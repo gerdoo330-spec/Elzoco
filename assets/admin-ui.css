@@ -297,14 +297,28 @@ select:not(.cs-native){
 .manager-cell .btn{margin-inline-start:auto}
 
 
-/* ---------- سربرگ ثابت جدول‌ها هنگام پیمایش ---------- */
-:where(table) > thead > tr > th,
-:where(table.t) > tbody > tr:first-child > th,
-:where(table) > tr:first-child > th {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: #f1f6fc;
-  box-shadow: 0 1px 0 rgba(148,163,184,.35);
+
+/* ---------- جدول کارکنان: اسکرول مستقل و سربرگ چسبان ---------- */
+.employee-table-scroll{
+  position:relative;
+  max-height:calc(100vh - 300px);
+  min-height:260px;
+  overflow:auto;
+  overscroll-behavior:contain;
+  isolation:isolate;
+  scrollbar-gutter:stable;
+  -webkit-overflow-scrolling:touch;
 }
-:where(table) > thead > tr > th { background: #f1f6fc; }
+.employee-table-scroll #etable{width:100%;border-collapse:separate;border-spacing:0}
+.employee-table-scroll #etable th{
+  position:sticky;
+  top:0;
+  z-index:30;
+  background:#eef4fb;
+  color:#173b60;
+  box-shadow:0 2px 0 rgba(148,163,184,.28);
+}
+@media(max-width:760px){
+  .employee-table-scroll{max-height:calc(100vh - 270px);min-height:220px}
+  .employee-table-scroll #etable th{z-index:30}
+}

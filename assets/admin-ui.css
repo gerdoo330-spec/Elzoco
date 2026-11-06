@@ -459,3 +459,109 @@ select:not(.cs-native){
   .employee-table-scroll #etable tbody td:last-child{border-bottom:0}
   .employee-table-scroll #etable tbody td[colspan]{display:block;text-align:center}
 }
+
+
+/* ===== Mobile employee directory: consistent RTL, app-like cards ===== */
+@media(max-width:760px){
+  .admin-app #s-employees .head{padding:2px 2px 4px;margin-bottom:12px}
+  .admin-app #s-employees .head h1{font-size:1.25rem;font-weight:900;letter-spacing:-.03em}
+  .admin-app #s-employees .head .muted{font-size:.78rem;line-height:1.8}
+  .admin-app #s-employees .card.flush>div:first-child{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+    gap:9px!important;padding:14px!important;margin:0 0 10px;
+    border:1px solid #e5edf7!important;border-radius:18px!important;
+    background:linear-gradient(145deg,#fff,#f7faff)!important;
+    box-shadow:0 8px 22px -18px rgba(11,35,67,.38);
+  }
+  .admin-app #s-employees #eq,
+  .admin-app #s-employees #ef,
+  .admin-app #s-employees #esSection,
+  .admin-app #s-employees .card.flush>div:first-child .btn{
+    width:100%!important;min-width:0!important;max-width:100%;
+    min-height:46px;border-radius:13px;font-size:.88rem;
+  }
+  .admin-app #s-employees #sectionHint{
+    margin:0 12px 12px;padding:9px 12px!important;
+    border:1px solid #e5edf7;border-radius:12px;
+    background:#f6f9fe;color:#64748b;font-size:.73rem;line-height:1.8;
+  }
+  .admin-app #s-employees .employee-table-scroll{
+    padding:0 2px 14px!important;
+    max-height:calc(100dvh - 270px)!important;
+    min-height:240px!important;
+  }
+  .admin-app #s-employees #etable,
+  .admin-app #s-employees #etable tbody,
+  .admin-app #s-employees #etable tbody tr,
+  .admin-app #s-employees #etable tbody td{
+    direction:rtl!important;
+    text-align:right!important;
+    box-sizing:border-box;
+  }
+  .admin-app #s-employees #etable tbody tr:not(.hd){
+    border:1px solid #e3ebf6;
+    border-radius:17px;
+    margin:0 0 13px;
+    padding:5px 0;
+    background:linear-gradient(150deg,#fff 0%,#fbfdff 100%);
+    box-shadow:0 9px 24px -19px rgba(11,35,67,.48),0 1px 2px rgba(11,35,67,.04);
+  }
+  .admin-app #s-employees #etable tbody td{
+    direction:rtl!important;
+    display:grid!important;
+    grid-template-columns:minmax(92px,34%) minmax(0,1fr)!important;
+    align-items:center!important;
+    gap:10px!important;
+    padding:10px 13px!important;
+    min-width:0!important;
+    line-height:1.75;
+    border-bottom:1px dashed #e8eef6!important;
+    font-size:.84rem!important;
+    overflow-wrap:anywhere;
+  }
+  .admin-app #s-employees #etable tbody td::before{
+    grid-column:1;grid-row:1;
+    direction:rtl!important;text-align:right!important;
+    color:#718096;font-size:.76rem;font-weight:800;
+    white-space:normal;
+  }
+  .admin-app #s-employees #etable tbody td>*{
+    grid-column:2;grid-row:1;min-width:0;
+    justify-self:stretch;text-align:right;
+  }
+  .admin-app #s-employees #etable tbody td.ltr{
+    direction:rtl!important;text-align:right!important;
+    unicode-bidi:plaintext;
+  }
+  .admin-app #s-employees #etable tbody td:nth-child(2){
+    padding-top:13px!important;padding-bottom:13px!important;
+    background:linear-gradient(90deg,rgba(239,246,255,.15),rgba(239,246,255,.72))!important;
+  }
+  .admin-app #s-employees #etable tbody td:nth-child(2) b{
+    color:#173b60;font-size:.94rem;font-weight:900;
+  }
+  .admin-app #s-employees #etable tbody td[data-label=""]{
+    display:block!important;padding:4px 12px!important;
+    border:0!important;text-align:right!important;
+  }
+  .admin-app #s-employees #etable tbody td[data-label=""]>*{display:inline-block}
+  .admin-app #s-employees #etable tbody td:last-child{border-bottom:0!important}
+  .admin-app #s-employees #etable tbody td .manager-cell{
+    display:flex;flex-wrap:wrap;align-items:center;gap:7px;
+  }
+  .admin-app #s-employees #etable tbody td .row{
+    display:grid;grid-template-columns:minmax(0,1fr);gap:7px;
+  }
+  .admin-app #s-employees #etable tbody td .btn{
+    width:100%;min-height:42px;border-radius:12px;
+  }
+  .admin-app #s-employees #etable tbody td[colspan]{
+    display:block!important;text-align:center!important;
+  }
+}
+@media(max-width:380px){
+  .admin-app #s-employees #etable tbody td{
+    grid-template-columns:minmax(82px,32%) minmax(0,1fr)!important;
+    gap:7px!important;padding-inline:10px!important;
+  }
+}

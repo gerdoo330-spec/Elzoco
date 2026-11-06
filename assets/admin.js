@@ -186,7 +186,7 @@
               <label class="ec-field"><span>شعبه <b>*</b></span><input name="branch" required placeholder="مثلاً الزوکو"></label>
               <label class="ec-field"><span>سکشن / واحد کاری <b>*</b></span><input name="section" required placeholder="مثلاً سالن"></label>
               <label class="ec-field"><span>عنوان شغلی / پست سازمانی</span><input name="post" placeholder="مثلاً سرپرست سالن"></label>
-              <label class="ec-field"><span>کد پرسنلی مدیر مستقیم</span><input name="manager_pc" inputmode="numeric" placeholder="در صورت وجود"></label>
+              <label class="ec-field"><span>مدیر / سرپرست مستقیم</span><select name="manager_pc" id="employeeManagerSelect"><option value="">بدون مدیر مستقیم</option><option value="" disabled>در حال دریافت فهرست مدیران…</option></select></label>
             </div>
           </section>
 
@@ -224,6 +224,20 @@
         out.value=code+suffix;
       } else out.value='';
     };
+    const managerSelect=document.getElementById('employeeManagerSelect');
+    if(managerSelect){
+      const managerResult=await api('admin','employee_supervisors');
+      if(managerResult.ok){
+        managerSelect.innerHTML='<option value="">بدون مدیر مستقیم</option>'+managerResult.supervisors.map(person=>{
+          const label=[person.name,person.role_label||person.post,person.personnel_code].filter(Boolean).join(' · ');
+          return '<option value="'+String(person.personnel_code).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+label.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</option>';
+        }).join('');
+        if(!managerResult.supervisors.length) managerSelect.innerHTML='<option value="">مدیر یا سرپرست فعالی یافت نشد</option>';
+      } else {
+        managerSelect.innerHTML='<option value="">بارگذاری فهرست ناموفق بود</option>';
+        toast(managerResult.message||'فهرست مدیران دریافت نشد.','bad');
+      }
+    }
     form.addEventListener('input',updateCode);
     form.addEventListener('submit',async ev=>{
       ev.preventDefault();

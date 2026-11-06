@@ -201,7 +201,7 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
     table.t td .btn.sm{min-height:40px;padding:8px 14px}
   }
 </style>
-<link rel="stylesheet" href="../assets/admin-ui.css?v=4">
+<link rel="stylesheet" href="../assets/admin-ui.css?v=5">
 <link rel="stylesheet" href="../assets/admin-settings.css?v=3">
 <link rel="stylesheet" href="../assets/notify-ui.css?v=1">
 <link rel="stylesheet" href="../assets/experience-ui.css?v=3">

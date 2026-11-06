@@ -151,6 +151,61 @@
   }
 
   /* ---------- کارمندان ---------- */
+  /* ---------- ثبت دستی کارمند با قرارداد یکسان با اکسل ---------- */
+  window.openEmployeeCreate = function () {
+    openModal(\`
+      <div class="employee-create-modal" dir="rtl">
+        <div class="employee-create-title"><div><h2>افزودن کارمند جدید</h2><p>ثبت مستقیم در پرونده پرسنلی؛ اطلاعات دستی در ایمپورت بعدی اکسل حفظ می‌شوند.</p></div><span class="employee-create-mark">＋</span></div>
+        <form id="employeeCreateForm">
+          <div class="employee-create-section"><b>اطلاعات هویتی</b><div class="employee-create-grid">
+            <label>نام و نام خانوادگی<input name="name" required maxlength="190" placeholder="نام کامل"></label>
+            <label>کد ملی<input name="national_code" required inputmode="numeric" maxlength="10" placeholder="۱۰ رقم؛ نامشخص: 0000000000"></label>
+            <label>شماره موبایل<input name="phone" inputmode="tel" placeholder="09xxxxxxxxx"></label>
+            <label>تاریخ شروع همکاری (شمسی)<input name="hire_date" required placeholder="۱۴۰۵/۰۵/۲۷"></label>
+          </div></div>
+          <div class="employee-create-section"><b>کد پرسنلی مطابق اکسل</b><div class="employee-create-grid">
+            <label>سه رقم انتهایی کد (ستون F)<input name="personnel_suffix" required inputmode="numeric" maxlength="3" placeholder="مثلاً 348"></label>
+            <label>کد کامل پرسنلی (خودکار)<input id="employeeCreateCode" readonly placeholder="پس از تاریخ و پسوند ساخته می‌شود"></label>
+            <label>شعبه<input name="branch" required placeholder="مثلاً الزوکو"></label>
+            <label>سکشن / واحد کاری<input name="section" required placeholder="مثلاً سالن"></label>
+            <label>پست سازمانی<input name="post" placeholder="عنوان شغلی"></label>
+            <label>کد پرسنلی مدیر مستقیم<input name="manager_pc" inputmode="numeric" placeholder="در صورت نیاز"></label>
+          </div></div>
+          <div class="employee-create-section"><b>حقوق و اطلاعات بانکی</b><div class="employee-create-grid">
+            <label>حقوق کل<input name="salary" inputmode="numeric" placeholder="اختیاری"></label>
+            <label>شماره شبا<input name="sheba" dir="ltr" placeholder="IR..."></label>
+            <label>حقوق پایه S<input name="base_S" inputmode="numeric"></label>
+            <label>حقوق پایه T<input name="base_T" inputmode="numeric"></label>
+            <label>حقوق پایه U<input name="base_U" inputmode="numeric"></label>
+            <label>حقوق پایه V<input name="base_V" inputmode="numeric"></label>
+            <label>حقوق پایه W<input name="base_W" inputmode="numeric"></label>
+            <label>مزایای AD<input name="base_AD" inputmode="numeric"></label>
+          </div></div>
+          <div class="employee-create-note">ساخت کد پرسنلی دقیقاً از الگوی N + F انجام می‌شود: بخش تاریخ از تاریخ استخدام شمسی و سه رقم انتهایی از فیلد بالا ساخته می‌شود. فیلدهای حقوقی خالی، قفل دستی نمی‌شوند تا در صورت وجود در اکسل قابل تکمیل باشند.</div>
+          <div class="employee-create-actions"><button class="btn" type="submit" id="employeeCreateSubmit">ثبت کارمند</button><button class="btn ghost" type="button" onclick="closeModal()">انصراف</button></div>
+        </form>
+      </div>\`);
+    const form=document.getElementById('employeeCreateForm');
+    const updateCode=()=>{
+      const fd=new FormData(form), raw=String(fd.get('hire_date')||'').replace(/[\/\-.]/g,'').replace(/[۰-۹]/g,ch=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(ch)).replace(/[٠-٩]/g,ch=>'٠١٢٣٤٥٦٧٨٩'.indexOf(ch));
+      const suffix=String(fd.get('personnel_suffix')||'').replace(/[۰-۹]/g,ch=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(ch)).replace(/[٠-٩]/g,ch=>'٠١٢٣٤٥٦٧٨٩'.indexOf(ch)).replace(/\D/g,'').padStart(3,'0').slice(-3);
+      const out=document.getElementById('employeeCreateCode');
+      if(raw.length===8 && suffix.length===3){
+        const year=Number(raw.slice(0,4)), code=(year>=1400&&year<=1499?String(year-1400).padStart(2,'0')+raw.slice(4):raw);
+        out.value=code+suffix;
+      } else out.value='';
+    };
+    form.addEventListener('input',updateCode);
+    form.addEventListener('submit',async ev=>{
+      ev.preventDefault();
+      const btn=document.getElementById('employeeCreateSubmit');btn.disabled=true;btn.textContent='در حال ثبت...';
+      const data=Object.fromEntries(new FormData(form).entries());
+      const r=await api('admin','employee_create',data);
+      if(!r.ok){toast(r.message||'ثبت کارمند انجام نشد.','bad');btn.disabled=false;btn.textContent='ثبت کارمند';return;}
+      closeModal();toast(r.message+' کد پرسنلی: '+r.personnel_code,'ok');loadEmployees();if(typeof loadDashboard==='function')loadDashboard();
+    });
+  };
+
   window.loadEmployees = async function () {
     const sectionSelect = document.getElementById('esSection');
     const selectedSection = sectionSelect ? sectionSelect.value : '';

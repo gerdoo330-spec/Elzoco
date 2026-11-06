@@ -521,7 +521,7 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
 <script>window.API_BASE = '../'; window.IS_ADMIN = <?= $isAdmin ? 'true' : 'false' ?>;</script>
 <script src="../assets/app.js"></script>
 <script src="../assets/jdate.js"></script>
-<script src="../assets/admin.js?v=15"></script>
+<script src="../assets/admin.js?v=16"></script>
 <script src="../assets/promotions-cards.js?v=4"></script>
 <script src="../assets/admin-ui.js?v=2"></script>
 <script src="../assets/admins-ui.js?v=1"></script>

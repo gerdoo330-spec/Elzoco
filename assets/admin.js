@@ -152,7 +152,7 @@
 
   /* ---------- کارمندان ---------- */
   /* ---------- ثبت دستی کارمند با قرارداد یکسان با اکسل ---------- */
-  window.openEmployeeCreate = function () {
+  window.openEmployeeCreate = async function () {
     openModal(`
       <div class="employee-create-modal" dir="rtl">
         <header class="ec-head">

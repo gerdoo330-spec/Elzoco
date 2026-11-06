@@ -290,3 +290,8 @@ select:not(.cs-native){
 .employee-history-record footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:8px;border-top:1px solid #edf2f7;color:#64748b;font-size:.78rem}
 .employee-history-record footer b{color:#334155}
 @media(max-width:640px){.employee-history-summary{grid-template-columns:1fr}.employee-history-title{align-items:center}.employee-history-record-head{flex-direction:column}}
+
+/* Direct manager badge in employee table */
+.manager-cell{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:150px}
+.manager-cell small{display:block;width:100%;font-size:.72rem;opacity:.72}
+.manager-cell .btn{margin-inline-start:auto}

@@ -36,7 +36,6 @@
       const groupToggle = personnelGroup.querySelector('[data-submenu]');
       const submenu = personnelGroup.querySelector('.side-submenu');
       if (groupToggle) {
-        groupToggle.classList.toggle('on', childActive);
         groupToggle.classList.toggle('has-active-child', childActive);
         groupToggle.setAttribute('aria-expanded', childActive ? 'true' : 'false');
       }

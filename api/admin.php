@@ -171,6 +171,25 @@ try {
             json_out(['ok' => true, 'dossier' => $dossier]);
         }
 
+        case 'employee_supervisors': {
+            require_admin_json('admin');
+            // مدیران و سرپرستان فعال بر اساس عنوان شغلی یا نقش مدیریتی ثبت‌شده در پنل
+            $rows = all("SELECT DISTINCT e.personnel_code, e.name, e.post,
+                    CASE
+                      WHEN a.role = 'admin' THEN 'مدیر سامانه'
+                      WHEN a.role = 'senior' THEN 'مدیر ارشد'
+                      WHEN a.role = 'manager' THEN 'مدیر'
+                      ELSE e.post
+                    END AS role_label
+                FROM employees e
+                LEFT JOIN admins a ON a.personnel_code = e.personnel_code AND a.active = 1
+                WHERE e.in_latest = 1 AND e.inactive = 0 AND e.personnel_code <> ''
+                  AND (e.post LIKE '%مدیر%' OR e.post LIKE '%سرپرست%'
+                       OR a.role IN ('manager','senior','admin'))
+                ORDER BY e.name");
+            json_out(['ok' => true, 'supervisors' => $rows]);
+        }
+
         case 'employee_create': {
             $a = require_admin_json('admin');
             $created = employee_create_manual($in, (string)$a['name']);

@@ -180,15 +180,15 @@
       return '<span class="badge b-ok">فعال</span>';
     };
     const rows = r.employees.map(e => `<tr>
-        <td>${IS_ADMIN && e.personnel_code ? `<input type="checkbox" class="esel" value="${e.id}" ${e.personnel_ok ? '' : 'disabled'} onchange="onEmpSelChange()">` : ''}</td>
-        <td><b>${esc(e.name)}</b> ${e.personnel_ok ? '' : '<span class="badge b-warn">ناقص</span>'}</td>
-        <td class="ltr">${esc(e.personnel_code || '—')}</td>
-        <td class="ltr">${esc(e.national_code === '0000000000' ? '0000000000' : e.national_code || '—')}</td>
-        <td class="ltr">${esc(e.phone || '—')}</td><td>${esc(e.post || '')}</td><td>${esc(e.section_name || '—')}</td><td>${status(e)}</td>
-        <td><div class="manager-cell">${e.manager_name ? `<span class="badge b-info"> ${esc(e.manager_name)} </span>` : '<span class="badge b-gray">تعیین نشده</span>'}<small class="ltr hint">${esc(e.manager_pc || '')}</small>${IS_ADMIN && e.personnel_ok ? `<button class="btn sm ghost" onclick="editManager(${e.id})">تغییر مدیر</button>` : ''}</div></td>
-        <td><div class="row">${IS_ADMIN ? `<button class="btn sm" onclick="viewEmployeeHistory(${e.id})">پرونده پرسنلی</button>` : ''}<button class="btn sm ghost" onclick="viewPayslips(${e.id})">مشاهده فیش</button></div></td></tr>`).join('');
-    document.getElementById('etable').innerHTML = `<tr>${IS_ADMIN ? '<th><input type="checkbox" title="انتخاب همه" onchange="toggleAllEmp(this.checked)"></th>' : '<th></th>'}<th>نام</th><th>کد پرسنلی</th><th>کد ملی</th><th>موبایل</th><th>پست</th><th>سکشن</th><th>وضعیت</th><th>مدیر مستقیم</th><th>پرونده / فیش</th></tr>` +
-      (rows || '<tr><td colspan="10" class="empty">موردی پیدا نشد.</td></tr>');
+        <td data-label="">${IS_ADMIN && e.personnel_code ? `<input type="checkbox" class="esel" value="${e.id}" ${e.personnel_ok ? '' : 'disabled'} onchange="onEmpSelChange()">` : ''}</td>
+        <td data-label="نام"><b>${esc(e.name)}</b> ${e.personnel_ok ? '' : '<span class="badge b-warn">ناقص</span>'}</td>
+        <td data-label="کد پرسنلی" class="ltr">${esc(e.personnel_code || '—')}</td>
+        <td data-label="کد ملی" class="ltr">${esc(e.national_code === '0000000000' ? '0000000000' : e.national_code || '—')}</td>
+        <td data-label="موبایل" class="ltr">${esc(e.phone || '—')}</td><td data-label="پست">${esc(e.post || '')}</td><td data-label="سکشن">${esc(e.section_name || '—')}</td><td data-label="وضعیت">${status(e)}</td>
+        <td data-label="مدیر مستقیم"><div class="manager-cell">${e.manager_name ? `<span class="badge b-info"> ${esc(e.manager_name)} </span>` : '<span class="badge b-gray">تعیین نشده</span>'}<small class="ltr hint">${esc(e.manager_pc || '')}</small>${IS_ADMIN && e.personnel_ok ? `<button class="btn sm ghost" onclick="editManager(${e.id})">تغییر مدیر</button>` : ''}</div></td>
+        <td data-label="پرونده / فیش"><div class="row">${IS_ADMIN ? `<button class="btn sm" onclick="viewEmployeeHistory(${e.id})">پرونده پرسنلی</button>` : ''}<button class="btn sm ghost" onclick="viewPayslips(${e.id})">مشاهده فیش</button></div></td></tr>`).join('');
+    document.getElementById('etable').innerHTML = `<thead><tr class="hd">${IS_ADMIN ? '<th><input type="checkbox" title="انتخاب همه" onchange="toggleAllEmp(this.checked)"></th>' : '<th></th>'}<th>نام</th><th>کد پرسنلی</th><th>کد ملی</th><th>موبایل</th><th>پست</th><th>سکشن</th><th>وضعیت</th><th>مدیر مستقیم</th><th>پرونده / فیش</th></tr></thead><tbody>` +
+      (rows || '<tr><td colspan="10" class="empty">موردی پیدا نشد.</td></tr>') + '</tbody>';
     onEmpSelChange();
   };
 

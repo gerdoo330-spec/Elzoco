@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS advance_requests (
   general_decision VARCHAR(190) NOT NULL DEFAULT '',
   chain_pcs VARCHAR(500) NOT NULL DEFAULT '',
   chain_idx TINYINT NOT NULL DEFAULT 0,
+  route VARCHAR(40) NULL,
   INDEX idx_adv_emp (employee_id)
 ) DEFAULT CHARSET=utf8mb4;
 
@@ -116,6 +117,7 @@ CREATE TABLE IF NOT EXISTS leave_requests (
   to_admin_decision VARCHAR(20) NOT NULL DEFAULT '',
   chain_pcs VARCHAR(500) NOT NULL DEFAULT '',
   chain_idx TINYINT NOT NULL DEFAULT 0,
+  route VARCHAR(40) NULL,
   created_jdate VARCHAR(12) NOT NULL,
   created_at DATETIME NOT NULL,
   INDEX idx_lv_emp (employee_id)
@@ -147,6 +149,7 @@ CREATE TABLE IF NOT EXISTS promotion_requests (
   to_admin_decision VARCHAR(20) NOT NULL DEFAULT '',
   chain_pcs VARCHAR(500) NOT NULL DEFAULT '',
   chain_idx TINYINT NOT NULL DEFAULT 0,
+  route VARCHAR(40) NULL,
   raise_amount BIGINT NULL,
   eval_score DECIMAL(5,2) NULL,
   eval_note VARCHAR(500) NOT NULL DEFAULT '',

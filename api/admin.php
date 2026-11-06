@@ -142,6 +142,8 @@ try {
             }
             $rows = all("SELECT e.id, e.name, e.personnel_code, e.national_code, e.phone, e.post, $sectionExpr AS section_name,
                 e.start_code, e.color, e.inactive, e.in_latest, e.manager_pc, e.personnel_ok,
+                (SELECT m.name FROM employees m WHERE m.personnel_code = e.manager_pc
+                    ORDER BY m.in_latest DESC, m.inactive ASC, m.id DESC LIMIT 1) AS manager_name,
                 (e.personnel_code <> '' AND EXISTS (SELECT 1 FROM admins a WHERE a.personnel_code = e.personnel_code AND a.active = 1)) AS has_account
                 FROM employees e LEFT JOIN employee_profiles ep ON ep.employee_id = e.id
                 WHERE $where ORDER BY e.name LIMIT 500", $params);

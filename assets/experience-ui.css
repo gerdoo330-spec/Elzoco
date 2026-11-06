@@ -1,0 +1,319 @@
+/* =====================================================================
+   EL ZOCO HR — Unified experience layer
+   Applies to employee, admin, authentication, setup and print screens.
+   Presentation only: no form names, IDs, API contracts or workflow logic
+   are changed by this stylesheet.
+   ===================================================================== */
+:root{
+  --ux-ink:#102744;
+  --ux-ink-2:#243f60;
+  --ux-muted:#71839b;
+  --ux-line:#e3eaf3;
+  --ux-surface:#fff;
+  --ux-canvas:#f3f6fb;
+  --ux-teal:#0f9d8a;
+  --ux-teal-2:#16b8a5;
+  --ux-blue:#285b91;
+  --ux-radius:20px;
+  --ux-shadow:0 16px 42px -30px rgba(13,39,72,.36),0 3px 12px -8px rgba(13,39,72,.12);
+  --ux-shadow-hover:0 22px 46px -30px rgba(13,39,72,.42),0 7px 18px -12px rgba(13,39,72,.16);
+  --ux-ease:cubic-bezier(.2,.8,.25,1);
+}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{color:var(--ux-ink);text-rendering:optimizeLegibility}
+button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid rgba(20,184,166,.38)!important;outline-offset:2px}
+::selection{background:rgba(20,184,166,.2);color:var(--ux-ink)}
+
+/* Common forms and controls */
+label{color:#334b67;line-height:1.8}
+input,select,textarea{border-color:#d8e2ee;background:#fbfdff;border-radius:13px;min-height:44px}
+input:hover,select:hover,textarea:hover{border-color:#b8cadd}
+input:focus,select:focus,textarea:focus{border-color:var(--ux-teal-2);box-shadow:0 0 0 4px rgba(20,184,166,.12)}
+input::placeholder,textarea::placeholder{color:#a2afbf;font-weight:500}
+textarea{line-height:1.9}
+.btn{border-radius:13px;min-height:42px;box-shadow:0 9px 20px -13px rgba(15,157,138,.8);transition:transform .2s var(--ux-ease),box-shadow .2s var(--ux-ease),filter .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 13px 24px -14px rgba(15,157,138,.75);filter:saturate(1.05)}
+.btn:active{transform:translateY(0) scale(.985)}
+.btn.ghost{border:1px solid #dbe5f0;background:#f7faff;color:#254d78}
+.btn.ghost:hover{background:#edf5fb;border-color:#c6d7e8;box-shadow:none}
+.btn.danger{box-shadow:0 9px 20px -13px rgba(220,38,38,.55)}
+.btn.sm{min-height:36px;border-radius:10px}
+.alert{border:1px solid #fecaca;border-radius:14px;line-height:1.9}
+.alert.ok{border-color:#bdebd2}
+.alert.warn{border-color:#f4dfaa}
+.hint,.muted{line-height:1.85}
+.badge{letter-spacing:0}
+.badge::before{animation:none}
+
+/* Admin application */
+body.admin-app{background:var(--ux-canvas)}
+.admin-app .shell{background:var(--ux-canvas)}
+.admin-app .side{background:linear-gradient(180deg,#0b2343 0%,#12345d 54%,#17416d 100%);box-shadow:inset -1px 0 0 rgba(255,255,255,.08),12px 0 34px -30px rgba(7,25,48,.75)}
+.admin-app .side-brand{padding:8px 8px 22px;margin-bottom:10px}
+.admin-app .side-brand .logo{filter:drop-shadow(0 7px 14px rgba(0,0,0,.24))}
+.admin-app .side nav{gap:6px;padding:5px 0}
+.admin-app .side nav button{min-height:48px;padding:8px 10px;border:1px solid transparent;border-radius:14px;font-size:.91rem;letter-spacing:-.01em}
+.admin-app .side nav button .ico{width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,.075)}
+.admin-app .side nav button:hover{background:rgba(255,255,255,.09);transform:translateX(-2px)}
+.admin-app .side nav button.on{background:linear-gradient(105deg,rgba(20,184,166,.22),rgba(20,184,166,.07));box-shadow:inset -3px 0 0 #22c6b1;border-color:rgba(255,255,255,.07)}
+.admin-app .side nav button.on .ico{background:linear-gradient(135deg,#29c5b3,#0f9d8a);color:white;box-shadow:0 8px 18px -10px rgba(20,184,166,.9)}
+.admin-app .side-foot{background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.1);border-radius:17px}
+.admin-app .main{padding:30px clamp(18px,2.5vw,42px) 64px;max-width:1800px;margin-inline:auto;width:100%}
+.admin-app .head{align-items:flex-end;margin:0 0 24px;padding:0 0 17px;border-bottom:1px solid #e3eaf3}
+.admin-app .head h1{font-size:clamp(1.25rem,1.5vw,1.65rem);font-weight:900;color:var(--ux-ink);letter-spacing:-.035em;margin:0 0 5px}
+.admin-app .head .muted{font-size:.84rem;color:var(--ux-muted);max-width:920px}
+.admin-app .sec.on{animation:uxSectionIn .34s var(--ux-ease) both}
+.admin-app .card{background:var(--ux-surface);border:1px solid rgba(218,229,241,.88);border-radius:20px;box-shadow:var(--ux-shadow);padding:22px;transition:box-shadow .22s,border-color .22s}
+.admin-app .card:hover{box-shadow:var(--ux-shadow-hover);border-color:#d3e0ee}
+.admin-app .card.flush{padding:0;overflow:hidden}
+.admin-app .card h2{color:var(--ux-ink);font-size:1rem;font-weight:850;margin:0 0 15px;letter-spacing:-.015em}
+.admin-app .grid{gap:16px}
+.admin-app .stat{position:relative;min-height:134px;padding:18px 19px;border:1px solid #e2eaf3;border-radius:19px;background:linear-gradient(145deg,#fff 0%,#f9fbfe 100%);box-shadow:0 12px 28px -25px rgba(11,35,67,.42);overflow:hidden;gap:7px}
+.admin-app .stat::after{content:"";position:absolute;width:115px;height:115px;left:-45px;bottom:-65px;border-radius:50%;background:radial-gradient(circle,rgba(20,184,166,.09),transparent 68%);pointer-events:none}
+.admin-app .stat .ic{width:42px;height:42px;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+.admin-app .stat .v{font-size:1.8rem;line-height:1.35;font-weight:900;color:var(--ux-ink);font-variant-numeric:tabular-nums}
+.admin-app .stat .l{font-size:.8rem;color:var(--ux-muted);font-weight:700}
+.admin-app .list-report{padding-inline-start:22px;line-height:2.1;color:#405670}
+.admin-app .list-report li::marker{color:#11a38f}
+.admin-app .dz{min-height:190px;display:grid;place-content:center;gap:8px;border:1.5px dashed #a9c5d9;border-radius:19px;background:linear-gradient(145deg,#f8fcff,#f0faf8);color:var(--ux-ink);transition:border-color .2s,background .2s,transform .2s}
+.admin-app .dz:hover,.admin-app .dz.over{border-color:#19b49f;background:#effbf8;transform:translateY(-1px)}
+.admin-app .dz>div:first-child{width:56px;height:56px;margin:auto;display:grid;place-items:center;border-radius:17px;background:#def6f0;color:#0d8d7b;font-size:1.9rem!important}
+.admin-app .dz>div:nth-child(2){font-size:.96rem}
+.admin-app .row{gap:10px}
+.admin-app .head>.row{justify-content:flex-end}
+.admin-app .head select,.admin-app .head .cs{min-width:160px}
+.admin-app .card.flush>div[style*="padding"]{padding:16px 18px!important}
+.admin-app .card.flush>div[style*="overflow"]{max-width:100%;overflow:auto;-webkit-overflow-scrolling:touch}
+.admin-app table.t{border-collapse:separate;border-spacing:0;width:100%;font-size:.86rem}
+.admin-app table.t th{position:sticky;top:0;z-index:2;background:#f4f8fc;color:#48617d;padding:13px 14px;border-bottom:1px solid #dfe8f2;font-size:.77rem;font-weight:850}
+.admin-app table.t th:first-child{border-top-right-radius:10px}
+.admin-app table.t th:last-child{border-top-left-radius:10px}
+.admin-app table.t td{padding:12px 14px;border-bottom:1px solid #edf1f6;color:#334b67;line-height:1.8}
+.admin-app table.t tbody tr:last-child td{border-bottom:0}
+.admin-app table.t tbody tr:hover td{background:#f8fbfe}
+.admin-app table.t .btn{min-height:34px;padding:6px 10px;font-size:.78rem}
+.admin-app .modal-bg{backdrop-filter:blur(7px);background:rgba(8,26,49,.55)}
+.admin-app .modal{max-width:min(560px,calc(100vw - 24px));max-height:min(86vh,850px);overflow:auto;border:1px solid #e1eaf4;border-radius:23px;box-shadow:0 32px 80px -34px rgba(3,19,39,.7);padding:24px}
+.admin-app .scrim{backdrop-filter:blur(3px)}
+.admin-app .m-top{background:rgba(255,255,255,.94);border-bottom:1px solid #e1eaf3;box-shadow:0 8px 22px -18px rgba(11,35,67,.45)}
+.admin-app .m-top .burger{background:linear-gradient(145deg,#0f9d8a,#16b8a5);box-shadow:0 8px 18px -12px rgba(15,157,138,.9)}
+
+/* Employee portal */
+body.employee-app{background:linear-gradient(180deg,#f2f6fb 0,#f6f8fc 460px,#f3f6fb 100%)}
+.employee-app .topbar{background:linear-gradient(110deg,#0b2343 0%,#153e68 62%,#0f766e 120%);box-shadow:0 10px 28px -18px rgba(11,35,67,.6)}
+.employee-app .topbar .in{max-width:1380px;padding:13px 22px}
+.employee-app .brand{font-size:.98rem;letter-spacing:-.01em}
+.employee-app .brand .logo{filter:drop-shadow(0 6px 12px rgba(0,0,0,.25))}
+.employee-app .topbar .user{font-weight:700;color:#e6f1fb}
+.employee-app .topbar a.out{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.08);border-radius:11px;transition:background .2s,transform .2s}
+.employee-app .topbar a.out:hover{background:rgba(255,255,255,.16);transform:translateY(-1px)}
+.employee-app .wrap{max-width:1380px;padding:26px 22px 70px}
+.employee-app #loading{max-width:720px;margin:42px auto;min-height:150px;display:grid;place-items:center}
+.employee-app #info.card{position:relative;overflow:hidden;padding:20px 24px;margin-bottom:20px!important;border-radius:22px;background:linear-gradient(115deg,#fff 0%,#fafdff 58%,#effaf8 100%);border:1px solid #dce9ef;box-shadow:var(--ux-shadow)}
+.employee-app #info.card::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:4px;background:linear-gradient(180deg,#0f9d8a,#6ccdbd)}
+.employee-app #info .grid{gap:0;grid-template-columns:repeat(4,minmax(0,1fr))}
+.employee-app #info .stat{padding:8px 18px;gap:4px;border-inline-start:1px solid #e6edf3;min-width:0}
+.employee-app #info .stat:first-child{padding-inline-start:4px}
+.employee-app #info .stat:last-child{border-inline-start:0}
+.employee-app #info .stat .l{font-size:.76rem;font-weight:750;color:#71859b}
+.employee-app #info .stat .v{font-size:1rem!important;font-weight:900;color:#153454;overflow-wrap:anywhere}
+.employee-app .tabs{width:100%;max-width:100%;display:flex;align-items:center;gap:8px;padding:7px;margin:0 0 18px;border:1px solid #e1eaf3;border-radius:17px;background:rgba(255,255,255,.78);box-shadow:0 8px 22px -20px rgba(11,35,67,.5);backdrop-filter:blur(8px)}
+.employee-app .tabs>button,.employee-app .tabs .dd-btn{min-height:44px;padding:10px 18px;border-radius:12px;color:#58708b;font-size:.88rem;font-weight:800;transition:background .2s,color .2s,box-shadow .2s}
+.employee-app .tabs>button:hover,.employee-app .tabs .dd-btn:hover{background:#f1f7fb;color:#214a70}
+.employee-app .tabs>button.on,.employee-app .tabs .dd.open>.dd-btn{background:linear-gradient(135deg,#0f9d8a,#16b8a5);color:#fff;box-shadow:0 8px 18px -12px rgba(15,157,138,.85)}
+.employee-app .pane.on{animation:uxPaneIn .3s var(--ux-ease) both}
+.employee-app .pane>.card,.employee-app .pane .grid>.card{border:1px solid #e1eaf3;border-radius:21px;box-shadow:var(--ux-shadow);padding:22px}
+.employee-app .card.flush{padding:0!important;overflow:hidden}
+.employee-app .section-title{padding-bottom:13px;margin-bottom:17px;border-bottom:1px solid #edf1f6}
+.employee-app .section-title h2,.employee-app .pane h2{font-size:1.03rem;font-weight:900;color:var(--ux-ink);margin:0}
+.employee-app .pane-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 16px;padding:12px 15px;border:1px solid #dfebf1;border-radius:14px;background:rgba(255,255,255,.75)}
+.employee-app .pane-nav .back{display:inline-flex;align-items:center;gap:6px;color:#0b8274;font-size:.82rem;font-weight:850}
+.employee-app .pane-nav .crumb{font-size:.82rem;color:#788aa0}
+.employee-app .pane .grid{gap:17px}
+.employee-app .pane form.stack{gap:15px}
+.employee-app .pane form.stack>label{gap:7px}
+.employee-app .pane form .alert{padding:11px 14px}
+.employee-app .pane .btn[type=submit]{min-height:48px}
+.employee-app .pane .card.flush>div[style*="padding"]{padding:18px 20px 12px!important}
+.employee-app .pane .card.flush>div[style*="overflow"]{max-width:100%;overflow:auto;-webkit-overflow-scrolling:touch}
+.employee-app table.t{width:100%;border-collapse:separate;border-spacing:0;font-size:.83rem}
+.employee-app table.t th{background:#f4f8fc;color:#536b86;padding:12px 13px;border-bottom:1px solid #e1eaf2;font-size:.76rem;font-weight:850;white-space:nowrap}
+.employee-app table.t td{padding:12px 13px;border-bottom:1px solid #edf1f6;line-height:1.8;color:#334b67}
+.employee-app table.t tr:last-child td{border-bottom:0}
+.employee-app table.t tr:hover td{background:#f8fbfe}
+.employee-app .dd-menu{border-color:#e1eaf3;box-shadow:0 25px 52px -22px rgba(11,35,67,.38)}
+.employee-app .dd-item{border:1px solid transparent}
+.employee-app .dd-item:hover{border-color:#e2ecf3;background:#f6fafc}
+.employee-app .dd-item.current{border-color:#ccece4;background:#effaf7}
+.employee-app .empty{padding:34px 20px;line-height:2}
+.employee-app .sh-block{padding:13px;border:1px solid #e5edf4;border-radius:16px;background:#fbfdff}
+.employee-app .sh-head{margin-bottom:9px}
+.employee-app .sh-head b{font-size:.9rem}
+.employee-app .sh-head small{font-size:.74rem}
+.employee-app .sh-grid{gap:9px!important}
+.employee-app .sh-grid .sh-opt{height:48px!important;border-radius:13px!important}
+.employee-app .sh-grid .sh-opt:focus-visible{outline-offset:3px}
+.employee-app #promoCount{display:inline-flex;align-items:center;align-self:flex-start;padding:5px 10px;border-radius:9px;background:#f2f6fb;font-weight:750}
+.employee-app .sheba-field{border-radius:13px;border-color:#d9e4ef}
+.employee-app .sheba-pre{background:#eff5fa;border-color:#d9e4ef}
+.employee-app #slip{min-width:0}
+.employee-app #slip .empty{border:1px dashed #dce6f0;border-radius:15px;background:#fbfdff}
+
+/* Request cards / approval cards */
+.rq{border-color:#e2eaf3!important;border-radius:21px!important;box-shadow:var(--ux-shadow)!important;transition:transform .2s var(--ux-ease),box-shadow .2s}
+.rq:hover{transform:translateY(-2px);box-shadow:var(--ux-shadow-hover)!important}
+.rq-steps{border:1px solid #e8eef5;background:#f8fbfe}
+.rq-reason p{line-height:2.05}
+.rq-actions{gap:9px}
+.rq-actions .btn{min-height:40px}
+
+/* Login pages: align both entrances to the same identity */
+.login-page .auth-page{background-color:#0b2343}
+.login-page .auth-wrap{box-shadow:0 34px 78px -30px rgba(0,0,0,.52)}
+.login-page .auth-aside{background:radial-gradient(560px 340px at 0 0,rgba(29,78,137,.8),transparent 70%),linear-gradient(155deg,#0b2343,#12365f)}
+.login-page .auth-box{border:1px solid rgba(255,255,255,.24)}
+.login-page .auth-body .btn{min-height:50px}
+body.lg{background:#0b2343}
+.lg-card{border:1px solid rgba(255,255,255,.22);box-shadow:0 36px 90px -35px rgba(0,0,0,.65)}
+.lg-submit{min-height:50px;border-radius:14px}
+
+/* One-time installer */
+body.center-page{min-height:100vh;display:grid;place-items:center;padding:22px;background:radial-gradient(900px 460px at 0 0,rgba(29,78,137,.18),transparent 65%),linear-gradient(145deg,#f3f7fb,#edf4f8)}
+.center-page .login-card{width:min(500px,100%);padding:30px;border:1px solid #e0e9f2;border-radius:24px;box-shadow:0 26px 60px -34px rgba(11,35,67,.45)}
+.center-page .login-card h1{font-size:1.4rem;font-weight:900;color:var(--ux-ink);padding-bottom:15px;border-bottom:1px solid #edf1f6;margin-bottom:20px}
+.center-page .login-card .btn{width:100%;min-height:48px}
+
+/* Print documents — richer on screen, unchanged paper geometry */
+body.print-document{min-height:100vh;padding:24px 14px 48px;background:linear-gradient(145deg,#eef3f8,#f6f8fb);color:#172b43}
+.print-document .sheet{position:relative;background:#fff;border:1px solid #dce5ef!important;border-radius:18px;box-shadow:0 22px 54px -34px rgba(11,35,67,.42);overflow:hidden}
+.print-document .top,.print-document .head{border-color:#c6d4e3!important}
+.print-document .top .ttl h1,.print-document .head .ttl h1{color:#12365f}
+.print-document h2{border-color:#d7e1ec!important;background:#f0f5fa!important;color:#163a60}
+.print-document table th{background:#f5f8fc!important;color:#294765}
+.print-document .bar{max-width:fit-content;margin:0 auto 14px 0;text-align:left}
+.print-document .bar button{border:0;border-radius:11px;background:linear-gradient(135deg,#0f9d8a,#16b8a5);box-shadow:0 10px 22px -14px rgba(15,157,138,.85);padding:10px 20px;font-weight:800}
+@media print{
+  body.print-document{padding:0;background:#fff;color:#000}
+  .print-document .sheet{border:0!important;border-radius:0;box-shadow:none;overflow:visible}
+  .print-document .bar{display:none}
+  .print-document h2{background:#e7ebf1!important;color:#000}
+  .print-document table th{background:#f5f7fa!important;color:#000}
+}
+
+/* Motion and responsive tuning */
+@keyframes uxSectionIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes uxPaneIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@media(max-width:1100px){
+  .admin-app .main{padding:22px 20px 52px}
+  .employee-app #info .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .employee-app #info .stat:nth-child(2){border-inline-start:0}
+  .employee-app #info .stat:nth-child(n+3){border-top:1px solid #e6edf3;padding-top:12px;margin-top:8px}
+}
+@media(max-width:900px){
+  .admin-app .main{padding:18px 16px 48px}
+  .admin-app .head{align-items:flex-start}
+  .admin-app .head>.row{width:100%;justify-content:stretch}
+  .admin-app .head>.row>*{flex:1 1 150px;min-width:0}
+  .employee-app .wrap{padding:18px 16px 48px}
+  .employee-app .pane>.grid.g2,.employee-app .pane .grid.g2{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:640px){
+  .admin-app .main{padding:15px 12px 38px}
+  .admin-app .head{padding-bottom:13px;margin-bottom:17px}
+  .admin-app .head h1{font-size:1.18rem}
+  .admin-app .card{padding:16px;border-radius:17px}
+  .admin-app .card.flush{padding:0}
+  .admin-app .stat{min-height:112px;padding:15px}
+  .admin-app .stat .v{font-size:1.55rem}
+  .admin-app .head>.row{display:grid;grid-template-columns:1fr}
+  .admin-app .head>.row>*{width:100%}
+  .admin-app table.t{min-width:640px}
+  .employee-app .topbar .in{padding:10px 13px}
+  .employee-app .wrap{padding:14px 12px 38px}
+  .employee-app #info.card{padding:14px 13px;margin-bottom:14px!important;border-radius:17px}
+  .employee-app #info .stat{padding:8px 10px}
+  .employee-app #info .stat .v{font-size:.9rem!important}
+  .employee-app .tabs{display:grid;grid-template-columns:1fr 1fr;padding:5px;gap:5px}
+  .employee-app .tabs>button,.employee-app .tabs .dd-btn{width:100%;min-width:0;justify-content:center;padding:9px 7px;font-size:.82rem}
+  .employee-app .pane>.card,.employee-app .pane .grid>.card{padding:16px;border-radius:17px}
+  .employee-app .pane .card.flush{padding:0!important}
+  .employee-app .pane-nav{align-items:flex-start;flex-direction:column;padding:10px 12px}
+  .employee-app .pane .section-title{align-items:flex-start;flex-direction:column}
+  .employee-app .pane .section-title label{width:100%;align-items:flex-start!important;flex-direction:column!important}
+  .employee-app .pane .section-title select{width:100%;min-width:0!important}
+  .employee-app table.t{min-width:610px}
+  .employee-app .sh-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .employee-app .sh-grid .sh-opt{height:44px!important;padding-inline:8px!important}
+  .employee-app .sh-grid .sh-t{font-size:.78rem!important}
+  .employee-app .pane .btn{width:100%}
+  .print-document{padding:10px 7px 30px!important}
+  .print-document .sheet{padding:5mm!important;border-radius:12px}
+}
+@media(max-width:390px){
+  .employee-app .topbar .in{display:grid;grid-template-columns:1fr;gap:8px}
+  .employee-app .topbar .row{justify-content:space-between}
+  .employee-app .tabs{grid-template-columns:1fr}
+  .employee-app #info .grid{grid-template-columns:1fr 1fr}
+  .employee-app .sh-grid{grid-template-columns:1fr!important}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .admin-app .sec.on,.employee-app .pane.on{animation:none}
+  .admin-app .side nav button,.employee-app .topbar a.out,.btn,.rq{transition:none!important}
+}
+
+/* Admin KPI tiles retain a compact two-column rhythm on medium screens. */
+@media (min-width:641px) and (max-width:900px){
+  .admin-app #dash>.grid.g4{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media (max-width:640px){
+  .admin-app #dash>.grid.g4{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .admin-app #dash>.grid.g4 .stat{min-height:104px}
+}
+
+/* Employee requests dropdown: keep the menu above the payslip pane.
+   The active pane uses an entrance transform, which creates a stacking
+   context. The tabs need their own higher stacking level so the menu is
+   never painted underneath the payslip card during or after the animation. */
+.employee-app #tabs{
+  position:relative;
+  z-index:10;
+  overflow:visible;
+}
+.employee-app #tabs .dd{
+  position:relative;
+  z-index:1;
+}
+.employee-app #tabs .dd.open{
+  z-index:2;
+}
+.employee-app #tabs .dd-menu{
+  z-index:1000;
+}
+.employee-app .pane{
+  position:relative;
+  z-index:0;
+}
+
+
+/* Leave entitlement summary — Persian calendar / orange brand accent */
+.leave-balance-panel{display:grid;gap:13px;margin:0 0 18px;padding:17px;border:1px solid #fed7aa;border-radius:18px;background:linear-gradient(135deg,#fffaf5,#fff 62%);box-shadow:0 13px 30px -26px rgba(194,65,12,.45)}
+.leave-balance-panel.is-missing{border-color:#f4d6b5;background:#fffaf5;color:#854d0e;gap:5px}
+.leave-balance-panel.is-missing span{font-size:.82rem;color:#8b6b4a;line-height:1.9}
+.leave-balance-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.leave-balance-head>div{display:grid;gap:4px}
+.leave-balance-head>div>b{font-size:.96rem;color:#8a3412}
+.leave-balance-head small,.leave-balance-head>span{font-size:.76rem;color:#8a6a52;line-height:1.8}
+.leave-balance-head>span{padding:5px 9px;border-radius:9px;background:#fff0e3}
+.leave-balance-head>span b{color:#9a3412}
+.leave-balance-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.leave-balance-grid>div{display:grid;gap:5px;min-width:0;padding:12px;border:1px solid #f1e3d7;border-radius:13px;background:rgba(255,255,255,.88)}
+.leave-balance-grid small{font-size:.73rem;color:#806b5c;font-weight:700}
+.leave-balance-grid b{font-size:1.04rem;color:#2e4055;overflow-wrap:anywhere}
+.leave-balance-grid .is-primary{border-color:#fb923c;background:linear-gradient(140deg,#fff1e6,#fffaf5)}
+.leave-balance-grid .is-primary b{color:#c2410c;font-size:1.18rem}
+.leave-balance-grid em{font-style:normal;color:#8b5e3c;font-size:.7rem;line-height:1.7}
+.leave-balance-foot{font-size:.72rem;color:#8b7562;line-height:1.8}
+@media(max-width:760px){.leave-balance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.leave-balance-panel{padding:13px}}
+@media(prefers-reduced-motion:reduce){.leave-balance-panel{scroll-behavior:auto}}

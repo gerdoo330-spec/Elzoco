@@ -1,0 +1,68 @@
+/* ===================================================================
+   اعلان‌های پاپ‌آپ: کارت سفید، آیکون رنگی هر نوع، دکمه‌های متحرک
+   =================================================================== */
+.np-stack{position:fixed;top:18px;left:18px;z-index:400;display:flex;flex-direction:column;gap:12px;width:min(390px,calc(100vw - 36px));pointer-events:none;direction:rtl}
+.np-card{--c1:#14b8a6;--c2:#0f9d8a;--c-soft:#ecfdf8;--c-ink:#0b6e63;position:relative;pointer-events:auto;overflow:hidden;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:start;padding:16px 16px 18px;border-radius:20px;background:#fff;border:1px solid #e4ecf6;box-shadow:0 26px 50px -22px rgba(11,35,67,.5),0 2px 0 rgba(255,255,255,.6) inset;cursor:pointer;animation:np-in .55s cubic-bezier(.2,.8,.25,1) both}
+.np-card.out{animation:np-out .42s cubic-bezier(.4,0,.8,.4) forwards}
+@keyframes np-in{from{opacity:0;transform:translateX(-36px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes np-out{to{opacity:0;transform:translateX(-30px) scale(.94)}}
+
+/* رنگ هر نوع */
+.np-card.k-advance{--c1:#14b8a6;--c2:#0f9d8a;--c-soft:#ecfdf8;--c-ink:#0b6e63}
+.np-card.k-loan{--c1:#3b82f6;--c2:#1d4ed8;--c-soft:#eff6ff;--c-ink:#1e40af}
+.np-card.k-leave{--c1:#f59e0b;--c2:#d97706;--c-soft:#fffbeb;--c-ink:#92400e}
+.np-card.k-promotion{--c1:#8b5cf6;--c2:#6d28d9;--c-soft:#f5f3ff;--c-ink:#5b21b6}
+.np-card.k-default{--c1:#64748b;--c2:#334155;--c-soft:#f1f5f9;--c-ink:#334155}
+.np-card.bad{--c1:#ef4444;--c2:#dc2626;--c-soft:#fef2f2;--c-ink:#991b1b}
+
+/* آیکون */
+.np-ic{position:relative;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 12px 20px -12px var(--c2),inset 0 1px 0 rgba(255,255,255,.35)}
+.np-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;animation:np-icon-in .6s .15s cubic-bezier(.34,1.56,.64,1) both}
+.np-ic::after{content:"";position:absolute;inset:-5px;border-radius:19px;border:2px solid var(--c1);opacity:0;animation:np-ring 2.2s .4s ease-out 2}
+@keyframes np-icon-in{from{transform:scale(.4) rotate(-25deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes np-ring{0%{transform:scale(.9);opacity:.7}100%{transform:scale(1.35);opacity:0}}
+
+/* متن */
+.np-body{min-width:0;display:grid;gap:5px}
+.np-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.np-tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;background:var(--c-soft);color:var(--c-ink);font-size:.72rem;font-weight:800;white-space:nowrap}
+.np-time{color:#94a3b8;font-size:.72rem;font-weight:600;white-space:nowrap}
+.np-title{font-size:.98rem;font-weight:800;color:#0f172a;line-height:1.6}
+.np-text{font-size:.86rem;color:#475569;line-height:1.8}
+
+/* دکمه‌ها */
+.np-act{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.np-btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:12px;border:0;font:inherit;font-size:.84rem;font-weight:800;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 10px 18px -12px var(--c2);transition:transform .2s cubic-bezier(.2,.8,.25,1),box-shadow .25s}
+.np-btn::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.4) 50%,transparent 70%);transform:translateX(120%);transition:transform .7s cubic-bezier(.2,.8,.25,1)}
+.np-btn:hover{transform:translateY(-2px);box-shadow:0 16px 24px -12px var(--c2)}
+.np-btn:hover::before{transform:translateX(-120%)}
+.np-btn:active{transform:scale(.96)}
+.np-btn:focus-visible{outline:3px solid color-mix(in srgb,var(--c1) 40%,transparent);outline-offset:2px}
+.np-arr{display:inline-grid;place-items:center;width:16px;height:16px;transition:transform .3s cubic-bezier(.2,.8,.25,1)}
+.np-arr svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.np-btn:hover .np-arr{transform:translateX(-3px)}
+.np-btn.g{background:#fff;color:#334155;border:1px solid #dbe4ef;box-shadow:none}
+.np-btn.g::before{background:linear-gradient(115deg,transparent 30%,rgba(51,65,85,.08) 50%,transparent 70%)}
+.np-btn.g:hover{background:#f8fafc;border-color:#b8c7d9;color:#0f172a;box-shadow:0 8px 16px -12px rgba(15,23,42,.4)}
+.np-btn.g:hover .np-arr{transform:rotate(-20deg)}
+
+/* بستن */
+.np-x{width:30px;height:30px;border-radius:10px;border:0;background:transparent;color:#94a3b8;display:grid;place-items:center;cursor:pointer;transition:background .2s,color .2s,transform .35s cubic-bezier(.34,1.56,.64,1)}
+.np-x svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.np-x:hover{background:#fef2f2;color:#dc2626;transform:rotate(90deg)}
+
+/* نوار پیشرفت زمان */
+.np-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--c1),var(--c2));transform-origin:right center;animation:np-timer var(--dur,9000ms) linear both}
+@keyframes np-timer{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.np-card:hover .np-bar{animation-play-state:paused}
+
+/* موبایل */
+@media (max-width:560px){
+  .np-stack{top:12px;left:12px;width:calc(100vw - 24px)}
+  .np-card{padding:14px;gap:12px;border-radius:18px}
+  .np-ic{width:42px;height:42px;border-radius:14px}
+  .np-btn{height:40px;flex:1 1 auto;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){
+  .np-card,.np-card.out,.np-ic svg,.np-ic::after,.np-bar{animation:none!important}
+}

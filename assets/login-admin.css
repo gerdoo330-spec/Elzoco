@@ -1,0 +1,107 @@
+/* ===================================================================
+   صفحه‌ی ورود مدیران (نسخه‌ی ۲): برچسب روی خط بالایی فیلد، آیکون‌های راست،
+   چشم رمز در سمت چپ، و انیمیشن ورود متن از راست به چپ
+   =================================================================== */
+:root{--lg-navy:#0b2343;--lg-navy2:#1d4e89;--lg-teal:#14b8a6;--lg-teal2:#0f9d8a;--lg-gold:#e8a317;--lg-ink:#0f172a;--lg-muted:#64748b;--lg-ease:cubic-bezier(.2,.8,.25,1);--lg-spring:cubic-bezier(.34,1.56,.64,1)}
+*{box-sizing:border-box}
+body.lg{margin:0;min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px 16px;font-family:"Vazirmatn",Tahoma,system-ui,sans-serif;color:var(--lg-ink);background:var(--lg-navy);overflow-x:hidden;position:relative;direction:rtl}
+
+/* پس‌زمینه‌ی متحرک */
+.lg-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:radial-gradient(1200px 700px at 85% -10%,#1d4e89 0%,transparent 60%),radial-gradient(900px 600px at -10% 110%,#0f9d8a33 0%,transparent 60%),linear-gradient(160deg,#0b2343,#071a33)}
+.lg-orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;will-change:transform}
+.lg-orb.a{width:420px;height:420px;background:#14b8a6;top:-120px;left:-100px;animation:lg-drift 16s ease-in-out infinite}
+.lg-orb.b{width:360px;height:360px;background:#e8a317;bottom:-140px;right:-80px;opacity:.35;animation:lg-drift 19s ease-in-out infinite reverse}
+.lg-orb.c{width:260px;height:260px;background:#3b82f6;top:40%;left:55%;opacity:.25;animation:lg-drift 22s ease-in-out infinite}
+.lg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%);mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%)}
+@keyframes lg-drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-30px) scale(1.08)}}
+
+/* کارت: overflow:hidden تا نوار رنگی بالا دقیقاً با گوشه‌ی گرد هم‌تراز شود */
+.lg-card{position:relative;z-index:1;width:min(440px,100%);background:#fff;border-radius:26px;padding:44px 36px 30px;overflow:hidden;box-shadow:0 40px 80px -30px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.08);animation:lg-in .8s var(--lg-ease) both}
+.lg-card::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--lg-teal),var(--lg-gold),var(--lg-teal));background-size:200% 100%;animation:lg-bar 4s linear infinite}
+@keyframes lg-bar{to{background-position:200% 0}}
+@keyframes lg-in{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
+
+.lg-brand{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:28px}
+.lg-coin{width:78px;height:78px;margin-bottom:14px;animation:lg-bob 4.2s ease-in-out infinite;filter:drop-shadow(0 14px 18px rgba(11,35,67,.35))}
+.lg-coin svg{width:100%;height:100%;display:block}
+@keyframes lg-bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-6px) rotate(2deg)}}
+.lg-brand h1{margin:0;font-size:1.5rem;font-weight:900;color:var(--lg-navy);letter-spacing:-.01em}
+.lg-brand p{margin:6px 0 0;color:var(--lg-muted);font-size:.92rem;font-weight:600}
+.lg-chip{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:5px 12px;border-radius:999px;background:#ecfdf8;color:#0b6e63;font-size:.78rem;font-weight:700;border:1px solid #b7eee3}
+.lg-chip i{width:7px;height:7px;border-radius:50%;background:var(--lg-teal);animation:lg-ping 2s infinite}
+@keyframes lg-ping{0%{box-shadow:0 0 0 0 rgba(20,184,166,.6)}70%{box-shadow:0 0 0 8px rgba(20,184,166,0)}100%{box-shadow:0 0 0 0 rgba(20,184,166,0)}}
+
+/* ----- فیلد: آیکون راست، برچسب روی خط بالایی ----- */
+.lg-field{position:relative;margin-bottom:20px}
+.lg-field input{display:block;width:100%;height:58px;margin:0;padding:0 50px 0 18px;border:1.5px solid #d6e1ee;border-radius:16px;background:#fbfdff;font:inherit;font-size:16px;color:var(--lg-ink);outline:none;direction:ltr;text-align:left;transition:border-color .25s,box-shadow .3s,background .25s}
+.lg-field.is-pass input{padding-left:50px;padding-right:50px}
+.lg-field input:hover{border-color:#b3c6dc}
+.lg-field input:focus{border-color:var(--lg-teal);background:#fff;box-shadow:0 0 0 5px rgba(20,184,166,.15)}
+.lg-field.has-err input{border-color:#f87171;background:#fff7f7}
+
+/* برچسب: در حالت عادی وسط فیلد، هنگام فوکوس یا پر بودن روی خط بالایی */
+.lg-field label{position:absolute;right:50px;top:50%;transform:translateY(-50%);padding:0 6px;background:transparent;color:var(--lg-muted);font-weight:700;font-size:.95rem;line-height:1;pointer-events:none;white-space:nowrap;transition:top .42s var(--lg-spring),transform .42s var(--lg-spring),font-size .3s var(--lg-ease),color .25s,background .25s}
+.lg-field input:focus + label,
+.lg-field.filled label{top:0;transform:translateY(-50%) scale(.84);background:#fff;color:var(--lg-navy2);font-size:.95rem}
+.lg-field input:focus + label{color:var(--lg-teal2)}
+.lg-field.has-err label{color:#dc2626}
+.lg-field.has-err input:focus + label{color:#dc2626}
+/* کمی ضربه‌ی نرم وقتی برچسب به خط می‌رسد */
+.lg-field input:focus + label{animation:lg-label-pop .5s var(--lg-spring)}
+@keyframes lg-label-pop{0%{transform:translateY(-50%) scale(1)}45%{transform:translateY(-50%) scale(.92)}100%{transform:translateY(-50%) scale(.84)}}
+
+/* آیکون‌ها: همیشه سمت راست */
+.lg-ico{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:#94a3b8;pointer-events:none;transition:color .25s,transform .4s var(--lg-spring)}
+.lg-ico svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lg-field:focus-within .lg-ico{color:var(--lg-teal);transform:translateY(-50%) scale(1.14) rotate(-6deg)}
+
+/* دکمه‌ی چشم: سمت چپ، جدا از آیکون قفل */
+.lg-eye{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:34px;height:34px;padding:0;border:0;border-radius:50%;background:#eef4fb;color:var(--lg-navy2);cursor:pointer;display:grid;place-items:center;transition:background .25s,color .25s,transform .3s var(--lg-spring)}
+.lg-eye:hover{background:#dbe9f7;transform:translateY(-50%) scale(1.08)}
+.lg-eye:active{transform:translateY(-50%) scale(.9)}
+.lg-eye:focus-visible{outline:3px solid rgba(20,184,166,.45);outline-offset:2px}
+.lg-eye svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .35s var(--lg-spring)}
+.lg-eye[aria-pressed="true"]{background:linear-gradient(135deg,var(--lg-teal),var(--lg-teal2));color:#fff;box-shadow:0 8px 16px -8px rgba(15,157,138,.9)}
+.lg-eye[aria-pressed="true"] svg{transform:scale(1.08)}
+
+/* خط ورود متن: هنگام تایپ، نوار درخشان از چپ به راست روی کادر می‌لغزد */
+.lg-field::after{content:"";position:absolute;right:14px;left:14px;bottom:-2px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--lg-teal),var(--lg-gold));transform:scaleX(0);transform-origin:left center;pointer-events:none;opacity:0}
+.lg-field.typed::after{animation:lg-sweep .6s var(--lg-ease)}
+@keyframes lg-sweep{0%{transform:scaleX(0);opacity:1;transform-origin:left}50%{transform:scaleX(1);opacity:1;transform-origin:left}51%{transform-origin:right}100%{transform:scaleX(0);opacity:0;transform-origin:right}}
+
+/* ----- دکمه‌ی ورود ----- */
+.lg-submit{position:relative;overflow:hidden;width:100%;height:56px;margin-top:8px;border:0;border-radius:16px;font:inherit;font-size:1.02rem;font-weight:800;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--lg-teal),var(--lg-teal2));box-shadow:0 14px 26px -14px rgba(15,157,138,.9);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .2s var(--lg-ease),box-shadow .3s}
+.lg-submit::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.4) 50%,transparent 70%);transform:translateX(120%);transition:transform .8s var(--lg-ease)}
+.lg-submit:hover{transform:translateY(-2px);box-shadow:0 20px 32px -14px rgba(15,157,138,.95)}
+.lg-submit:hover::before{transform:translateX(-120%)}
+.lg-submit:active{transform:scale(.98)}
+.lg-submit:focus-visible{outline:3px solid rgba(20,184,166,.5);outline-offset:3px}
+.lg-submit[disabled]{opacity:.75;cursor:progress;transform:none}
+.lg-submit .arr{width:18px;height:18px;transition:transform .35s var(--lg-ease)}
+.lg-submit:hover .arr{transform:translateX(-4px)}
+.lg-submit .arr svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+
+/* پیام خطا */
+#msg{min-height:0}
+#msg .alert{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:12px 14px;border-radius:14px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-weight:700;font-size:.9rem;animation:lg-shake .5s var(--lg-ease)}
+#msg .alert::before{content:"";width:22px;height:22px;flex:0 0 22px;border-radius:50%;background:#fee2e2 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b91c1c' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M12 8v5M12 16.5v.01'/%3E%3C/svg%3E") center/14px no-repeat}
+@keyframes lg-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+.lg-foot{margin-top:22px;padding-top:16px;border-top:1px dashed #e2eaf3;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--lg-muted);font-size:.8rem;font-weight:600}
+.lg-foot svg{width:16px;height:16px;fill:none;stroke:var(--lg-navy2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.lg-card.is-done{animation:lg-out .6s var(--lg-ease) forwards}
+@keyframes lg-out{to{opacity:0;transform:translateY(-16px) scale(.97)}}
+
+/* موبایل */
+@media (max-width:480px){
+  body.lg{padding:14px 12px}
+  .lg-card{padding:36px 22px 24px;border-radius:22px}
+  .lg-coin{width:66px;height:66px}
+  .lg-brand h1{font-size:1.3rem}
+  .lg-field input{height:56px;font-size:16px}
+  .lg-submit{height:54px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition-duration:.01ms!important}
+}

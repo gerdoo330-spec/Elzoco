@@ -1,0 +1,126 @@
+/* پرونده جامع پرسنلی — پوسته‌ی مستقل، سازگار با RTL و موبایل */
+.employee-dossier{display:grid;gap:17px;color:#18324f;min-width:0}
+.employee-dossier-header{display:flex;align-items:center;gap:13px;padding:2px 0 15px;border-bottom:1px solid #e7edf4;min-width:0}
+.employee-dossier-avatar{width:50px;height:50px;flex:0 0 50px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#fed7aa,#f97316);color:#7c2d12;font-size:1.25rem;font-weight:950;box-shadow:0 10px 22px -14px rgba(234,88,12,.85)}
+.employee-dossier-heading{flex:1;min-width:0}
+.employee-dossier-title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.employee-dossier-title-row h2{margin:0;font-size:1.15rem;font-weight:950;color:#102e50}
+.employee-dossier-heading p{margin:5px 0 0;color:#64748b;font-size:.85rem;display:flex;gap:12px;flex-wrap:wrap}
+.employee-dossier-heading p b{color:#193b5e}
+.employee-dossier-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.employee-dossier-overview>div{display:grid;gap:5px;min-width:0;padding:12px 14px;border:1px solid #e2eaf2;border-radius:15px;background:linear-gradient(145deg,#fff,#f8fbfe)}
+.employee-dossier-overview small{color:#6b7f95;font-size:.75rem;font-weight:750}
+.employee-dossier-overview b{color:#14395f;font-size:.96rem;font-weight:950;overflow-wrap:anywhere}
+.employee-dossier-tabs{display:flex;gap:7px;align-items:center;padding:6px;overflow-x:auto;border:1px solid #e1eaf3;border-radius:15px;background:#f6f9fc;scrollbar-width:thin;scrollbar-color:#c5d1df transparent}
+.employee-dossier-tabs button{flex:0 0 auto;border:0;border-radius:11px;background:transparent;color:#536b85;padding:10px 14px;font:inherit;font-size:.82rem;font-weight:850;white-space:nowrap;cursor:pointer;transition:background .18s,color .18s,box-shadow .18s}
+.employee-dossier-tabs button:hover{background:#fff;color:#183a5d}
+.employee-dossier-tabs button.on{background:linear-gradient(135deg,#fb923c,#f97316);color:#fff;box-shadow:0 8px 18px -12px rgba(234,88,12,.9)}
+.employee-dossier-pane{display:none;min-width:0;animation:dossierPaneIn .22s ease both}
+.employee-dossier-pane.on{display:block}
+.employee-dossier-pane>h3{margin:0 0 13px;color:#15395e;font-size:1rem;font-weight:950}
+.employee-dossier-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.employee-dossier-grid.compact{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:12px}
+.employee-dossier-kv{display:grid;align-content:start;gap:6px;min-width:0;padding:12px 14px;border:1px solid #e3eaf2;border-radius:14px;background:#fff}
+.employee-dossier-kv small{color:#72849a;font-size:.74rem;font-weight:750}
+.employee-dossier-kv b{font-size:.88rem;color:#183b5f;overflow-wrap:anywhere;line-height:1.8}
+.employee-dossier-note{margin-top:13px;padding:12px 14px;border:1px solid #f5d8bc;border-radius:13px;background:#fff8f1;color:#76502e;font-size:.82rem;line-height:1.95}
+.employee-dossier-bank-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.employee-dossier-bank-card{display:grid;gap:8px;align-content:start;min-width:0;padding:18px;border:1px solid #e1eaf2;border-radius:18px;background:linear-gradient(145deg,#fff,#f8fbff)}
+.employee-dossier-bank-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#fff0e3;color:#c65a16;font-weight:950;font-size:.86rem}
+.employee-dossier-bank-card small{color:#70839a;font-size:.76rem;font-weight:750}
+.employee-dossier-bank-card strong{color:#163b60;font-size:1.02rem;overflow-wrap:anywhere}
+.employee-dossier-bank-card .employee-dossier-sheba{font-size:.9rem;letter-spacing:.04em}
+.employee-dossier-muted{color:#8796a8;font-size:.74rem;line-height:1.8}
+.employee-dossier-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.employee-dossier-kpis>div{display:grid;gap:6px;padding:13px;border:1px solid #e2eaf2;border-radius:15px;background:#f8fbfe;min-width:0}
+.employee-dossier-kpis small{font-size:.74rem;color:#6b7f95;font-weight:750}
+.employee-dossier-kpis b{font-size:.9rem;color:#183d63;overflow-wrap:anywhere}
+.employee-dossier-split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.employee-dossier-subcard{padding:14px;border:1px solid #e2eaf2;border-radius:16px;background:#fff;min-width:0}
+.employee-dossier-subcard h4{margin:0 0 10px;padding-bottom:9px;border-bottom:1px solid #edf1f5;color:#1b3f63;font-size:.86rem}
+.employee-dossier-line{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed #edf1f5;font-size:.78rem;line-height:1.8}
+.employee-dossier-line:last-child{border-bottom:0}
+.employee-dossier-line span{color:#62778e}
+.employee-dossier-line b{color:#1b3e62;white-space:nowrap}
+.employee-dossier-table-wrap{width:100%;overflow-x:auto;border:1px solid #e3eaf2;border-radius:15px;background:#fff;-webkit-overflow-scrolling:touch}
+.employee-dossier-table{width:100%;min-width:720px;border-collapse:separate;border-spacing:0;font-size:.8rem}
+.employee-dossier-table th{padding:11px 12px;text-align:right;white-space:nowrap;background:#f5f8fc;color:#506780;border-bottom:1px solid #e4ebf2;font-size:.74rem;font-weight:900}
+.employee-dossier-table td{padding:11px 12px;vertical-align:top;text-align:right;color:#2c4967;border-bottom:1px solid #edf1f5;line-height:1.85}
+.employee-dossier-table tr:last-child td{border-bottom:0}
+.employee-dossier-table td small{display:block;color:#7b8da1;font-size:.72rem}
+.employee-dossier-table td .badge{white-space:nowrap}
+.employee-dossier-section-block{display:grid;gap:10px;margin-bottom:18px}
+.employee-dossier-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.employee-dossier-section-head h3{margin:0;color:#193c60;font-size:.9rem;font-weight:950}
+.employee-dossier-section-head>span{font-size:.76rem;color:#7b8da1}
+.employee-dossier-request-card{display:grid;gap:10px;margin-bottom:12px;padding:15px;border:1px solid #e2eaf2;border-radius:17px;background:linear-gradient(145deg,#fff,#fbfdff)}
+.employee-dossier-request-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.employee-dossier-request-head>div{display:grid;gap:4px;min-width:0}
+.employee-dossier-request-head b{color:#173b60;font-size:.92rem}
+.employee-dossier-request-head small{color:#7b8da1;font-size:.74rem}
+.employee-dossier-reason{max-width:420px;overflow-wrap:anywhere;line-height:1.9}
+.employee-dossier-reason p{margin:5px 0 0;white-space:pre-wrap;color:#4b6179}
+.employee-dossier-slip-preview{margin-top:14px;min-width:0}
+.employee-dossier-slip-preview .slip{margin:0 auto}
+.employee-dossier-history-list{display:grid;gap:10px}
+.employee-dossier-loading{min-height:220px;display:grid;align-content:center;justify-items:center;gap:10px;color:#526b85;text-align:center}
+.employee-dossier-loading small{color:#8a9aad}
+.employee-dossier-spinner{width:35px;height:35px;border:3px solid #ffedd5;border-top-color:#f97316;border-radius:50%;animation:dossierSpin .8s linear infinite}
+@keyframes dossierSpin{to{transform:rotate(360deg)}}
+@keyframes dossierPaneIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media(max-width:900px){.employee-dossier-overview,.employee-dossier-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.employee-dossier-grid,.employee-dossier-grid.compact{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.employee-dossier{gap:13px}.employee-dossier-header{align-items:flex-start;flex-wrap:wrap}.employee-dossier-header>.btn{margin-inline-start:auto}.employee-dossier-title-row h2{font-size:1rem}.employee-dossier-overview{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.employee-dossier-overview>div{padding:10px}.employee-dossier-overview b{font-size:.85rem}.employee-dossier-grid,.employee-dossier-grid.compact,.employee-dossier-bank-grid,.employee-dossier-kpis,.employee-dossier-split{grid-template-columns:minmax(0,1fr)}.employee-dossier-kv{padding:10px 12px}.employee-dossier-request-head{flex-direction:column}.employee-dossier-table{min-width:690px}}
+@media(prefers-reduced-motion:reduce){.employee-dossier-pane{animation:none}.employee-dossier-spinner{animation:none}}
+
+
+.employee-dossier-leave-balance{display:grid;gap:13px;margin-bottom:16px;padding:16px;border:1px solid #fed7aa;border-radius:18px;background:linear-gradient(135deg,#fff9f3,#fff 68%)}
+.employee-dossier-leave-balance-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.employee-dossier-leave-balance-head>div{display:grid;gap:4px}
+.employee-dossier-leave-balance-head>div>b{color:#963b12;font-size:.94rem}
+.employee-dossier-leave-balance-head small,.employee-dossier-leave-balance-date{font-size:.74rem;color:#8a705a;line-height:1.8}
+.employee-dossier-leave-balance-date{padding:5px 9px;background:#fff0e3;border-radius:9px}
+.employee-dossier-leave-balance-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.employee-dossier-leave-balance-grid>div{display:grid;gap:5px;padding:12px;border:1px solid #f0e1d5;border-radius:13px;background:#fff;min-width:0}
+.employee-dossier-leave-balance-grid small{font-size:.72rem;color:#7a6a5b}
+.employee-dossier-leave-balance-grid b{font-size:1rem;color:#29445f;overflow-wrap:anywhere}
+.employee-dossier-leave-balance-grid .is-primary{border-color:#fb923c;background:#fff5ec}
+.employee-dossier-leave-balance-grid .is-primary b{font-size:1.16rem;color:#c2410c}
+.employee-dossier-leave-balance-grid em{font-style:normal;font-size:.68rem;color:#8c5a35;line-height:1.7}
+.employee-dossier-leave-balance-foot{font-size:.72rem;color:#8a796a;line-height:1.8}
+@media(max-width:620px){.employee-dossier-leave-balance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* نمایش نسخه‌های آرشیوی هر بارگذاری اکسل */
+.employee-import-snapshot-details{margin-top:12px;border:1px solid var(--line,#e5e7eb);border-radius:13px;background:rgba(148,163,184,.045);padding:10px 12px}
+.employee-import-snapshot-details>summary{cursor:pointer;color:var(--brand,#ea580c);font-weight:700;font-size:.88rem;list-style:none}
+.employee-import-snapshot-details>summary::-webkit-details-marker{display:none}
+.employee-import-snapshot-details>summary:after{content:'＋';float:left;font-size:1rem}
+.employee-import-snapshot-details[open]>summary:after{content:'−'}
+.employee-import-snapshot-details h4{font-size:.86rem;margin:14px 0 8px}
+.employee-import-snapshot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.employee-import-snapshot-grid .employee-dossier-kv{min-width:0}
+@media(max-width:640px){.employee-import-snapshot-grid{grid-template-columns:1fr}}
+
+/* ویرایش امن اطلاعات پرونده پرسنلی */
+.employee-dossier-header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-inline-start:auto}
+.employee-profile-edit{display:grid;gap:16px;padding-bottom:6px}
+.dossier-edit-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid #e6edf4}
+.dossier-edit-header h2{margin:0;color:#15395e;font-size:1.12rem;font-weight:950}
+.dossier-edit-header p{margin:6px 0 0;color:#73859a;font-size:.82rem}
+.dossier-edit-notice{display:grid;gap:5px;padding:13px 15px;border:1px solid #fed7aa;border-radius:14px;background:linear-gradient(135deg,#fff7ed,#fff)}
+.dossier-edit-notice b{color:#9a3412;font-size:.86rem}
+.dossier-edit-notice span,.dossier-edit-notice small{color:#805b40;font-size:.78rem;line-height:1.9}
+.dossier-edit-notice small{color:#8b6b53}
+.dossier-edit-section{display:grid;gap:12px;padding:15px;border:1px solid #e2eaf2;border-radius:17px;background:#fbfdff}
+.dossier-edit-section h3{margin:0;color:#173b60;font-size:.9rem;font-weight:950}
+.dossier-edit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.dossier-edit-field{display:grid;gap:7px;min-width:0;padding:11px 12px;border:1px solid #e2eaf2;border-radius:13px;background:#fff}
+.dossier-edit-field>label:first-child{color:#536b83;font-size:.76rem;font-weight:850}
+.dossier-edit-field>input{width:100%;min-width:0;max-width:100%;height:42px;padding:8px 10px;border:1px solid #dbe5ef;border-radius:10px;background:#fff;color:#173b60;font:inherit;font-size:.88rem;outline:none}
+.dossier-edit-field>input:focus{border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.12)}
+.dossier-edit-source{display:flex;align-items:flex-start;gap:7px;color:#7c8da0;font-size:.69rem;line-height:1.7;cursor:pointer}
+.dossier-edit-source input{margin:2px 0 0;accent-color:#ea580c;flex:0 0 auto}
+.dossier-edit-help{color:#8797a8;font-size:.68rem;line-height:1.7}
+.dossier-edit-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:5px}
+@media(max-width:900px){.dossier-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.employee-dossier-header-actions{width:100%;margin-inline-start:0}.employee-dossier-header-actions .btn{flex:1}.dossier-edit-grid{grid-template-columns:minmax(0,1fr)}.dossier-edit-section{padding:11px}.dossier-edit-actions{align-items:stretch}.dossier-edit-actions>.row{width:100%}.dossier-edit-actions>.row .btn{flex:1}}

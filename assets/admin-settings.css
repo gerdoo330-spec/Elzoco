@@ -1,0 +1,331 @@
+/* =====================================================================
+   صفحه مدیران و تنظیمات — طراحی یکپارچه، تمام‌عرض و واکنش‌گرا
+   ===================================================================== */
+.settings-page{--set-navy:#102c50;--set-blue:#285b91;--set-teal:#0f9d8a;--set-gold:#d99a16;--set-line:#e4ebf4;--set-muted:#71829a}
+.settings-page-head{align-items:flex-end;margin-bottom:18px}
+.settings-page-head .muted{margin-top:4px}
+.settings-page-mark{display:inline-flex;align-items:center;gap:8px;padding:8px 13px;border:1px solid #dce8f5;border-radius:999px;background:rgba(255,255,255,.72);color:#516985;font-size:.78rem;font-weight:800}
+.settings-page-mark-dot{width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 0 4px rgba(16,185,129,.12)}
+.settings-role-note{display:flex;align-items:center;gap:16px;padding:18px 22px;margin-bottom:20px;border:1px solid #d8e6f5;border-radius:20px;background:linear-gradient(110deg,#fff 0%,#f5f9ff 64%,#eef8f7 100%);box-shadow:0 12px 28px -25px rgba(11,35,67,.48);position:relative;overflow:hidden}
+.settings-role-note::after{content:"";position:absolute;inset-inline-end:-36px;top:-72px;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,rgba(20,184,166,.11),transparent 68%);pointer-events:none}
+.settings-note-icon,.settings-section-icon,.settings-subhead-icon,.settings-window-icon{display:grid;place-items:center;flex:0 0 auto}
+.settings-note-icon{width:52px;height:52px;border-radius:17px;color:#fff;background:linear-gradient(145deg,#285b91,#102c50);box-shadow:0 9px 20px -12px rgba(16,44,80,.8)}
+.settings-note-icon svg,.settings-section-icon svg,.settings-subhead-icon svg,.settings-window-icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.settings-note-copy{min-width:0;flex:1}
+.settings-eyebrow{display:block;font-size:.72rem;font-weight:800;color:#0f9d8a;letter-spacing:.02em;margin-bottom:3px}
+.settings-note-copy h2{margin:0 0 3px;font-size:1.02rem;color:var(--set-navy)}
+.settings-note-copy p{margin:0;color:#687d98;font-size:.84rem;line-height:1.9}
+.settings-note-tag{position:relative;z-index:1;white-space:nowrap;padding:8px 12px;border-radius:12px;background:#e8f6f3;color:#08796e;border:1px solid #c8ece4;font-size:.76rem;font-weight:800}
+.settings-panel{background:#fff;border:1px solid var(--set-line);border-radius:22px;padding:22px;box-shadow:0 14px 36px -30px rgba(11,35,67,.5)}
+.settings-accounts-panel{margin-bottom:4px}
+.settings-section-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.settings-section-icon{width:44px;height:44px;border-radius:14px;color:#0b8176;background:linear-gradient(145deg,#e9fbf7,#d9f4ed);border:1px solid #c9eee4}
+.settings-section-head h2{margin:0;color:var(--set-navy);font-size:1.08rem}
+.settings-section-head p{margin:3px 0 0;color:var(--set-muted);font-size:.82rem}
+.settings-form-divider{height:1px;background:linear-gradient(90deg,transparent,#dfe8f2 12%,#dfe8f2 88%,transparent);margin:22px 0 18px}
+.settings-account-form-head{margin-bottom:14px}
+.settings-account-form-head .ico{width:40px;height:40px;border-radius:13px}
+.settings-account-form{gap:14px!important}
+.settings-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 16px;align-items:start}
+.settings-form-grid>label,.settings-personnel-field{min-width:0}
+.settings-personnel-field{display:flex;flex-direction:column;gap:7px;grid-column:span 2}
+.settings-personnel-picker{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.settings-personnel-picker #adEmpName{flex:1;min-width:180px}
+.settings-password-field small{font-size:.75rem;color:#8090a6;font-weight:500}
+.settings-form-actions{margin-top:2px}
+
+/* حساب‌ها: چیدمان چندستونه و فشرده */
+#adminList{min-width:0}
+#adminList .adm-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:14px;padding:2px}
+#adminList .adm{min-width:0;padding:15px 16px;border-radius:18px;gap:12px;box-shadow:0 10px 28px -24px rgba(11,35,67,.45)}
+#adminList .adm-top{grid-template-columns:42px minmax(0,1fr) auto;gap:10px;align-items:center}
+#adminList .adm-av{width:42px;height:42px;border-radius:13px}
+#adminList .adm-id b{font-size:.92rem}
+#adminList .adm-id span{font-size:.77rem}
+#adminList .adm-role{grid-column:auto;justify-self:end;font-size:.72rem;padding:4px 9px}
+#adminList .adm-meta{padding:9px 11px;gap:8px;border:1px solid #edf2f8;background:#f7faff}
+#adminList .adm-meta small{font-size:.7rem}
+#adminList .adm-meta span{font-size:.86rem}
+#adminList .adm-a{gap:8px}
+#adminList .adm-a .btn{min-width:0;min-height:38px;padding:7px 9px;font-size:.79rem}
+#adminList .adm-a .btn .bt{white-space:nowrap}
+
+/* سرفصل‌های بخش‌های تنظیمات */
+.settings-subhead{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:28px 2px 14px}
+.settings-subhead h2{margin:0;color:var(--set-navy);font-size:1.22rem}
+.settings-subhead p{margin:4px 0 0;color:var(--set-muted);font-size:.82rem;line-height:1.8}
+.settings-subhead-icon{width:46px;height:46px;border-radius:15px;background:#eaf2fc;border:1px solid #d9e7f7;color:#285b91}
+.settings-subhead-icon.rules-icon{background:#fff7e7;border-color:#f7e5b8;color:#b77912}
+.settings-subhead-icon.promo-icon{background:#f0edff;border-color:#dfd8ff;color:#6856c7}
+.settings-subhead-icon.approval-icon{background:#e8f8f2;border-color:#cfefe2;color:#16815e}
+.settings-window-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;align-items:stretch}
+.settings-window-card{--window-tone:#285b91;--window-soft:#edf4fd;--window-border:#dce8f7;min-width:0;padding:18px;border-radius:20px;border:1px solid var(--window-border);background:linear-gradient(160deg,#fff 0%,var(--window-soft) 160%);box-shadow:0 12px 28px -26px rgba(11,35,67,.55);display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden;transition:transform .25s ease,box-shadow .25s ease}
+.settings-window-card:hover{transform:translateY(-3px);box-shadow:0 18px 34px -26px rgba(11,35,67,.55)}
+.window-advance{--window-tone:#0f9d8a;--window-soft:#effbf8;--window-border:#d4eee7}
+.window-loan{--window-tone:#9266c7;--window-soft:#f7f3ff;--window-border:#e7def8}
+.settings-window-head{display:flex;align-items:center;gap:11px}
+.settings-window-icon{width:42px;height:42px;border-radius:13px;color:var(--window-tone);background:var(--window-soft);border:1px solid var(--window-border)}
+.settings-window-head h3{margin:0;color:var(--set-navy);font-size:.98rem}
+.settings-window-head span:not(.settings-window-icon){display:block;margin-top:2px;font-size:.73rem;color:var(--set-muted)}
+.settings-window-card>p{margin:0;min-height:46px;color:#6d7d92;font-size:.79rem;line-height:1.85}
+.settings-window-form{gap:12px!important;margin-top:auto}
+.settings-date-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.settings-window-card label{font-size:.78rem;gap:6px}
+.settings-window-card input{width:100%;min-width:0;padding:10px 9px;font-size:.9rem;background:rgba(255,255,255,.85);border-radius:11px}
+.settings-window-actions{display:flex;gap:8px;flex-wrap:wrap}
+.settings-window-actions .btn{flex:1 1 auto;min-height:39px;padding:8px 10px;font-size:.8rem}
+.settings-window-actions .btn.ghost{background:#fff;border:1px solid #e0e8f2}
+.settings-window-status{margin-top:auto;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.75);border:1px dashed var(--window-border);color:#65758c;font-size:.75rem;line-height:1.7;min-height:38px}
+.settings-window-status b{color:var(--window-tone);font-weight:800}
+
+/* قوانین مساعده و وام */
+.settings-rules-form{gap:14px!important}
+.settings-rule-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;align-items:stretch}
+.settings-rule-card{--rule-tone:#0f9d8a;--rule-soft:#effbf8;min-width:0;padding:20px;border:1px solid #d9eee8;border-radius:20px;background:linear-gradient(150deg,#fff,var(--rule-soft));display:grid;gap:13px;box-shadow:0 10px 28px -26px rgba(11,35,67,.5);transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+.settings-rule-card:hover{transform:translateY(-2px);box-shadow:0 16px 30px -25px rgba(11,35,67,.55);border-color:rgba(15,157,138,.35)}
+.rule-loan{--rule-tone:#8d65c4;--rule-soft:#f7f3ff;border-color:#e7def8}
+.settings-rule-head{display:flex;align-items:center;gap:11px;padding-bottom:12px;border-bottom:1px solid rgba(148,163,184,.2)}
+.settings-rule-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:var(--rule-tone);color:#fff;font-size:1.1rem;font-weight:900;box-shadow:0 8px 18px -12px var(--rule-tone)}
+.settings-rule-head h3{margin:0;color:var(--set-navy);font-size:1rem}
+.settings-rule-head p{margin:3px 0 0;color:var(--set-muted);font-size:.76rem}
+.settings-rule-card label{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 9px;align-items:center;font-size:.82rem;color:#34465e}
+.settings-rule-card label input{grid-column:1/-1;width:100%;background:rgba(255,255,255,.88);font-size:.94rem}
+.settings-field-unit{padding:3px 8px;border-radius:7px;color:var(--rule-tone);background:rgba(255,255,255,.85);border:1px solid rgba(148,163,184,.2);font-size:.7rem;font-weight:800}
+.settings-save-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-top:4px}
+.settings-save-row .hint{font-size:.78rem}
+.settings-save-row .btn{min-width:150px}
+
+/* شیوه‌ی اعمال تغییر حقوق */
+.settings-promo-panel,.settings-approval-panel{padding:20px}
+.settings-panel-intro{margin:0 0 14px;color:#6c7d93;font-size:.82rem;line-height:1.95}
+.settings-promo-options{display:grid;gap:10px}
+.promo-choice{position:relative;display:grid!important;grid-template-columns:20px minmax(0,1fr) auto;align-items:start!important;gap:12px!important;padding:15px 16px;border:1.5px solid #e1e8f1;border-radius:16px;background:#fff;cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s}
+.promo-choice:has(input:checked){border-color:#73cdbd;background:linear-gradient(110deg,#f0fcf8,#fff);box-shadow:0 8px 20px -18px rgba(15,157,138,.8)}
+.promo-choice input{width:18px;height:18px;margin:3px 0 0;accent-color:#0f9d8a}
+.promo-choice-copy{display:grid;gap:5px;min-width:0}
+.promo-choice-copy b{color:var(--set-navy);font-size:.9rem}
+.promo-choice-copy small{color:#6c7d93;font-size:.78rem;font-weight:500;line-height:1.95}
+.promo-choice-tag{align-self:center;white-space:nowrap;padding:6px 9px;border-radius:9px;background:#e5f7f1;color:#0b826d;font-size:.68rem;font-weight:800}
+
+/* مسیر تأیید */
+.settings-approval-guide{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;border-radius:14px;background:linear-gradient(100deg,#effaf6,#f5f8fd);border:1px solid #dcefe7}
+.settings-approval-guide>b{color:#176c57;font-size:.8rem}
+.settings-approval-guide>span{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#344d68;font-size:.78rem;font-weight:800}
+.settings-approval-guide i{font-style:normal;color:#0f9d8a}
+.settings-approval-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.approval-kind-card{min-width:0;padding:15px;border:1px solid #e3eaf3;border-radius:17px;background:#fff;display:grid;gap:12px;transition:border-color .2s,box-shadow .2s}
+.approval-kind-head{display:flex;align-items:center;gap:10px}
+.approval-kind-icon{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#edf4fc;color:#285b91;font-size:1rem;font-weight:900}
+.approval-kind-head b{color:var(--set-navy);font-size:.9rem}
+.approval-path{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:9px 10px;border-radius:12px;background:#f6f9fd;min-height:40px}
+.approval-step{padding:4px 8px;border-radius:8px;background:#e8f5f0;color:#176c57;font-size:.68rem;font-weight:800}
+.approval-step.is-off{background:#edf0f4;color:#8995a5;text-decoration:line-through}
+.approval-path-arrow{color:#9baabd;font-size:.75rem;font-weight:900}
+.approval-levels{display:flex;gap:8px;flex-wrap:wrap}
+.approval-toggle{display:inline-flex!important;align-items:center!important;gap:7px!important;padding:7px 10px;border:1px solid #e4eaf2;border-radius:10px;background:#fff;color:#64748b!important;font-size:.73rem!important;font-weight:700!important;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.approval-toggle:has(input:checked){background:#eefaf6;border-color:#bfe8d9;color:#126c53!important}
+.approval-toggle input{width:15px;height:15px;margin:0;accent-color:#0f9d8a}
+
+@media(max-width:1180px){
+  .settings-window-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .settings-window-card:last-child{grid-column:1/-1}
+  #adminList .adm-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr))}
+}
+@media(max-width:900px){
+  .settings-page .settings-window-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .settings-page .settings-rule-grid,.settings-page .settings-approval-grid{grid-template-columns:1fr}
+  .settings-window-card:last-child{grid-column:auto}
+  .settings-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .settings-personnel-field{grid-column:1/-1}
+}
+@media(max-width:640px){
+  .settings-page-head{align-items:flex-start}
+  .settings-page-mark{display:none}
+  .settings-role-note{align-items:flex-start;padding:15px;gap:11px}
+  .settings-note-icon{width:42px;height:42px;border-radius:13px}
+  .settings-note-icon svg{width:20px;height:20px}
+  .settings-note-tag{display:none}
+  .settings-panel{padding:15px;border-radius:18px}
+  .settings-section-head{margin-bottom:12px}
+  .settings-form-grid,.settings-page .settings-window-grid{grid-template-columns:1fr}
+  .settings-personnel-field{grid-column:auto}
+  .settings-personnel-picker{align-items:stretch}
+  .settings-personnel-picker #adEmpName{flex-basis:100%}
+  .settings-subhead{margin-top:22px}
+  .settings-subhead h2{font-size:1.08rem}
+  .settings-subhead-icon{width:40px;height:40px}
+  .settings-window-card:last-child{grid-column:auto}
+  .settings-window-card>p{min-height:0}
+  .settings-date-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .settings-window-actions .btn{width:auto}
+  .settings-rule-card{padding:16px}
+  .settings-save-row{align-items:stretch}
+  .settings-save-row .hint{flex-basis:100%}
+  .settings-save-row .btn{width:100%}
+  .promo-choice{grid-template-columns:20px minmax(0,1fr)}
+  .promo-choice-tag{grid-column:2;justify-self:start}
+  .settings-approval-guide{align-items:flex-start;flex-direction:column}
+  .settings-approval-grid{grid-template-columns:1fr}
+  #adminList .adm-grid{grid-template-columns:1fr;padding:0}
+  #adminList .adm{padding:13px}
+  #adminList .adm-top{grid-template-columns:40px minmax(0,1fr) auto}
+  #adminList .adm-role{font-size:.67rem;padding:4px 7px}
+  #adminList .adm-a .btn{flex:1 1 0}
+}
+@media(max-width:390px){
+  .settings-window-actions{display:grid;grid-template-columns:1fr}
+  .settings-date-grid{grid-template-columns:1fr}
+  #adminList .adm-top{grid-template-columns:38px minmax(0,1fr)}
+  #adminList .adm-role{grid-column:2;justify-self:start}
+  #adminList .adm-a{display:grid;grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .settings-window-card,.promo-choice,.approval-kind-card{transition:none!important}
+  .settings-window-card:hover{transform:none}
+}
+
+/* جزئیات تکمیلی کارت‌های مسیر تأیید */
+.approval-kind-title{display:grid;gap:2px;min-width:0}
+.approval-kind-title small{color:var(--set-muted);font-size:.7rem;font-weight:600}
+.approval-kind-status{margin-inline-start:auto;padding:5px 8px;border-radius:999px;background:#eaf7f1;color:#167253;font-size:.66rem;font-weight:800;white-space:nowrap}
+.approval-kind-status.hr-only{background:#f1f5f9;color:#64748b}
+.approval-path{direction:rtl}
+.approval-levels{direction:rtl}
+.approval-toggle span{line-height:1.5}
+
+.approval-kind-card:hover{transform:translateY(-2px);border-color:#c7e5dc;box-shadow:0 15px 28px -24px rgba(11,35,67,.55)}
+
+
+/* =====================================================================
+   اصلاح چیدمان بخش «افزایش حقوق و تغییر شغل»
+   دو انتخاب هم‌اندازه و مستقل؛ بدون نوارهای افقی کشیده
+   ===================================================================== */
+.settings-promo-panel{
+  padding:22px;
+  background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);
+}
+.settings-promo-panel .settings-panel-intro{
+  margin:0 0 16px;
+  padding:11px 14px;
+  border:1px solid #e2eaf4;
+  border-inline-start:3px solid #8c7ce6;
+  border-radius:12px;
+  background:#f7f8ff;
+  color:#65758d;
+  line-height:1.9;
+}
+.settings-promo-options{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-items:stretch;
+  gap:14px;
+}
+.promo-choice{
+  direction:rtl;
+  display:grid!important;
+  grid-template-columns:22px minmax(0,1fr)!important;
+  grid-template-rows:1fr auto;
+  align-content:stretch!important;
+  align-items:start!important;
+  gap:12px 11px!important;
+  min-width:0;
+  min-height:184px;
+  height:100%;
+  padding:18px!important;
+  border:1px solid #e0e8f2;
+  border-radius:18px;
+  background:#fff;
+  box-shadow:0 10px 24px -22px rgba(16,44,80,.55);
+  transition:border-color .2s ease,background .2s ease,box-shadow .2s ease,transform .2s ease;
+}
+.promo-choice:hover{
+  transform:translateY(-2px);
+  border-color:#b9d9d4;
+  box-shadow:0 16px 28px -23px rgba(16,44,80,.55);
+}
+.promo-choice:has(input:checked){
+  border-color:#5fc4b2;
+  background:linear-gradient(145deg,#effbf7 0%,#fff 74%);
+  box-shadow:0 12px 26px -20px rgba(15,157,138,.48),inset 0 0 0 1px rgba(15,157,138,.08);
+}
+.promo-choice input{
+  grid-column:1;
+  grid-row:1;
+  justify-self:center;
+  align-self:start;
+  width:19px!important;
+  height:19px;
+  margin:3px 0 0!important;
+  accent-color:#0f9d8a;
+  cursor:pointer;
+}
+.promo-choice-mark{display:none!important}
+.promo-choice-copy{
+  grid-column:2;
+  grid-row:1;
+  display:grid;
+  align-content:start;
+  gap:9px;
+  min-width:0;
+  line-height:1.85;
+}
+.promo-choice-copy b{
+  display:block;
+  color:#102c50;
+  font-size:.94rem;
+  line-height:1.7;
+}
+.promo-choice-copy small{
+  display:block;
+  max-width:62ch;
+  color:#687b94;
+  font-size:.8rem;
+  font-weight:500;
+  line-height:2;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.promo-choice-tag{
+  grid-column:2;
+  grid-row:2;
+  justify-self:start;
+  align-self:end;
+  max-width:100%;
+  white-space:normal;
+  margin-top:8px;
+  padding:6px 10px;
+  border-radius:9px;
+  border:1px solid #d5eee6;
+  background:#eaf8f3;
+  color:#0b806b;
+  font-size:.7rem;
+  font-weight:800;
+  line-height:1.6;
+}
+.promo-choice:nth-child(2) .promo-choice-tag{
+  border-color:#e1e8f2;
+  background:#f1f5fa;
+  color:#59708c;
+}
+.settings-promo-panel #promoModeForm{gap:16px!important}
+.settings-promo-panel .settings-save-row{
+  padding-top:14px;
+  border-top:1px solid #edf1f6;
+}
+@media(max-width:980px){
+  .settings-promo-options{grid-template-columns:minmax(0,1fr)}
+  .promo-choice{min-height:0;grid-template-rows:auto auto}
+  .promo-choice-copy small{max-width:none}
+}
+@media(max-width:640px){
+  .settings-promo-panel{padding:14px}
+  .settings-promo-panel .settings-panel-intro{font-size:.78rem;padding:10px 11px}
+  .promo-choice{padding:14px!important;border-radius:15px;gap:10px!important}
+  .promo-choice-copy b{font-size:.88rem}
+  .promo-choice-copy small{font-size:.77rem;line-height:1.9}
+  .promo-choice-tag{font-size:.66rem;margin-top:4px}
+}
+@media(prefers-reduced-motion:reduce){
+  .promo-choice{transition:none!important}
+  .promo-choice:hover{transform:none}
+}

@@ -1,0 +1,292 @@
+/* ===================================================================
+   سیستم طراحی یکپارچه‌ی پنل مدیریت
+   دکمه‌ها، فیلدها، لیست‌های کشویی، نشان‌ها، کارت‌ها و انیمیشن‌ها
+   این فایل بعد از استایل‌های صفحه بارگذاری می‌شود و آن‌ها را یکدست می‌کند.
+   =================================================================== */
+:root{
+  --ui-teal:#14b8a6; --ui-teal2:#0f9d8a; --ui-navy:#0b2343; --ui-navy2:#1d4e89;
+  --ui-line:#dbe5f1; --ui-line2:#e8eef7; --ui-muted:#64748b; --ui-text:#0f172a;
+  --ui-danger:#dc2626; --ui-warn:#d97706; --ui-ok:#16a34a; --ui-info:#2563eb;
+  --ui-ease:cubic-bezier(.2,.8,.25,1);
+  --ui-r:12px; --ui-shadow:0 10px 24px -18px rgba(11,35,67,.55);
+}
+
+/* ---------- دکمه‌ها ---------- */
+.btn{
+  position:relative;overflow:hidden;isolation:isolate;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:42px;padding:9px 18px;border-radius:var(--ui-r);border:1px solid transparent;
+  font:inherit;font-size:.9rem;font-weight:700;letter-spacing:.01em;line-height:1.2;white-space:nowrap;
+  color:#fff;background:linear-gradient(135deg,var(--ui-teal),var(--ui-teal2));
+  box-shadow:0 10px 20px -12px rgba(15,157,138,.85);
+  cursor:pointer;text-decoration:none;user-select:none;
+  transition:transform .2s var(--ui-ease),box-shadow .25s var(--ui-ease),background .25s,color .2s,border-color .2s;
+}
+.btn::before{ /* درخشش هنگام هاور */
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);
+  transform:translateX(-120%);transition:transform .7s var(--ui-ease);
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 16px 28px -14px rgba(15,157,138,.9)}
+.btn:hover::before{transform:translateX(120%)}
+.btn:active{transform:translateY(0) scale(.97);transition-duration:.08s}
+.btn:focus-visible{outline:3px solid rgba(20,184,166,.45);outline-offset:3px}
+.btn[disabled],.btn.is-busy{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.is-busy{pointer-events:none}
+.btn.is-busy::after{content:"";width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:ui-spin .7s linear infinite}
+
+.btn.ghost{background:#fff;color:var(--ui-navy);border-color:#cfdcec;box-shadow:0 2px 6px -4px rgba(11,35,67,.35)}
+.btn.ghost::before{background:linear-gradient(115deg,transparent 30%,rgba(29,78,137,.08) 50%,transparent 70%)}
+.btn.ghost:hover{background:#f4f8ff;border-color:#9fb8d6;color:var(--ui-navy2);box-shadow:0 12px 22px -14px rgba(29,78,137,.5)}
+
+.btn.primary,.btn.navy{background:linear-gradient(135deg,var(--ui-navy2),var(--ui-navy));box-shadow:0 10px 20px -12px rgba(11,35,67,.85)}
+.btn.primary:hover,.btn.navy:hover{box-shadow:0 16px 28px -14px rgba(11,35,67,.9)}
+
+.btn.danger{background:linear-gradient(135deg,#f87171,var(--ui-danger));box-shadow:0 10px 20px -12px rgba(220,38,38,.8)}
+.btn.danger:hover{box-shadow:0 16px 28px -14px rgba(220,38,38,.9)}
+.btn.danger.ghost{background:#fff;color:var(--ui-danger);border-color:#f3c3c3;box-shadow:none}
+.btn.danger.ghost:hover{background:#fef2f2;border-color:#ef9a9a;color:#b91c1c}
+
+.btn.sm{min-height:34px;padding:6px 12px;font-size:.82rem;border-radius:10px;gap:6px}
+.btn.lg{min-height:50px;padding:12px 26px;font-size:1rem;border-radius:14px}
+.btn.icon-only{padding:0;width:42px}
+.btn.sm.icon-only{width:34px}
+
+/* آیکون دکمه */
+.btn .bi{width:18px;height:18px;flex:0 0 18px;display:inline-grid;place-items:center;transition:transform .35s var(--ui-ease)}
+.btn.sm .bi{width:15px;height:15px;flex-basis:15px}
+.btn .bi svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+.btn:hover .bi{transform:translateY(-1px) rotate(-8deg) scale(1.08)}
+.btn:hover .bi svg{animation:ui-wiggle .55s var(--ui-ease)}
+.btn.danger:hover .bi svg{animation-name:ui-shake}
+
+/* ---------- فیلدها و لیست‌های کشویی ---------- */
+input[type=text],input[type=search],input[type=number],input[type=password],input[type=date],input[type=email],input[type=tel],input[type=url],input:not([type]),textarea,select{
+  font:inherit;font-size:.92rem;color:var(--ui-text);
+  background:#fff;border:1.5px solid #d3dfed;border-radius:var(--ui-r);
+  padding:10px 14px;min-height:42px;outline:none;max-width:100%;
+  transition:border-color .2s,box-shadow .25s,background .2s;
+}
+input:hover,textarea:hover,select:hover{border-color:#b5c7de}
+input:focus,textarea:focus,select:focus{border-color:var(--ui-teal);box-shadow:0 0 0 4px rgba(20,184,166,.16);background:#fcfffe}
+input::placeholder,textarea::placeholder{color:#94a3b8}
+textarea{min-height:90px;line-height:1.8}
+
+/* select بومی: فلش سفارشی و حالت یکدست */
+select:not(.cs-native){
+  appearance:none;-webkit-appearance:none;padding-inline-end:40px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231d4e89' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:left 12px center;background-size:16px;
+}
+
+/* لیست کشویی متحرک (جایگزین بصری select) */
+.cs{position:relative;display:inline-block;min-width:170px;max-width:100%;vertical-align:middle}
+.cs-btn{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:42px;padding:9px 12px 9px 14px;font:inherit;font-size:.92rem;font-weight:600;color:var(--ui-text);
+  background:#fff;border:1.5px solid #d3dfed;border-radius:var(--ui-r);cursor:pointer;text-align:start;
+  transition:border-color .2s,box-shadow .25s,transform .15s var(--ui-ease);
+}
+.cs-btn:hover{border-color:#9fb8d6;transform:translateY(-1px)}
+.cs-btn:active{transform:scale(.98)}
+.cs.open .cs-btn,.cs-btn:focus-visible{outline:none;border-color:var(--ui-teal);box-shadow:0 0 0 4px rgba(20,184,166,.16)}
+.cs-val{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cs-chev{width:18px;height:18px;flex:0 0 18px;color:var(--ui-navy2);transition:transform .35s var(--ui-ease)}
+.cs-chev svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.cs.open .cs-chev{transform:rotate(180deg)}
+.cs-list{
+  position:fixed;z-index:9999;margin:0;padding:6px;list-style:none;overflow:auto;
+  background:#fff;border:1px solid #e1eaf5;border-radius:16px;box-shadow:0 24px 50px -18px rgba(11,35,67,.45);
+  visibility:hidden;opacity:0;transform:translateY(-8px) scale(.97);transform-origin:top center;
+  transition:opacity .22s var(--ui-ease),transform .28s var(--ui-ease),visibility 0s .28s;
+}
+.cs-list.open{visibility:visible;opacity:1;transform:none;transition:opacity .22s var(--ui-ease),transform .28s var(--ui-ease),visibility 0s}
+.cs-list li{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;cursor:pointer;
+  font-size:.9rem;font-weight:600;color:#334155;transition:background .15s,color .15s,padding .2s var(--ui-ease);
+  opacity:0;transform:translateX(8px);
+}
+.cs-list.open li{animation:ui-item .35s var(--ui-ease) both;animation-delay:calc(var(--i,0) * 22ms)}
+.cs-list li::after{content:"";width:8px;height:8px;border-radius:50%;background:transparent;margin-inline-start:auto;transition:background .2s,transform .3s var(--ui-ease);transform:scale(.4)}
+.cs-list li:hover,.cs-list li.kb{background:#eef6ff;color:var(--ui-navy)}
+.cs-list li:hover{padding-inline-start:16px}
+.cs-list li.on{background:linear-gradient(90deg,rgba(20,184,166,.14),rgba(20,184,166,.04));color:#0b6e63}
+.cs-list li.on::after{background:var(--ui-teal);transform:scale(1)}
+
+/* ---------- نشان‌ها (وضعیت) ---------- */
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:.78rem;font-weight:700;line-height:1.3;border:1px solid transparent;white-space:nowrap}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.85;animation:ui-pulse 2.4s ease-in-out infinite}
+.badge.b-ok{background:#ecfdf3;color:#15803d;border-color:#bbf7d0}
+.badge.b-bad{background:#fef2f2;color:#b91c1c;border-color:#fecaca}
+.badge.b-warn{background:#fffbeb;color:#b45309;border-color:#fde68a}
+.badge.b-info{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+.badge.b-gray{background:#f1f5f9;color:#475569;border-color:#e2e8f0}
+.badge.b-ok::before,.badge.b-bad::before{animation:none}
+
+/* ---------- کارت‌ها و تیترها ---------- */
+.card{border-radius:18px;border:1px solid var(--ui-line2);box-shadow:0 12px 30px -24px rgba(11,35,67,.45);transition:box-shadow .3s var(--ui-ease)}
+.card:hover{box-shadow:0 18px 36px -24px rgba(11,35,67,.5)}
+.head h1{font-size:1.45rem;letter-spacing:-.01em;color:var(--ui-navy)}
+.head .muted{font-size:.88rem;margin-top:4px}
+
+/* نوار ابزار صفحه */
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.toolbar .cs{min-width:190px}
+
+/* ---------- ورود تدریجی محتوا ---------- */
+.sec.on > *{animation:ui-rise .5s var(--ui-ease) both}
+.sec.on > *:nth-child(2){animation-delay:.05s}
+.sec.on > *:nth-child(3){animation-delay:.1s}
+
+/* ---------- انیمیشن‌ها ---------- */
+@keyframes ui-spin{to{transform:rotate(360deg)}}
+@keyframes ui-wiggle{0%{transform:rotate(0)}25%{transform:rotate(-14deg)}50%{transform:rotate(10deg)}75%{transform:rotate(-5deg)}100%{transform:rotate(0)}}
+@keyframes ui-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
+@keyframes ui-item{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+@keyframes ui-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes ui-pulse{0%,100%{opacity:.85}50%{opacity:.35}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+
+/* ---------- موبایل ---------- */
+@media (max-width:760px){
+  .btn{min-height:44px}
+  .btn.sm{min-height:40px;padding:8px 14px}
+  .btn:hover{transform:none}
+  .toolbar{width:100%}
+  .toolbar > *{flex:1 1 100%;min-width:0}
+  .toolbar .btn{width:100%}
+  .cs{min-width:0;width:100%}
+  .cs-btn{min-height:46px}
+  .cs-list{max-height:52vh}
+  .cs-list li{padding:13px 14px;font-size:.95rem}
+  input,select,textarea{font-size:16px}  /* جلوگیری از زوم خودکار iOS */
+}
+
+/* ===================================================================
+   مدیران و تنظیمات: کارت حساب‌ها و فرم
+   =================================================================== */
+.adm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;padding:4px}
+.adm{position:relative;background:#fff;border:1px solid #e3ebf6;border-radius:20px;padding:16px;display:grid;gap:14px;box-shadow:0 14px 30px -24px rgba(11,35,67,.5);overflow:hidden;
+  animation:ui-rise .5s var(--ui-ease) both;animation-delay:calc(var(--d,0) * 50ms);transition:transform .25s var(--ui-ease),box-shadow .25s}
+.adm::before{content:"";position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--ui-teal),var(--ui-navy2))}
+.adm:hover{transform:translateY(-3px);box-shadow:0 22px 40px -26px rgba(11,35,67,.55)}
+.adm.is-off{background:#fafbfd}
+.adm.is-off::before{background:#cbd5e1}
+.adm.is-off .adm-av{background:linear-gradient(135deg,#94a3b8,#64748b)}
+.adm-top{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
+.adm-av{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.05rem;background:linear-gradient(135deg,var(--ui-teal),var(--ui-teal2));box-shadow:0 10px 20px -12px rgba(15,157,138,.8);transition:transform .35s var(--ui-ease)}
+.adm:hover .adm-av{transform:rotate(-6deg) scale(1.06)}
+.adm-id{min-width:0;display:grid;gap:3px}
+.adm-id b{color:var(--ui-navy);font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adm-id span{font-size:.82rem}
+.adm-role{grid-column:1/-1;justify-self:start}
+.adm-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#f7faff;border-radius:14px;padding:10px 12px}
+.adm-meta small{display:block;color:var(--ui-muted);font-size:.74rem;font-weight:700;margin-bottom:4px}
+.adm-meta span{font-weight:700;color:var(--ui-navy);font-size:.92rem}
+.adm-a{display:flex;gap:8px;flex-wrap:wrap}
+.adm-a .btn{flex:1 1 auto}
+
+/* فرم حساب */
+#adForm{display:grid;gap:16px}
+#adForm label{display:grid;gap:7px;font-weight:700;color:var(--ui-navy);font-size:.9rem}
+#adForm .grid.g2{gap:16px}
+#adForm .row{gap:10px;flex-wrap:wrap}
+#adEmpName{display:flex;align-items:center;gap:8px;min-height:42px;padding:9px 14px;border-radius:var(--ui-r);background:#f4f8ff;border:1.5px dashed #bcd0e8;color:var(--ui-navy);font-weight:700;font-size:.9rem;transition:background .25s,border-color .25s}
+#adEmpName.has{background:#ecfdf8;border-style:solid;border-color:#9de3d6;color:#0b6e63}
+.adm-form-head{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.adm-form-head .ico{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--ui-navy2),var(--ui-navy));color:#fff;box-shadow:0 10px 20px -12px rgba(11,35,67,.8)}
+.adm-form-head .ico svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.adm-form-head b{display:block;color:var(--ui-navy);font-size:1.05rem}
+.adm-form-head small{color:var(--ui-muted);font-size:.84rem}
+
+@media (max-width:760px){
+  .adm-grid{grid-template-columns:minmax(0,1fr);padding:0}
+  .adm{padding:14px;border-radius:18px}
+  .adm-a .btn{width:100%}
+  #adForm .grid.g2{grid-template-columns:minmax(0,1fr)!important}
+}
+
+/* select بومی فقط برای ارسال مقدار است و هرگز دیده نمی‌شود */
+.cs-native{position:absolute!important;inset-inline-start:0!important;top:0!important;width:1px!important;height:1px!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important;clip-path:inset(50%)!important;background:none!important;box-shadow:none!important}
+
+/* شیفت فعلی و درخواستی در کارت مدیر */
+.rq-shifts{display:flex;flex-wrap:wrap;gap:8px}
+.rq-chip.cur,.rq-chip.req{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 12px;font-size:.82rem;font-weight:800;white-space:nowrap}
+.rq-chip.cur{background:#f1f5f9;color:#334155;border:1px solid #e2e8f0}
+.rq-chip.req{background:#fff7e0;color:#8a5a07;border:1px solid #f5d88a}
+.rq-chip small{font-size:.72rem;font-weight:700;opacity:.8}
+
+/* ===== هویت نارنجی سایدبار + جلب توجه درخواست‌های تازه ===== */
+.admin-app .side nav button.on {
+  background: linear-gradient(100deg, rgba(249,115,22,.25), rgba(249,115,22,.075)) !important;
+  color: #fff !important;
+  box-shadow: inset -4px 0 0 #f97316, 0 10px 24px -18px rgba(249,115,22,.75) !important;
+}
+.admin-app .side nav button.on .ico {
+  background: linear-gradient(135deg, #fdba74, #f97316) !important;
+  color: #431407 !important;
+  box-shadow: 0 7px 18px -7px rgba(249,115,22,.9) !important;
+}
+.admin-app .side nav button.has-new {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgba(251,146,60,.48);
+  background: linear-gradient(100deg, rgba(249,115,22,.20), rgba(249,115,22,.055));
+  color: #fff;
+}
+.admin-app .side nav button.has-new .ico {
+  background: linear-gradient(135deg, #fdba74, #f97316);
+  color: #431407;
+  box-shadow: 0 5px 16px -7px rgba(249,115,22,.9);
+}
+.admin-app .side nav button.has-new .cnt {
+  background: #f97316;
+  color: #fff;
+  border-color: rgba(255,255,255,.5);
+}
+.admin-app .side nav button.alert-pulse::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border: 1.5px solid rgba(251,146,60,.95);
+  border-radius: 14px;
+  pointer-events: none;
+  animation: sideRequestWave 1.25s ease-out 3;
+}
+.admin-app .side nav button.alert-pulse .ico {
+  animation: sideRequestIcon 1.05s ease-in-out 3;
+}
+@keyframes sideRequestWave {
+  0% { opacity: .95; transform: scale(.98); }
+  100% { opacity: 0; transform: scale(1.045); }
+}
+@keyframes sideRequestIcon {
+  0%, 100% { transform: translateX(0) scale(1); }
+  25% { transform: translateX(-2px) scale(1.05); }
+  55% { transform: translateX(2px) scale(1.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-app .side nav button.alert-pulse::after,
+  .admin-app .side nav button.alert-pulse .ico { animation: none !important; }
+}
+
+/* پرونده پرسنلی — تاریخچه‌ی رویدادهای نهایی */
+.employee-history-modal{display:grid;gap:16px}
+.employee-history-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.employee-history-title h2{margin:0 0 4px;font-size:1.18rem}
+.employee-history-title p{margin:0;color:var(--muted);font-size:.88rem}
+.employee-history-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.employee-history-summary>div{display:grid;gap:5px;padding:12px 14px;border:1px solid #e4eaf2;border-radius:14px;background:#f8fafc;min-width:0}
+.employee-history-summary small,.employee-history-record small{color:#64748b;font-size:.76rem}
+.employee-history-summary b{font-size:.9rem;overflow-wrap:anywhere}
+.employee-history-list{display:grid;gap:10px}
+.employee-history-record{padding:14px 16px;border:1px solid #dce8e2;border-radius:16px;background:linear-gradient(145deg,#fff,#fbfefc);display:grid;gap:10px}
+.employee-history-record-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.employee-history-record-head>div{display:grid;gap:3px}
+.employee-history-record p{margin:0;color:#334155;line-height:1.9;font-size:.88rem;overflow-wrap:anywhere}
+.employee-history-record footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:8px;border-top:1px solid #edf2f7;color:#64748b;font-size:.78rem}
+.employee-history-record footer b{color:#334155}
+@media(max-width:640px){.employee-history-summary{grid-template-columns:1fr}.employee-history-title{align-items:center}.employee-history-record-head{flex-direction:column}}

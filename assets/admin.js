@@ -155,34 +155,63 @@
   window.openEmployeeCreate = function () {
     openModal(`
       <div class="employee-create-modal" dir="rtl">
-        <div class="employee-create-title"><div><h2>افزودن کارمند جدید</h2><p>ثبت مستقیم در پرونده پرسنلی؛ اطلاعات دستی در ایمپورت بعدی اکسل حفظ می‌شوند.</p></div><span class="employee-create-mark">＋</span></div>
-        <form id="employeeCreateForm">
-          <div class="employee-create-section"><b>اطلاعات هویتی</b><div class="employee-create-grid">
-            <label>نام و نام خانوادگی<input name="name" required maxlength="190" placeholder="نام کامل"></label>
-            <label>کد ملی<input name="national_code" required inputmode="numeric" maxlength="10" placeholder="۱۰ رقم؛ نامشخص: 0000000000"></label>
-            <label>شماره موبایل<input name="phone" inputmode="tel" placeholder="09xxxxxxxxx"></label>
-            <label>تاریخ شروع همکاری (شمسی)<input name="hire_date" required placeholder="۱۴۰۵/۰۵/۲۷"></label>
-          </div></div>
-          <div class="employee-create-section"><b>کد پرسنلی مطابق اکسل</b><div class="employee-create-grid">
-            <label>سه رقم انتهایی کد (ستون F)<input name="personnel_suffix" required inputmode="numeric" maxlength="3" placeholder="مثلاً 348"></label>
-            <label>کد کامل پرسنلی (خودکار)<input id="employeeCreateCode" readonly placeholder="پس از تاریخ و پسوند ساخته می‌شود"></label>
-            <label>شعبه<input name="branch" required placeholder="مثلاً الزوکو"></label>
-            <label>سکشن / واحد کاری<input name="section" required placeholder="مثلاً سالن"></label>
-            <label>پست سازمانی<input name="post" placeholder="عنوان شغلی"></label>
-            <label>کد پرسنلی مدیر مستقیم<input name="manager_pc" inputmode="numeric" placeholder="در صورت نیاز"></label>
-          </div></div>
-          <div class="employee-create-section"><b>حقوق و اطلاعات بانکی</b><div class="employee-create-grid">
-            <label>حقوق کل<input name="salary" inputmode="numeric" placeholder="اختیاری"></label>
-            <label>شماره شبا<input name="sheba" dir="ltr" placeholder="IR..."></label>
-            <label>حقوق پایه S<input name="base_S" inputmode="numeric"></label>
-            <label>حقوق پایه T<input name="base_T" inputmode="numeric"></label>
-            <label>حقوق پایه U<input name="base_U" inputmode="numeric"></label>
-            <label>حقوق پایه V<input name="base_V" inputmode="numeric"></label>
-            <label>حقوق پایه W<input name="base_W" inputmode="numeric"></label>
-            <label>مزایای AD<input name="base_AD" inputmode="numeric"></label>
-          </div></div>
-          <div class="employee-create-note">ساخت کد پرسنلی دقیقاً از الگوی N + F انجام می‌شود: بخش تاریخ از تاریخ استخدام شمسی و سه رقم انتهایی از فیلد بالا ساخته می‌شود. فیلدهای حقوقی خالی، قفل دستی نمی‌شوند تا در صورت وجود در اکسل قابل تکمیل باشند.</div>
-          <div class="employee-create-actions"><button class="btn" type="submit" id="employeeCreateSubmit">ثبت کارمند</button><button class="btn ghost" type="button" onclick="closeModal()">انصراف</button></div>
+        <header class="ec-head">
+          <div class="ec-head-copy">
+            <span class="ec-eyebrow">مدیریت منابع انسانی <i></i> پرونده پرسنلی</span>
+            <h2>ثبت کارمند جدید</h2>
+            <p>اطلاعات را یک‌بار وارد کنید؛ پرونده با ساختار فعلی اکسل و فیش حقوقی هماهنگ می‌ماند.</p>
+          </div>
+          <div class="ec-head-icon" aria-hidden="true">＋</div>
+        </header>
+
+        <form id="employeeCreateForm" class="ec-form" autocomplete="off">
+          <section class="ec-card">
+            <div class="ec-section-head"><span class="ec-step">۰۱</span><div><h3>اطلاعات هویتی</h3><p>مشخصات اصلی برای تشکیل پرونده کارمند</p></div></div>
+            <div class="ec-grid">
+              <label class="ec-field ec-span-2"><span>نام و نام خانوادگی <b>*</b></span><input name="name" required maxlength="190" placeholder="نام کامل کارمند"></label>
+              <label class="ec-field"><span>کد ملی <b>*</b></span><input name="national_code" required inputmode="numeric" maxlength="10" placeholder="۱۰ رقم"></label>
+              <label class="ec-field"><span>شماره موبایل</span><input name="phone" inputmode="tel" placeholder="09xxxxxxxxx"></label>
+              <label class="ec-field"><span>تاریخ شروع همکاری <b>*</b></span><input name="hire_date" required placeholder="۱۴۰۵/۰۵/۲۷"></label>
+              <label class="ec-field"><span>سه رقم انتهایی کد پرسنلی <b>*</b></span><input name="personnel_suffix" required inputmode="numeric" maxlength="3" placeholder="مثلاً 348"></label>
+            </div>
+            <div class="ec-code-preview">
+              <div><span class="ec-code-label">کد پرسنلی نهایی</span><small>به‌صورت خودکار از تاریخ شروع همکاری و سه رقم انتهایی ساخته می‌شود.</small></div>
+              <input id="employeeCreateCode" readonly placeholder="پس از تکمیل تاریخ و پسوند" aria-label="کد پرسنلی نهایی">
+            </div>
+          </section>
+
+          <section class="ec-card">
+            <div class="ec-section-head"><span class="ec-step">۰۲</span><div><h3>جایگاه سازمانی</h3><p>محل فعالیت و ساختار گزارش‌دهی کارمند</p></div></div>
+            <div class="ec-grid">
+              <label class="ec-field"><span>شعبه <b>*</b></span><input name="branch" required placeholder="مثلاً الزوکو"></label>
+              <label class="ec-field"><span>سکشن / واحد کاری <b>*</b></span><input name="section" required placeholder="مثلاً سالن"></label>
+              <label class="ec-field"><span>عنوان شغلی / پست سازمانی</span><input name="post" placeholder="مثلاً سرپرست سالن"></label>
+              <label class="ec-field"><span>کد پرسنلی مدیر مستقیم</span><input name="manager_pc" inputmode="numeric" placeholder="در صورت وجود"></label>
+            </div>
+          </section>
+
+          <section class="ec-card">
+            <div class="ec-section-head"><span class="ec-step">۰۳</span><div><h3>حقوق و اطلاعات بانکی</h3><p>مبالغ را مطابق واحد و ساختار فایل اکسل وارد کنید؛ تکمیل این بخش اختیاری است.</p></div></div>
+            <div class="ec-grid">
+              <label class="ec-field"><span>حقوق کل ثبت‌شده در پرونده</span><input name="salary" inputmode="numeric" placeholder="مبلغ کل"></label>
+              <label class="ec-field"><span>شماره شبا</span><input name="sheba" dir="ltr" placeholder="IRxxxxxxxxxxxxxxxxxxxxxxxx"></label>
+            </div>
+            <div class="ec-payroll-title">اجزای حقوق مؤثر در محاسبه فیش</div>
+            <div class="ec-payroll-grid">
+              <label class="ec-pay-field"><span>مزد ثابت ماهانه</span><small>مبنای محاسبه مزد ثابت در فیش</small><input name="base_S" inputmode="numeric" placeholder="مبلغ"></label>
+              <label class="ec-pay-field"><span>حق سنوات و یک‌دوم پاداش پایان سال</span><small>مبلغ ثبت‌شده در جزء سنوات</small><input name="base_T" inputmode="numeric" placeholder="مبلغ"></label>
+              <label class="ec-pay-field"><span>حق مسکن و بن کارگری</span><small>در فیش در یک ردیف محاسبه می‌شود</small><input name="base_U" inputmode="numeric" placeholder="مبلغ"></label>
+              <label class="ec-pay-field"><span>حق تأهل و اولاد</span><small>مجموع مبلغ این ردیف</small><input name="base_V" inputmode="numeric" placeholder="مبلغ"></label>
+              <label class="ec-pay-field"><span>اضافه‌کار، شب‌کاری و تعطیل‌کاری – بخش اول</span><small>به‌همراه بخش دوم در یک ردیف فیش جمع می‌شود</small><input name="base_W" inputmode="numeric" placeholder="مبلغ بخش اول"></label>
+              <label class="ec-pay-field"><span>اضافه‌کار، شب‌کاری و تعطیل‌کاری – بخش دوم</span><small>مقدار ستون AD اکسل؛ با بخش اول جمع می‌شود</small><input name="base_AD" inputmode="numeric" placeholder="مبلغ بخش دوم"></label>
+            </div>
+            <div class="ec-payroll-foot"><span>ⓘ</span><p>نام‌ها بر اساس عنوان ردیف‌های فیش حقوقی تنظیم شده‌اند. دو جزء اضافه‌کار در محاسبه فیش با هم جمع می‌شوند. فیلد خالی به‌معنای صفر قطعی نیست و در همگام‌سازی بعدی اکسل قابل تکمیل خواهد بود.</p></div>
+          </section>
+
+          <footer class="ec-footer">
+            <div class="ec-required-note"><b>*</b> فیلدهای ضروری باید تکمیل شوند.</div>
+            <div class="ec-actions"><button class="btn ghost" type="button" onclick="closeModal()">انصراف</button><button class="btn ec-submit" type="submit" id="employeeCreateSubmit"><span>✓</span> ثبت کارمند</button></div>
+          </footer>
         </form>
       </div>`);
     const form=document.getElementById('employeeCreateForm');
@@ -198,10 +227,10 @@
     form.addEventListener('input',updateCode);
     form.addEventListener('submit',async ev=>{
       ev.preventDefault();
-      const btn=document.getElementById('employeeCreateSubmit');btn.disabled=true;btn.textContent='در حال ثبت...';
+      const btn=document.getElementById('employeeCreateSubmit');btn.disabled=true;btn.innerHTML='<span>…</span> در حال ثبت';
       const data=Object.fromEntries(new FormData(form).entries());
       const r=await api('admin','employee_create',data);
-      if(!r.ok){toast(r.message||'ثبت کارمند انجام نشد.','bad');btn.disabled=false;btn.textContent='ثبت کارمند';return;}
+      if(!r.ok){toast(r.message||'ثبت کارمند انجام نشد.','bad');btn.disabled=false;btn.innerHTML='<span>✓</span> ثبت کارمند';return;}
       closeModal();toast(r.message+' کد پرسنلی: '+r.personnel_code,'ok');loadEmployees();if(typeof loadDashboard==='function')loadDashboard();
     });
   };

@@ -171,6 +171,12 @@ try {
             json_out(['ok' => true, 'dossier' => $dossier]);
         }
 
+        case 'employee_create': {
+            $a = require_admin_json('admin');
+            $created = employee_create_manual($in, (string)$a['name']);
+            json_out(['ok' => true] + $created);
+        }
+
         case 'employee_profile_save': {
             $a = require_admin_json('admin'); // اطلاعات هویتی، بانکی و حقوقی فقط با دسترسی کامل قابل ویرایش است.
             $id = (int)($in['employee_id'] ?? 0);

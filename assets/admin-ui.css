@@ -405,3 +405,57 @@ select:not(.cs-native){
   .admin-app .side-submenu,.admin-app .side-submenu button,.admin-app .side-group-toggle .group-chevron{animation:none!important;transition:none!important}
   .admin-app .side-submenu{transform:none!important}
 }
+
+
+/* اصلاح اسکرول فهرست کارکنان در موبایل؛ استایل عمومی کارت‌ها نباید overflow را خنثی کند */
+@media(max-width:760px){
+  .admin-app .card.flush > .employee-table-scroll{
+    display:block;
+    width:100%;
+    max-width:100%;
+    height:auto;
+    max-height:calc(100dvh - 245px);
+    min-height:220px;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    overscroll-behavior-y:contain;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
+    padding:0 10px 12px;
+  }
+  .employee-table-scroll #etable{display:block;width:100%;min-width:0!important}
+  .employee-table-scroll #etable thead{display:none!important}
+  .employee-table-scroll #etable tbody{display:block;width:100%}
+  .employee-table-scroll #etable tbody tr:not(.hd){
+    display:block;
+    width:100%;
+    margin:0 0 12px;
+    border:1px solid #e1eaf5;
+    border-radius:16px;
+    background:linear-gradient(155deg,#fff,#f8fbff);
+    box-shadow:0 8px 22px -18px rgba(11,35,67,.5);
+    overflow:hidden;
+  }
+  .employee-table-scroll #etable tbody td{
+    display:grid;
+    grid-template-columns:minmax(92px,34%) minmax(0,1fr);
+    gap:10px;
+    align-items:start;
+    min-width:0;
+    padding:10px 12px;
+    border-bottom:1px dashed #e6edf7;
+    background:transparent!important;
+    text-align:right;
+    word-break:break-word;
+  }
+  .employee-table-scroll #etable tbody td::before{
+    content:attr(data-label);
+    color:#64748b;
+    font-size:.77rem;
+    font-weight:800;
+  }
+  .employee-table-scroll #etable tbody td[data-label=""]{display:block}
+  .employee-table-scroll #etable tbody td[data-label=""]::before{content:none}
+  .employee-table-scroll #etable tbody td:last-child{border-bottom:0}
+  .employee-table-scroll #etable tbody td[colspan]{display:block;text-align:center}
+}

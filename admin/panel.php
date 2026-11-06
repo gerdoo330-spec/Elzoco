@@ -201,7 +201,7 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
     table.t td .btn.sm{min-height:40px;padding:8px 14px}
   }
 </style>
-<link rel="stylesheet" href="../assets/admin-ui.css?v=6">
+<link rel="stylesheet" href="../assets/admin-ui.css?v=7">
 <link rel="stylesheet" href="../assets/admin-settings.css?v=3">
 <link rel="stylesheet" href="../assets/notify-ui.css?v=1">
 <link rel="stylesheet" href="../assets/experience-ui.css?v=3">
@@ -229,18 +229,29 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
         <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M17 11a3 3 0 1 0 0-6"/><path d="M1 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/><path d="M19 15a5 5 0 0 1 4 5v1"/></svg></span>
         <span class="lbl">کارمندان</span>
       </button>
-      <button data-s="advances">
-        <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg></span>
-        <span class="lbl">مساعده و وام</span> <span class="cnt" id="cAdv" style="display:none"></span>
-      </button>
-      <button data-s="promotions">
-        <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg></span>
-        <span class="lbl">ارتقا گروه شغلی</span> <span class="cnt" id="cPr" style="display:none"></span>
-      </button>
-      <button data-s="leaves">
-        <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></span>
-        <span class="lbl">مرخصی‌ها</span> <span class="cnt" id="cLv" style="display:none"></span>
-      </button>
+      <div class="side-group" id="personnelGroup">
+        <button type="button" class="side-group-toggle" data-submenu="personnelSubmenu" aria-expanded="false" aria-controls="personnelSubmenu">
+          <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M17 11a3 3 0 1 0 0-6"/><path d="M1 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/><path d="M19 15a5 5 0 0 1 4 5v1"/></svg></span>
+          <span class="lbl">امور پرسنلی</span>
+          <span class="group-chevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></span>
+        </button>
+        <div class="side-submenu" id="personnelSubmenu" aria-hidden="true">
+          <div class="side-submenu-inner">
+            <button type="button" data-s="advances">
+              <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg></span>
+              <span class="lbl">مساعده و وام</span><span class="cnt" id="cAdv" style="display:none"></span>
+            </button>
+            <button type="button" data-s="promotions">
+              <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg></span>
+              <span class="lbl">ارتقا گروه شغلی</span><span class="cnt" id="cPr" style="display:none"></span>
+            </button>
+            <button type="button" data-s="leaves">
+              <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></span>
+              <span class="lbl">مرخصی‌ها</span><span class="cnt" id="cLv" style="display:none"></span>
+            </button>
+          </div>
+        </div>
+      </div>
       <?php if ($isAdmin): ?>
       <button data-s="admins">
         <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
@@ -510,7 +521,7 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
 <script>window.API_BASE = '../'; window.IS_ADMIN = <?= $isAdmin ? 'true' : 'false' ?>;</script>
 <script src="../assets/app.js"></script>
 <script src="../assets/jdate.js"></script>
-<script src="../assets/admin.js?v=12"></script>
+<script src="../assets/admin.js?v=13"></script>
 <script src="../assets/promotions-cards.js?v=4"></script>
 <script src="../assets/admin-ui.js?v=2"></script>
 <script src="../assets/admins-ui.js?v=1"></script>

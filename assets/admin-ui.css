@@ -660,3 +660,18 @@ select:not(.cs-native){
 @media(min-width:701px){
  .modal-bg:has(.employee-create-modal) .modal{width:min(960px,calc(100vw - 40px))!important;max-width:960px!important;padding:0!important;overflow:hidden!important;border-radius:20px!important}
 }
+
+
+/* تکمیل فهرست مدیر مستقیم و تثبیت نوار عملیات فرم در قاب مودال */
+.ec-field select{width:100%;min-width:0;height:44px;padding:0 13px;border:1px solid #dce5ef;border-radius:11px;background:#fbfdff;color:#173653;font:inherit;font-size:13px;outline:none;transition:border-color .18s,box-shadow .18s}
+.ec-field select:focus{border-color:#19a995;background:#fff;box-shadow:0 0 0 3px #19a99518}
+#modalBody:has(.employee-create-modal){display:flex!important;flex-direction:column!important;width:min(960px,calc(100vw - 32px))!important;max-width:960px!important;max-height:calc(100dvh - 32px)!important;height:auto!important;padding:0!important;overflow:hidden!important;border-radius:20px!important}
+#modalBody:has(.employee-create-modal) .employee-create-modal{display:flex;flex-direction:column;min-height:0;max-height:calc(100dvh - 32px);width:100%;overflow:hidden}
+#modalBody:has(.employee-create-modal) .ec-head{flex:0 0 auto}
+#modalBody:has(.employee-create-modal) .ec-form{display:flex;flex:1 1 auto;flex-direction:column;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain}
+#modalBody:has(.employee-create-modal) .ec-footer{position:sticky;bottom:0;z-index:3;flex:0 0 auto;margin-top:14px}
+@media(max-width:700px){
+ #modalBody:has(.employee-create-modal){width:calc(100vw - 16px)!important;max-height:calc(100dvh - 16px)!important;border-radius:16px!important}
+ #modalBody:has(.employee-create-modal) .employee-create-modal{max-height:calc(100dvh - 16px)}
+ #modalBody:has(.employee-create-modal) .ec-form{padding-bottom:0}
+}

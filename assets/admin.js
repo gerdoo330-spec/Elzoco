@@ -163,7 +163,7 @@
         <td class="ltr">${esc(e.personnel_code || '—')}</td>
         <td class="ltr">${esc(e.national_code === '0000000000' ? '0000000000' : e.national_code || '—')}</td>
         <td class="ltr">${esc(e.phone || '—')}</td><td>${esc(e.post || '')}</td><td>${esc(e.section_name || '—')}</td><td>${status(e)}</td>
-        <td class="ltr">${esc(e.manager_pc || '—')} ${IS_ADMIN && e.personnel_ok ? `<button class="btn sm ghost" onclick="editManager(${e.id})">تغییر</button>` : ''}</td>
+        <td><div class="manager-cell">${e.manager_name ? `<span class="badge b-info"> ${esc(e.manager_name)} </span>` : '<span class="badge b-gray">تعیین نشده</span>'}<small class="ltr hint">${esc(e.manager_pc || '')}</small>${IS_ADMIN && e.personnel_ok ? `<button class="btn sm ghost" onclick="editManager(${e.id})">تغییر مدیر</button>` : ''}</div></td>
         <td><div class="row">${IS_ADMIN ? `<button class="btn sm" onclick="viewEmployeeHistory(${e.id})">پرونده پرسنلی</button>` : ''}<button class="btn sm ghost" onclick="viewPayslips(${e.id})">مشاهده فیش</button></div></td></tr>`).join('');
     document.getElementById('etable').innerHTML = `<tr>${IS_ADMIN ? '<th><input type="checkbox" title="انتخاب همه" onchange="toggleAllEmp(this.checked)"></th>' : '<th></th>'}<th>نام</th><th>کد پرسنلی</th><th>کد ملی</th><th>موبایل</th><th>پست</th><th>سکشن</th><th>وضعیت</th><th>مدیر مستقیم</th><th>پرونده / فیش</th></tr>` +
       (rows || '<tr><td colspan="10" class="empty">موردی پیدا نشد.</td></tr>');
@@ -221,14 +221,17 @@
     if (!ids.length) return toast('ابتدا کارمندان را انتخاب کنید.', 'bad');
     pickEmployee(sup => applyManager(ids, sup), { title: `مدیر مستقیم برای ${ids.length} کارمند`, allowNone: true, noneLabel: 'بدون مدیر مستقیم' });
   };
-  window.editManager = function (id) {
-    const e = (window._emps || []).find(x => x.id === id) || { name: '' };
-    pickEmployee(sup => applyManager([id], sup), { title: `مدیر مستقیم «${e.name}»`, allowNone: true, noneLabel: 'بدون مدیر مستقیم' });
+  window.editManager = function (id, refreshDossier = false) {
+    const e = (window._emps || []).find(x => Number(x.id) === Number(id)) || (window._currentEmployeeDossier?.employee || { name: '' });
+    pickEmployee(sup => applyManager([id], sup, refreshDossier), { title: `تغییر مدیر مستقیم «${e.name}»`, allowNone: true, noneLabel: 'بدون مدیر مستقیم' });
   };
-  window.applyManager = async function (ids, sup) {
+  window.applyManager = async function (ids, sup, refreshDossier = false) {
     const r = await api('admin', 'set_manager_bulk', { ids, supervisor_id: sup ? sup.id : 0 });
     toast(r.message, r.ok ? 'ok' : 'bad');
-    if (r.ok) loadEmployees();
+    if (r.ok) {
+      await loadEmployees();
+      if (refreshDossier && ids.length === 1) await viewEmployeeHistory(Number(ids[0]));
+    }
   };
 
   /* ---------- پرونده جامع پرسنلی کارمند ---------- */
@@ -275,8 +278,9 @@
       ${kv('عنوان شغلی فعلی', escv(emp.post))}
       ${kv('تاریخ شروع همکاری', `<span class="ltr">${escv(emp.hire_date)}</span>`)}
       ${kv('کد تاریخ شروع ثبت‌شده', `<span class="ltr">${escv(emp.start_code)}</span>`)}
-      ${kv('مدیر مستقیم', escv(emp.manager_name, emp.manager_pc ? 'نام مدیر در اطلاعات کارکنان پیدا نشد' : 'تعیین نشده'))}
+      ${kv('مدیر مستقیم', emp.manager_name ? `<span class="badge b-info">${esc(emp.manager_name)}</span>` : escv('', emp.manager_pc ? 'نام مدیر در اطلاعات کارکنان پیدا نشد' : 'تعیین نشده'))}
       ${kv('کد پرسنلی مدیر مستقیم', `<span class="ltr">${escv(emp.manager_pc)}</span>`)}
+      ${IS_ADMIN ? `<div class="employee-dossier-manager-action"><button class="btn sm" type="button" onclick="editManager(${Number(emp.id)},true)">تغییر مدیر مستقیم</button><small>این تغییر در رابطه مدیریتی و مسیر ارجاع درخواست‌های جدید اعمال می‌شود.</small></div>` : ''}
       ${extraIdentity.map(x => kv(esc(x.label), escv(x.value))).join('')}
       ${kv('وضعیت اطلاعات پرسنلی', emp.personnel_ok ? badge('اطلاعات پایه کامل', 'b-ok') : badge('نیازمند تکمیل اطلاعات پایه', 'b-warn'))}
       ${kv('وضعیت همکاری', activeBadge)}

@@ -136,6 +136,7 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeShell(user: Map<String,dynamic>.from(session['user'] as Map))));
     } catch (e) {
+      await secureStore.deleteAll();
       if (mounted) setState(() => error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => busy = false);

@@ -124,3 +124,7 @@
 .dossier-edit-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:5px}
 @media(max-width:900px){.dossier-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.employee-dossier-header-actions{width:100%;margin-inline-start:0}.employee-dossier-header-actions .btn{flex:1}.dossier-edit-grid{grid-template-columns:minmax(0,1fr)}.dossier-edit-section{padding:11px}.dossier-edit-actions{align-items:stretch}.dossier-edit-actions>.row{width:100%}.dossier-edit-actions>.row .btn{flex:1}}
+
+/* Direct manager action inside employee dossier */
+.employee-dossier-manager-action{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0}
+.employee-dossier-manager-action small{color:var(--muted,#64748b);font-size:.78rem;line-height:1.8}

@@ -12,13 +12,36 @@
   window.logout = async () => { await api('admin', 'logout'); location.href = 'index.php'; };
 
   document.getElementById('menu').addEventListener('click', (e) => {
+    const toggle = e.target.closest('button[data-submenu]');
+    if (toggle) {
+      const group = toggle.closest('.side-group');
+      const opening = !group.classList.contains('expanded');
+      group.classList.toggle('expanded', opening);
+      toggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
+      const submenu = document.getElementById(toggle.dataset.submenu);
+      if (submenu) submenu.setAttribute('aria-hidden', opening ? 'false' : 'true');
+      return;
+    }
     const b = e.target.closest('button[data-s]');
     if (!b) return;
     showSection(b.dataset.s);
   });
 
   window.showSection = function (name) {
-    document.querySelectorAll('#menu button').forEach(b => b.classList.toggle('on', b.dataset.s === name));
+    document.querySelectorAll('#menu button[data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === name));
+    const personnelGroup = document.getElementById('personnelGroup');
+    if (personnelGroup) {
+      const childActive = ['advances', 'promotions', 'leaves'].includes(name);
+      personnelGroup.classList.toggle('expanded', childActive);
+      const groupToggle = personnelGroup.querySelector('[data-submenu]');
+      const submenu = personnelGroup.querySelector('.side-submenu');
+      if (groupToggle) {
+        groupToggle.classList.toggle('on', childActive);
+        groupToggle.classList.toggle('has-active-child', childActive);
+        groupToggle.setAttribute('aria-expanded', childActive ? 'true' : 'false');
+      }
+      if (submenu) submenu.setAttribute('aria-hidden', childActive ? 'false' : 'true');
+    }
     /* با باز شدن بخش مربوط، تأکید اعلان همان بخش پاک می‌شود؛ شمارنده‌ی درخواست‌های در انتظار باقی می‌ماند. */
     if (typeof window.clearSidebarRequestAlert === 'function') window.clearSidebarRequestAlert(name);
     document.querySelectorAll('.sec').forEach(s => s.classList.toggle('on', s.id === 's-' + name));

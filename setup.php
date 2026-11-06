@@ -4,7 +4,14 @@ require __DIR__ . '/src/bootstrap.php';
 start_session_secure();
 
 $lock = __DIR__ . '/storage/installed.lock';
-if (file_exists($lock)) {
+// بعضی بسته‌های سورس ممکن است فایل lock نمونه را همراه داشته باشند.
+// نصب فقط زمانی متوقف می‌شود که دیتابیس واقعاً قبلاً ادمین داشته باشد.
+try {
+    $hasAdmins = (int)db()->query("SELECT COUNT(*) FROM admins")->fetchColumn() > 0;
+} catch (Throwable $e) {
+    $hasAdmins = false;
+}
+if (file_exists($lock) && $hasAdmins) {
     http_response_code(403);
     exit('نصب قبلاً انجام شده است. برای امنیت، فایل setup.php را از سرور حذف کنید.');
 }

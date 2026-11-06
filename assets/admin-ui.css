@@ -322,3 +322,86 @@ select:not(.cs-native){
   .employee-table-scroll{max-height:calc(100vh - 270px);min-height:220px}
   .employee-table-scroll #etable th{z-index:30}
 }
+
+
+/* ===== سایدبار سه‌بعدی و گروه بازشونده امور پرسنلی ===== */
+.admin-app .side{
+  perspective:1200px;
+  transform-style:preserve-3d;
+  background:
+    radial-gradient(ellipse at 12% 12%,rgba(53,104,163,.28),transparent 42%),
+    radial-gradient(ellipse at 100% 82%,rgba(249,115,22,.10),transparent 38%),
+    linear-gradient(155deg,#071a32 0%,#0b2546 48%,#12365f 100%);
+  border-inline-start:1px solid rgba(255,255,255,.09);
+  box-shadow:inset -1px 0 rgba(255,255,255,.07),inset -14px 0 28px -24px rgba(0,0,0,.9),18px 0 45px -34px rgba(3,13,29,.9);
+}
+.admin-app .side::after{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;
+  background:linear-gradient(115deg,transparent 0 42%,rgba(255,255,255,.035) 50%,transparent 58%);
+  background-size:220% 100%;animation:sideAmbient 13s ease-in-out infinite;
+}
+@keyframes sideAmbient{0%,100%{background-position:120% 0}50%{background-position:-30% 0}}
+.admin-app .side nav{padding:4px 2px 10px;gap:6px;perspective:900px}
+.admin-app .side nav button{
+  position:relative;isolation:isolate;transform-style:preserve-3d;
+  border:1px solid transparent;
+  transition:background .28s,color .28s,transform .38s cubic-bezier(.2,.8,.2,1),box-shadow .3s,border-color .3s;
+}
+.admin-app .side nav button .ico{
+  position:relative;overflow:visible;
+  background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.045));
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:inset 0 1px rgba(255,255,255,.14),0 5px 12px -9px #000;
+  transform:translateZ(8px);
+  transition:transform .4s cubic-bezier(.2,.8,.2,1),background .3s,box-shadow .3s,color .3s;
+}
+.admin-app .side nav button .ico svg{filter:drop-shadow(0 2px 2px rgba(0,0,0,.2));transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.admin-app .side nav button:hover{
+  transform:translate3d(-4px,-1px,7px) rotateY(-2deg);
+  border-color:rgba(255,255,255,.09);
+  box-shadow:0 12px 22px -18px rgba(0,0,0,.8),inset -2px 0 rgba(255,255,255,.08);
+}
+.admin-app .side nav button:hover .ico{transform:translateZ(15px) rotate(-5deg) scale(1.07);box-shadow:0 10px 20px -10px rgba(0,0,0,.65),inset 0 1px rgba(255,255,255,.35)}
+.admin-app .side nav button:hover .ico svg{transform:scale(1.08)}
+.admin-app .side nav button.on .ico{border-color:rgba(255,255,255,.42);box-shadow:0 9px 22px -9px rgba(249,115,22,.65),inset 0 1px rgba(255,255,255,.5)}
+.admin-app .side-group{position:relative;display:grid;gap:3px}
+.admin-app .side-group-toggle .group-chevron{width:22px;height:22px;flex:0 0 22px;display:grid;place-items:center;border-radius:7px;color:#9fb6d6;transition:transform .42s cubic-bezier(.2,.8,.2,1),color .25s,background .25s}
+.admin-app .side-group-toggle .group-chevron svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.admin-app .side-group.expanded>.side-group-toggle .group-chevron{transform:rotate(180deg);color:#fdba74;background:rgba(249,115,22,.12)}
+.admin-app .side-group>.side-group-toggle.has-active-child{background:linear-gradient(100deg,rgba(249,115,22,.20),rgba(249,115,22,.055));color:#fff;border-color:rgba(249,115,22,.18)}
+.admin-app .side-submenu{
+  display:grid;grid-template-rows:0fr;opacity:0;transform:translateY(-7px) perspective(700px) rotateX(-8deg);
+  transform-origin:top center;visibility:hidden;pointer-events:none;
+  transition:grid-template-rows .42s cubic-bezier(.2,.8,.2,1),opacity .28s ease,transform .42s cubic-bezier(.2,.8,.2,1),visibility 0s linear .42s;
+}
+.admin-app .side-group.expanded>.side-submenu{
+  grid-template-rows:1fr;opacity:1;transform:translateY(0) perspective(700px) rotateX(0);
+  visibility:visible;pointer-events:auto;
+  transition:grid-template-rows .42s cubic-bezier(.2,.8,.2,1),opacity .28s ease,transform .42s cubic-bezier(.2,.8,.2,1),visibility 0s;
+}
+.admin-app .side-submenu-inner{min-height:0;overflow:hidden;display:grid;gap:4px;padding:0 8px 0 0;margin-inline-start:18px;border-inline-start:1px solid rgba(148,180,218,.22)}
+.admin-app .side-submenu button{
+  min-height:43px!important;padding:7px 9px!important;margin-inline-start:7px;width:calc(100% - 7px)!important;
+  border-radius:11px!important;font-size:.87rem!important;color:#b7cbe5!important;gap:9px!important;
+  transform-origin:right center;
+}
+.admin-app .side-submenu button .ico{width:29px!important;height:29px!important;flex-basis:29px!important;border-radius:9px!important}
+.admin-app .side-submenu button .ico svg{width:16px!important;height:16px!important}
+.admin-app .side-submenu button.on{background:linear-gradient(100deg,rgba(249,115,22,.24),rgba(249,115,22,.07))!important;color:#fff!important;box-shadow:inset -3px 0 #f97316,0 8px 18px -14px rgba(249,115,22,.7)!important}
+.admin-app .side-submenu button.on .ico{background:linear-gradient(135deg,#fdba74,#f97316)!important;color:#431407!important}
+.admin-app .side-submenu button:nth-child(1){--sub-i:0}
+.admin-app .side-submenu button:nth-child(2){--sub-i:1}
+.admin-app .side-submenu button:nth-child(3){--sub-i:2}
+.admin-app .side-group.expanded .side-submenu button{animation:personnelItemIn .42s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--sub-i,0)*65ms + 45ms)}
+@keyframes personnelItemIn{from{opacity:0;transform:translateX(12px) translateZ(-8px)}to{opacity:1;transform:translateX(0) translateZ(0)}}
+.admin-app .side-group-toggle .ico{background:linear-gradient(145deg,rgba(255,255,255,.17),rgba(255,255,255,.06))}
+.admin-app .side-foot{background:linear-gradient(145deg,rgba(255,255,255,.105),rgba(255,255,255,.035));border-color:rgba(255,255,255,.11);box-shadow:inset 0 1px rgba(255,255,255,.08),0 12px 24px -22px #000;backdrop-filter:blur(12px)}
+@media(max-width:900px){
+  .admin-app .side{perspective:1000px;box-shadow:-24px 0 60px -24px rgba(0,0,0,.58),inset 1px 0 rgba(255,255,255,.1)}
+}
+@media(prefers-reduced-motion:reduce){
+  .admin-app .side::after{animation:none!important}
+  .admin-app .side nav button,.admin-app .side nav button .ico,.admin-app .side nav button .ico svg,
+  .admin-app .side-submenu,.admin-app .side-submenu button,.admin-app .side-group-toggle .group-chevron{animation:none!important;transition:none!important}
+  .admin-app .side-submenu{transform:none!important}
+}

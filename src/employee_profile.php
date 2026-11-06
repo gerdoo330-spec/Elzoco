@@ -353,10 +353,13 @@ function employee_create_manual(array $input, string $actor): array
         ]);
         $employeeId = (int)$pdo->lastInsertId();
         $fields = [
-            'name' => $name, 'national_code' => $national, 'phone' => $phone, 'post' => $post,
-            'hire_date' => $hireDate, 'sheba' => $sheba,
+            'name' => $name, 'national_code' => $national, 'hire_date' => $hireDate,
             'extra_branch' => $branch, 'extra_section' => $section,
         ];
+        // فیلد اختیاری خالی را قفل نکن؛ تا اکسل بعدی بتواند مقدار معتبر آن را تکمیل کند.
+        if ($phone !== '') $fields['phone'] = $phone;
+        if ($post !== '') $fields['post'] = $post;
+        if ($sheba !== '') $fields['sheba'] = $sheba;
         if ($salaryRaw !== '') $fields['salary'] = (string)$salary;
         foreach ($base as $key => $value) $fields['base_' . $key] = (string)$value;
         employee_profile_save_manual($employeeId, $fields, [], $actor);

@@ -447,10 +447,11 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
         'sections_detected' => [], 'section_assignments' => [], 'section_missing' => [],
     ];
 
-    // ۱) کارکرد ماه: نام → اولین ردیف
+    // ۱) کارکرد ماه: ردیف‌های این شیت با همان شماره ردیف به «اطلاعات پایه» متناظرند.
+    // وضعیت استخدام فقط از رنگ سلول نام در ستون C شیت اطلاعات پایه تعیین می‌شود.
     $work = [];
     $workNames = [];
-    $workSectionRows = [];
+    $sectionByBaseRow = [];
     foreach ($workRows as $r => $cells) {
         if ($r < 6) {
             continue;
@@ -464,40 +465,28 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
             continue;
         }
         $workNames[$key][] = (string)$raw;
+
+        // رنگ قرمز/نارنجی سلول نام در اطلاعات پایه یعنی دوره همکاری خاتمه‌یافته.
+        $baseNameFill = strtoupper((string)($infoRows[$r][2]['fill'] ?? ''));
+        $baseRowInactive = in_array($baseNameFill, COLOR_INACTIVE, true);
+
         $sectionValue = trim((string)($cells[27]['v'] ?? '')); // ستون AB شیت کارکرد ماه
-        if ($sectionValue !== '') {
-            $workSectionRows[$key][] = ['section' => $sectionValue, 'row' => (int)$r, 'name' => trim((string)$raw)];
+        // مقدار صفر، مقدار خالی یا سکشن ردیف غیرفعال نباید به پرونده فعال منتقل شود.
+        if (!$baseRowInactive && $sectionValue !== '' && $sectionValue !== '0') {
+            $sectionByBaseRow[(int)$r] = $sectionValue;
         }
-        if (!isset($work[$key])) {
+
+        // اگر نام در چند دوره تکرار شده باشد، ردیف متناظر با پرونده فعال بر ردیف قرمز/نارنجی اولویت دارد.
+        if (!isset($work[$key]) || !$baseRowInactive) {
             $work[$key] = work_record($cells);
+            $work[$key]['section'] = (!$baseRowInactive && $sectionValue !== '' && $sectionValue !== '0')
+                ? $sectionValue
+                : '';
         }
         foreach ([4, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18] as $c) {
             if (!empty($cells[$c]['err'])) {
                 $report['error_cells'][] = 'کارکرد ماه!' . $r . ':' . $c;
             }
-        }
-    }
-
-    // استخراج سکشن از ستون AB؛ اگر برای یک نام چند سکشن متفاوت ثبت شده باشد،
-    // به‌جای انتخاب حدسی، ردیف‌های متعارض اعلام می‌شوند.
-    $sectionNamesByKey = [];
-    foreach ($workSectionRows as $nameKey => $items) {
-        $distinct = [];
-        foreach ($items as $item) {
-            $normalized = XlsxReader::norm((string)$item['section']);
-            if ($normalized !== '') $distinct[$normalized] = (string)$item['section'];
-        }
-        if (count($distinct) > 1) {
-            $rowDetails = array_map(static fn($item) => 'ردیف ' . (int)$item['row'] . ' (' . $item['name'] . '): ' . $item['section'], $items);
-            throw new RuntimeException(
-                'در شیت «کارکرد ماه»، برای یک نام بیش از یک سکشن در ستون AB ثبت شده است: ' .
-                implode('؛ ', $rowDetails) . '. برای جلوگیری از ثبت سکشن اشتباه، این بارگذاری ذخیره نشد.'
-            );
-        }
-        $section = (string)reset($distinct);
-        if ($section !== '') {
-            $sectionNamesByKey[$nameKey] = $section;
-            if (isset($work[$nameKey])) $work[$nameKey]['section'] = $section;
         }
     }
 
@@ -685,13 +674,13 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
         $incomingPersonnelCodes[$code] = ['name' => (string)$rec['name'], 'row' => (int)$rec['row']];
     }
 
-    // اتصال سکشن ستون AB به پرونده‌ی کارمند. تطبیق با همان کلید نامی انجام می‌شود
-    // که نسخه‌ی فعلی سامانه برای اتصال ردیف‌های کارکرد به فیش استفاده می‌کند.
-    // مقدار خالی AB هیچ‌گاه سکشن قبلی را پاک نمی‌کند؛ قفل ویرایش دستی مدیر نیز در merge رعایت می‌شود.
+    // اتصال سکشن با شماره ردیف متناظر در «اطلاعات پایه» انجام می‌شود، نه صرفاً نام.
+    // بنابراین ردیف قرمز/نارنجی استخدام قبلی هرگز سکشن پرونده فعال را آلوده نمی‌کند.
+    // مقدار خالی/صفر اکسل سکشن قبلی را پاک نمی‌کند و قفل ویرایش دستی مدیر در merge رعایت می‌شود.
     $detectedSections = [];
     foreach ($records as &$sectionRecord) {
-        $section = trim((string)($sectionNamesByKey[$sectionRecord['name_key']] ?? ''));
-        if ($section !== '') {
+        $section = trim((string)($sectionByBaseRow[(int)$sectionRecord['row']] ?? ''));
+        if ($section !== '' && empty($sectionRecord['inactive'])) {
             $sectionRecord['extra']['section'] = $section;
             $detectedSections[$section] = true;
             $report['section_assignments'][] = [

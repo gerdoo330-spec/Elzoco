@@ -232,6 +232,7 @@ function work_record(array $cells): array
         'advance'      => (float)($g(17) ?? 0),      // R  مساعده
         'insurance'    => (float)($g(18) ?? 0),      // S  حق بیمه
         'sheba'        => ident($g(20)),             // U  شماره شبا
+        'section'      => trim((string)($g(27) ?? '')), // AB سکشن کارمند
     ];
 }
 
@@ -443,11 +444,13 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
         'zero_national_no_phone' => [], 'error_cells' => [],
         'profile_fields_detected' => array_values(array_unique(array_keys($profileHeaderMap))),
         'profile_data_updated' => 0, 'preserved_existing_fields' => 0,
+        'sections_detected' => [], 'section_assignments' => [], 'section_missing' => [],
     ];
 
     // ۱) کارکرد ماه: نام → اولین ردیف
     $work = [];
     $workNames = [];
+    $workSectionRows = [];
     foreach ($workRows as $r => $cells) {
         if ($r < 6) {
             continue;
@@ -461,6 +464,10 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
             continue;
         }
         $workNames[$key][] = (string)$raw;
+        $sectionValue = trim((string)($cells[27]['v'] ?? '')); // ستون AB شیت کارکرد ماه
+        if ($sectionValue !== '') {
+            $workSectionRows[$key][] = ['section' => $sectionValue, 'row' => (int)$r, 'name' => trim((string)$raw)];
+        }
         if (!isset($work[$key])) {
             $work[$key] = work_record($cells);
         }
@@ -468,6 +475,29 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
             if (!empty($cells[$c]['err'])) {
                 $report['error_cells'][] = 'کارکرد ماه!' . $r . ':' . $c;
             }
+        }
+    }
+
+    // استخراج سکشن از ستون AB؛ اگر برای یک نام چند سکشن متفاوت ثبت شده باشد،
+    // به‌جای انتخاب حدسی، ردیف‌های متعارض اعلام می‌شوند.
+    $sectionNamesByKey = [];
+    foreach ($workSectionRows as $nameKey => $items) {
+        $distinct = [];
+        foreach ($items as $item) {
+            $normalized = XlsxReader::norm((string)$item['section']);
+            if ($normalized !== '') $distinct[$normalized] = (string)$item['section'];
+        }
+        if (count($distinct) > 1) {
+            $rowDetails = array_map(static fn($item) => 'ردیف ' . (int)$item['row'] . ' (' . $item['name'] . '): ' . $item['section'], $items);
+            throw new RuntimeException(
+                'در شیت «کارکرد ماه»، برای یک نام بیش از یک سکشن در ستون AB ثبت شده است: ' .
+                implode('؛ ', $rowDetails) . '. برای جلوگیری از ثبت سکشن اشتباه، این بارگذاری ذخیره نشد.'
+            );
+        }
+        $section = (string)reset($distinct);
+        if ($section !== '') {
+            $sectionNamesByKey[$nameKey] = $section;
+            if (isset($work[$nameKey])) $work[$nameKey]['section'] = $section;
         }
     }
 
@@ -654,6 +684,30 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
         }
         $incomingPersonnelCodes[$code] = ['name' => (string)$rec['name'], 'row' => (int)$rec['row']];
     }
+
+    // اتصال سکشن ستون AB به پرونده‌ی کارمند. تطبیق با همان کلید نامی انجام می‌شود
+    // که نسخه‌ی فعلی سامانه برای اتصال ردیف‌های کارکرد به فیش استفاده می‌کند.
+    // مقدار خالی AB هیچ‌گاه سکشن قبلی را پاک نمی‌کند؛ قفل ویرایش دستی مدیر نیز در merge رعایت می‌شود.
+    $detectedSections = [];
+    foreach ($records as &$sectionRecord) {
+        $section = trim((string)($sectionNamesByKey[$sectionRecord['name_key']] ?? ''));
+        if ($section !== '') {
+            $sectionRecord['extra']['section'] = $section;
+            $detectedSections[$section] = true;
+            $report['section_assignments'][] = [
+                'name' => (string)$sectionRecord['name'],
+                'row' => (int)$sectionRecord['row'],
+                'section' => $section,
+            ];
+        } elseif (empty($sectionRecord['inactive'])) {
+            $report['section_missing'][] = [
+                'name' => (string)$sectionRecord['name'],
+                'row' => (int)$sectionRecord['row'],
+            ];
+        }
+    }
+    unset($sectionRecord);
+    $report['sections_detected'] = array_values(array_keys($detectedSections));
 
     // ۳) بررسی‌های داده
     foreach ($records as $rec) {
@@ -912,6 +966,7 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
                 'national_code' => $rec['national'], 'phone' => $rec['phone'], 'post' => $rec['post'],
                 'hire_date' => $rec['hire_date'], 'sheba' => $rec['sheba'],
                 'salary' => $rec['salary'], 'source_salary' => $importSalary,
+                'section' => (string)($rec['extra']['section'] ?? ''),
                 'inactive' => (bool)$rec['inactive'],
                 '_payslip' => [
                     'period_id' => $periodId, 'year' => $year, 'month' => $month,

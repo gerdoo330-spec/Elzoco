@@ -153,7 +153,7 @@
   /* ---------- کارمندان ---------- */
   /* ---------- ثبت دستی کارمند با قرارداد یکسان با اکسل ---------- */
   window.openEmployeeCreate = function () {
-    openModal(\`
+    openModal(`
       <div class="employee-create-modal" dir="rtl">
         <div class="employee-create-title"><div><h2>افزودن کارمند جدید</h2><p>ثبت مستقیم در پرونده پرسنلی؛ اطلاعات دستی در ایمپورت بعدی اکسل حفظ می‌شوند.</p></div><span class="employee-create-mark">＋</span></div>
         <form id="employeeCreateForm">
@@ -184,7 +184,7 @@
           <div class="employee-create-note">ساخت کد پرسنلی دقیقاً از الگوی N + F انجام می‌شود: بخش تاریخ از تاریخ استخدام شمسی و سه رقم انتهایی از فیلد بالا ساخته می‌شود. فیلدهای حقوقی خالی، قفل دستی نمی‌شوند تا در صورت وجود در اکسل قابل تکمیل باشند.</div>
           <div class="employee-create-actions"><button class="btn" type="submit" id="employeeCreateSubmit">ثبت کارمند</button><button class="btn ghost" type="button" onclick="closeModal()">انصراف</button></div>
         </form>
-      </div>\`);
+      </div>`);
     const form=document.getElementById('employeeCreateForm');
     const updateCode=()=>{
       const fd=new FormData(form), raw=String(fd.get('hire_date')||'').replace(/[\/\-.]/g,'').replace(/[۰-۹]/g,ch=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(ch)).replace(/[٠-٩]/g,ch=>'٠١٢٣٤٥٦٧٨٩'.indexOf(ch));

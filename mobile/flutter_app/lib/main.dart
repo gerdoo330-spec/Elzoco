@@ -36,7 +36,11 @@ class ElzocoApp extends StatelessWidget {
 }
 
 class MobileApi {
-  static String get _base => apiBase.replaceAll(RegExp(r'/+
+  static String get _base => apiBase.trim().replaceAll(RegExp(r'/+$'), '');
+
+  static Future<Map<String,dynamic>> post(String action, Map<String,dynamic> data) async {
+    final response = await http.post(
+      Uri.parse('$_base/api/mobile.php?action=$action'),
       headers: {'Content-Type':'application/json','Accept':'application/json'},
       body: jsonEncode(data),
     ).timeout(const Duration(seconds: 25));

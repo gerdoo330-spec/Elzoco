@@ -201,7 +201,7 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
     table.t td .btn.sm{min-height:40px;padding:8px 14px}
   }
 </style>
-<link rel="stylesheet" href="../assets/admin-ui.css?v=5">
+<link rel="stylesheet" href="../assets/admin-ui.css?v=6">
 <link rel="stylesheet" href="../assets/admin-settings.css?v=3">
 <link rel="stylesheet" href="../assets/notify-ui.css?v=1">
 <link rel="stylesheet" href="../assets/experience-ui.css?v=3">
@@ -310,7 +310,7 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
         <div class="hint" id="sectionHint" style="padding:0 18px 12px">فیلتر سکشن بر اساس ستون «سکشن»، «بخش» یا «واحد کاری» در شیت اطلاعات پایه و اطلاعات پرونده پرسنلی است.</div>
         <?php if (!$isAdmin): ?><div class="hint" style="padding:0 18px 12px">این فهرست فقط کارکنان زیرمجموعه‌ی مستقیم و غیرمستقیم شما را نمایش می‌دهد؛ دسترسی به کارکنان سایر مدیران از سمت سرور نیز مسدود است.</div><?php endif; ?>
         <div id="bulkBar" style="display:none;padding:12px 18px;gap:10px;align-items:center;flex-wrap:wrap;background:#f2f7fd;border-bottom:1px solid var(--line)"><b>انتخاب‌شده: <span id="bulkCount">0</span></b><button class="btn sm" type="button" onclick="bulkSetManager()">تعیین مدیر مستقیم برای انتخاب‌شده‌ها</button><button class="btn sm ghost" type="button" onclick="toggleAllEmp(false)">لغو انتخاب</button></div>
-        <div style="overflow:auto"><table class="t" id="etable"></table></div>
+        <div class="employee-table-scroll"><table class="t" id="etable"></table></div>
       </div>
     </section>
 

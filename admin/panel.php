@@ -201,7 +201,7 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
     table.t td .btn.sm{min-height:40px;padding:8px 14px}
   }
 </style>
-<link rel="stylesheet" href="../assets/admin-ui.css?v=11">
+<link rel="stylesheet" href="../assets/admin-ui.css?v=12">
 <link rel="stylesheet" href="../assets/admin-settings.css?v=3">
 <link rel="stylesheet" href="../assets/notify-ui.css?v=1">
 <link rel="stylesheet" href="../assets/experience-ui.css?v=3">
@@ -521,7 +521,7 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
 <script>window.API_BASE = '../'; window.IS_ADMIN = <?= $isAdmin ? 'true' : 'false' ?>;</script>
 <script src="../assets/app.js"></script>
 <script src="../assets/jdate.js"></script>
-<script src="../assets/admin.js?v=17"></script>
+<script src="../assets/admin.js?v=18"></script>
 <script src="../assets/promotions-cards.js?v=4"></script>
 <script src="../assets/admin-ui.js?v=2"></script>
 <script src="../assets/admins-ui.js?v=1"></script>

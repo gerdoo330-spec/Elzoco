@@ -19,7 +19,7 @@ try{
  }
  $u=mobile_user();if(!$u)json_out(['ok'=>false,'message'=>'نشست معتبر نیست؛ دوباره وارد شوید.','logout'=>true],401);
  if($action==='me'&&$method==='GET'){
-  if($u['type']==='employee'){$e=one('SELECT * FROM employees WHERE id=?',[$u['id']]);$p=employee_periods((int)$e['id']);json_out(['ok'=>true,'user'=>$u,'periods'=>array_map(fn($x)=>['id'=>(int)$x['id'],'label'=>period_label($x),'has_work'=>(bool)$x['has_work']],$p),'advance'=>advance_overview($e),'loan'=>advance_overview($e,'loan'),'promotion'=>promo_overview($e),'leave'=>['requests'=>leave_list_for((int)$e['id']),'balance'=>leave_annual_balance($e)]]);}
+  if($u['type']==='employee'){$e=one('SELECT * FROM employees WHERE id=?',[$u['id']]);$p=employee_periods((int)$e['id']);json_out(['ok'=>true,'user'=>$u,'periods'=>array_map(fn($x)=>['id'=>(int)$x['id'],'label'=>period_label($x),'has_work'=>(bool)$x['has_work']],$p),'advance'=>advance_overview($e),'loan'=>advance_overview($e,'loan'),'promotion'=>promo_overview($e),'leave'=>['types'=>array_map(fn($k,$t)=>['key'=>$k,'label'=>$t['label'],'unit'=>$t['unit']],array_keys(LEAVE_TYPES),LEAVE_TYPES),'requests'=>leave_list_for((int)$e['id']),'balance'=>leave_annual_balance($e),'max_hours'=>(int)cfg('leave_max_hours_per_day',8)],'payslip_window'=>payslip_window()]);}
   $a=['id'=>$u['id'],'name'=>$u['name'],'role'=>$u['role'],'pc'=>$u['personnel_code']];$scope=admin_employee_scope_ids($a);
   if($scope===null)$counts=one("SELECT COUNT(*) total,COALESCE(SUM(in_latest=1 AND inactive=0),0) active,COALESCE(SUM(inactive=1 OR in_latest=0),0) inactive FROM employees");
   elseif(!$scope)$counts=['total'=>0,'active'=>0,'inactive'=>0];

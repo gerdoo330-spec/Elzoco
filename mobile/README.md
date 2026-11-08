@@ -1,57 +1,53 @@
 # Elzoco HRM Mobile
 
-Flutter Android/iOS app. Persian RTL, premium navy/teal/white design. Uses the existing PHP/MySQL backend; no separate mobile database.
+اپلیکیشن بومی Flutter برای Android (و آماده‌سازی مسیر iOS) با رابط فارسی و راست‌چین. اپلیکیشن از همان PHP API و پایگاه داده‌ی سامانه استفاده می‌کند و دیتابیس جداگانه‌ای ندارد.
 
-## Authentication foundation
+## ساختار دسترسی
 
-- Mobile API endpoint: `/api/mobile.php`
-- Employee sign-in reuses the current national-code + full personnel-code verification. The phone number is checked when the employee account uses the zero-national-code fallback, matching the existing website login rule.
-- Admin, senior manager and direct manager sign-in reuse the existing `admins` accounts.
-- Bearer token is generated from 256 random bits; only its SHA-256 hash is stored in MySQL.
-- Token expires after 30 days. Logout revokes it.
-- The Flutter app stores the token using `flutter_secure_storage`.
-- After login and whenever the app starts, it calls `action=me` to validate the token against the server. Invalid sessions are cleared.
-- Manager dashboard scope is calculated by the existing employee-scope authorization function.
+- **admin و senior:** آمار کل سامانه و فهرست تمام کارکنان؛ درخواست‌های قابل بررسی و امکانات مدیریتی که API موبایل ارائه می‌کند.
+- **manager:** فقط کارکنان زیرمجموعه و درخواست‌هایی که در گردش تأیید به او ارجاع شده‌اند.
+- **employee:** اطلاعات و خدمات حساب شخصی خودش.
+- محدودیت کارکنان زیرمجموعه در سرور و با `admin_employee_scope_ids()` اعمال می‌شود. فهرست موبایل صرفاً نتیجه‌ی محدوده‌ی مجاز API را نمایش می‌دهد.
 
-## Deploy to the test host
+## امکانات پیاده‌سازی‌شده در Flutter
 
-1. Upload `api/mobile.php` to the test site's `api/` directory.
-2. Run `db/migrations/2026-11-06-mobile-tokens.sql` exactly once on the test site's database.
-3. Confirm the site is served over HTTPS. Do not test real credentials over plain HTTP.
-4. Open `https://YOUR-DOMAIN/payroll/api/mobile.php?action=me` in a browser. Expected result without a Bearer token: HTTP 401 and a JSON response similar to:
-   `{"ok":false,"message":"نشست معتبر نیست؛ دوباره وارد شوید.","logout":true}`
-5. Never share passwords, national codes, or bearer tokens in chat or screenshots.
+- ورود کارمند با کد ملی، کد پرسنلی کامل و شماره موبایل؛ ورود مدیر با نام کاربری و رمز عبور.
+- نگهداری Bearer token با `flutter_secure_storage` و اعتبارسنجی نشست با `action=me`.
+- پنل کارمند: فیش‌های حقوقی و جزئیات دریافتی/کسورات، ثبت و مشاهده‌ی مرخصی، وام، مساعده و ارتقای شغلی، اعلان‌ها.
+- پنل مدیریتی: داشبورد و شمارنده‌ها، فهرست کارکنان مجاز، مشاهده‌ی درخواست‌ها، تأیید/رد درخواست‌ها و اعلان‌ها.
+- همه‌ی درخواست‌ها از API فعلی `/api/mobile.php` عبور می‌کنند.
 
-## Run Flutter on a connected Android device
+## اجرای محلی
 
-From `mobile/flutter_app/`:
+از پوشه‌ی `mobile/flutter_app` اجرا کنید:
 
 ```bash
+flutter create --platforms=android,ios --project-name elzoco_hrm .
 flutter pub get
-flutter run --dart-define=API_BASE_URL=https://YOUR-DOMAIN/payroll
+flutter analyze
+flutter run --dart-define=API_BASE_URL=https://hrsarv.ir/payroll
 ```
 
-Replace `YOUR-DOMAIN` with the actual test-host domain. Keep `/payroll` only if that is the site's public folder path.
+آدرس API را در صورت تغییر هاست در `API_BASE_URL` جایگزین کنید. برای تست اطلاعات واقعی فقط از HTTPS استفاده کنید.
 
-For a release APK:
+## ساخت APK
 
 ```bash
-flutter build apk --release --dart-define=API_BASE_URL=https://YOUR-DOMAIN/payroll
+flutter build apk --release --dart-define=API_BASE_URL=https://hrsarv.ir/payroll
 ```
 
-## Current scope
+GitHub Actions در فایل `.github/workflows/flutter-android.yml` پروژه Android را ایجاد می‌کند، کد را تحلیل می‌کند و APK خروجی را به‌عنوان Artifact ذخیره می‌کند.
 
-This first slice is the authentication foundation and a minimal role-aware landing screen. Employee workflows (payslips, leave, loans/advances, promotion requests and notifications), followed by manager/supervisor workflows and the full admin panel, are still to be implemented and tested.
+## وضعیت فعلی و محدودیت‌ها
 
+- این کد، اپلیکیشن Flutter واقعی است؛ صفحات HTML قبلی فقط کنسول آزمایش API و نمونه‌ی وب هستند.
+- کنترل دسترسی مدیر/سرپرست و کارکنان زیرمجموعه از سمت API انجام می‌شود.
+- صفحه‌ی مدیریت موبایل در این مرحله شامل داشبورد، کارکنان، درخواست‌ها و اعلان‌هاست. تمام تنظیمات و عملیات تخصصی پنل کامل PHP هنوز به صفحات بومی Flutter منتقل نشده‌اند.
+- مشاهده‌ی فیش پیاده‌سازی شده؛ چاپ و تولید PDF بومی در نسخه‌ی بعدی تکمیل می‌شود.
+- خروجی APK فقط پس از اجرای موفق Flutter build/CI قابل تأیید است؛ تا قبل از آن نباید نسخه‌ی نصب‌شدنی را آماده اعلام کرد.
 
-## Standalone browser test console (no Flutter required)
+## API و دیتابیس
 
-A single-file browser console is available at the repository root: `mobile-test-console.html`.
-
-1. Upload `mobile-test-console.html` to the same public `payroll` directory that contains `api/` (for example, `public_html/payroll/mobile-test-console.html`).
-2. Open `https://YOUR-DOMAIN/payroll/mobile-test-console.html` on a desktop or Android phone.
-3. Run **بررسی اتصال سرور**. HTTP 401 with `logout:true` is the expected unauthenticated response and confirms that the endpoint is reachable.
-4. Choose employee or admin sign-in and enter authorized test credentials. The page sends credentials only to the same-origin API, does not save credentials or tokens in browser storage, and keeps the Bearer token in page memory only.
-5. After a successful login, it calls `action=me` to verify the session. Use logout to revoke the token.
-
-Use HTTPS only. Do not share passwords, national IDs, phone numbers, or tokens in screenshots or chat. This is a diagnostic page, not the production mobile app.
+- API: `api/mobile.php`
+- Migration توکن: `db/migrations/2026-11-06-mobile-tokens.sql`
+- برای قابلیت فهرست کارکنان در اپ مدیران، endpoint امن `manager_employees` اضافه شده است. این endpoint قبل از پاسخ، scope مدیر را روی سرور اعمال می‌کند.

@@ -1,0 +1,34 @@
+name: Flutter Android build
+on:
+  push:
+    branches:
+      - feature/import-section-from-worksheet-ab
+    paths:
+      - 'mobile/flutter_app/**'
+      - '.github/workflows/flutter-android.yml'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile/flutter_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate Android project files
+        run: flutter create --platforms=android --project-name elzoco_hrm .
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Analyze Dart code
+        run: flutter analyze
+      - name: Build release APK
+        run: flutter build apk --release --dart-define=API_BASE_URL=https://hrsarv.ir/payroll
+      - uses: actions/upload-artifact@v4
+        with:
+          name: elzoco-hrm-android-apk
+          path: mobile/flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error

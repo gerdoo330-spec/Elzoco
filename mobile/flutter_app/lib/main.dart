@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:webview_flutter/webview_flutter.dart';
 const apiBase=String.fromEnvironment('API_BASE_URL',defaultValue:'https://hrsarv.ir/payroll');
 const vault=FlutterSecureStorage();const navy=Color(0xFF173B5C),teal=Color(0xFF0AA992),orange=Color(0xFFF28A24),bg=Color(0xFFF3F6FA),muted=Color(0xFF8292A4);
 void main(){WidgetsFlutterBinding.ensureInitialized();SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarColor:navy,statusBarIconBrightness:Brightness.light));runApp(const App());}
@@ -12,6 +13,7 @@ class Api{
   final h={'Accept':'application/json','Content-Type':'application/json',if(token!=null)'Authorization':'Bearer '+token};
   final r=method=='GET'?await http.get(url(a),headers:h):await http.post(url(a),headers:h,body:jsonEncode({...?body,'action':a}));
   final d=jsonDecode(utf8.decode(r.bodyBytes));if(d is! Map<String,dynamic>)throw Exception('پاسخ سرور معتبر نیست.');
+  if(a=='login'&&r.headers['set-cookie']!=null){final ck=r.headers['set-cookie']!.split(';').first;await vault.write(key:'admin_session_cookie',value:ck);}
   if(r.statusCode==401||d['logout']==true)throw Exception('نشست منقضی شده؛ دوباره وارد شوید.');
   if(r.statusCode<200||r.statusCode>=300||d['ok']==false)throw Exception(d['message']??'عملیات ناموفق بود.');
   return d;
@@ -41,7 +43,7 @@ Future<void> loadManager()async{try{final x=await Future.wait([api('manager_empl
 Future<void> refresh()async{setState(()=>busy=true);try{d=await api('me');u=_map(d['user']);if(!emp)await loadManager();}catch(e){toast(e.toString(),true);}if(mounted)setState(()=>busy=false);}
 Future<void> logout()async{try{await api('logout',method:'POST');}catch(_){}await vault.deleteAll();widget.onLogout();}
 void toast(String s,[bool bad=false])=>ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s),backgroundColor:bad?Colors.red:teal));
-@override Widget build(BuildContext c){final pages=emp?[_employeeHome(),_employeeRequests(),_slips(),_alerts()]:[_managerHome(),_staff(),_managerRequests(),_alerts()];final labels=emp?const ['خانه','درخواست‌ها','فیش حقوقی','اعلان‌ها']:const ['خانه','کارکنان','درخواست‌ها','اعلان‌ها'];final icons=emp?const [Icons.home,Icons.assignment,Icons.receipt_long,Icons.notifications]:const [Icons.dashboard,Icons.groups,Icons.inbox,Icons.notifications];return Scaffold(appBar:AppBar(title:Text('پنل '+roleName),actions:[IconButton(onPressed:refresh,icon:const Icon(Icons.refresh)),IconButton(onPressed:logout,icon:const Icon(Icons.logout))]),body:busy?const Center(child:CircularProgressIndicator()):IndexedStack(index:tab,children:pages),bottomNavigationBar:NavigationBar(selectedIndex:tab,onDestinationSelected:(v){setState(()=>tab=v);if(v==1&&!emp&&staff.isEmpty)loadManager();if(v==3)loadAlerts();},destinations:List.generate(4,(i)=>NavigationDestination(icon:Icon(icons[i]),label:labels[i]))));}
+@override Widget build(BuildContext c){final pages=<Widget>[...(emp?[_employeeHome(),_employeeRequests(),_slips(),_alerts()]:[_managerHome(),_staff(),_managerRequests(),_alerts()])];if(admin)pages.add(const FullAdminPanel());final labels=emp?const ['خانه','درخواست‌ها','فیش حقوقی','اعلان‌ها']:admin?const ['خانه','کارکنان','درخواست‌ها','اعلان‌ها','کل سامانه']:const ['خانه','کارکنان','درخواست‌ها','اعلان‌ها'];final icons=emp?const [Icons.home,Icons.assignment,Icons.receipt_long,Icons.notifications]:admin?const [Icons.dashboard,Icons.groups,Icons.inbox,Icons.notifications,Icons.admin_panel_settings]:const [Icons.dashboard,Icons.groups,Icons.inbox,Icons.notifications];return Scaffold(appBar:AppBar(title:Text('پنل '+roleName),actions:[IconButton(onPressed:refresh,icon:const Icon(Icons.refresh)),IconButton(onPressed:logout,icon:const Icon(Icons.logout))]),body:busy?const Center(child:CircularProgressIndicator()):IndexedStack(index:tab,children:pages),bottomNavigationBar:NavigationBar(selectedIndex:tab,onDestinationSelected:(v){setState(()=>tab=v);if(v==1&&!emp&&staff.isEmpty)loadManager();if(v==3)loadAlerts();},destinations:List.generate(4,(i)=>NavigationDestination(icon:Icon(icons[i]),label:labels[i]))));}
 Widget heading(String s)=>Padding(padding:const EdgeInsets.symmetric(vertical:10),child:Text(s,style:const TextStyle(fontWeight:FontWeight.w900,color:navy,fontSize:14)));
 Widget hero(String s)=>Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[navy,Color(0xFF087E7C)]),borderRadius:BorderRadius.circular(17)),child:Text(s,style:const TextStyle(color:Colors.white,fontWeight:FontWeight.bold,fontSize:17)));
 Widget card(String s,String sub,IconData icon,VoidCallback tap)=>Card(color:Colors.white,elevation:0,child:ListTile(onTap:tap,leading:Icon(icon,color:teal),title:Text(s,style:const TextStyle(color:navy,fontWeight:FontWeight.bold)),subtitle:Text(sub,style:const TextStyle(fontSize:11,color:muted))));
@@ -61,6 +63,49 @@ Widget _alerts()=>ListView(padding:const EdgeInsets.all(15),children:[heading('�
 Future<void> loadAlerts()async{try{final r=await api(emp?'notif_poll':'manager_notif_poll');alerts=_list(r['items']);final ids=alerts.map((x)=>x['id']).where((x)=>x!=null).toList();if(ids.isNotEmpty)await api(emp?'notif_ack':'manager_notif_ack',method:'POST',body:{'ids':ids});if(mounted)setState((){});}catch(e){toast(e.toString(),true);}}
 void openForm(String k)=>Navigator.push(context,MaterialPageRoute(builder:(_)=>RequestForm(kind:k,data:d,send:(a,b)=>api(a,method:'POST',body:b),refresh:refresh)));
 }
+class FullAdminPanel extends StatefulWidget{const FullAdminPanel({super.key});@override State<FullAdminPanel> createState()=>_FullAdminPanelState();}
+class _FullAdminPanelState extends State<FullAdminPanel>{
+ late final WebViewController controller;bool ready=false;String? failure;
+ @override void initState(){super.initState();initWebView();}
+ Future<void> initWebView()async{
+  try{
+   final raw=await vault.read(key:'admin_session_cookie');
+   if(raw==null||!raw.contains('=')){setState(()=>failure='نشست پنل مدیریت در دسترس نیست. یک بار خارج شوید و دوباره وارد شوید.');return;}
+   final split=raw.indexOf('=');final name=raw.substring(0,split),value=raw.substring(split+1);
+   final base=Uri.parse(apiBase);await WebViewCookieManager().setCookie(WebViewCookie(name:name,value:value,domain:base.host,path:'/'));
+   controller=WebViewController()..setJavaScriptMode(JavaScriptMode.unrestricted)
+    ..setNavigationDelegate(NavigationDelegate(onPageFinished:(_){if(mounted)setState(()=>ready=true);}))
+    ..loadRequest(Uri.parse(apiBase.replaceAll(RegExp(r'/+{final String kind;final Map<String,dynamic> data;final Future<Map<String,dynamic>> Function(String,Map<String,dynamic>) send;final Future<void> Function() refresh;const RequestForm({super.key,required this.kind,required this.data,required this.send,required this.refresh});@override State<RequestForm> createState()=>_RequestFormState();}
+class _RequestFormState extends State<RequestForm>{final a=TextEditingController(),b=TextEditingController(),c=TextEditingController(),d=TextEditingController();String type='daily',fin='advance',shift='صبح (۸ ساعته)',newShift='شب (۸ ساعته)';bool registered=false,busy=false;static const shifts=['صبح (۸ ساعته)','شب (۸ ساعته)','فول تایم (۱۲ ساعته)','گردشی'];@override void dispose(){a.dispose();b.dispose();c.dispose();d.dispose();super.dispose();}
+Widget input(String label,TextEditingController x,{TextInputType? keyboard,int lines=1})=>TextField(controller:x,keyboardType:keyboard,maxLines:lines,decoration:InputDecoration(labelText:label));
+Future<void> submit()async{setState(()=>busy=true);try{late String action;late Map<String,dynamic> body;if(widget.kind=='leave'){action='leave_submit';body={'type':type,'from':a.text,'to':b.text,'start_time':b.text,'end_time':c.text,'reason':d.text};}else if(widget.kind=='finance'){action=fin=='loan'?'loan_submit':'advance_submit';body={'amount':a.text,'sheba':b.text,'use_registered':registered?1:0};}else{action='promo_submit';body={'job':a.text,'current_shift':shift,'shift':newShift,'reason':b.text};}final r=await widget.send(action,body);if(mounted){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(r['message']??'درخواست ثبت شد.')));await widget.refresh();Navigator.pop(context);}}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(e.toString()),backgroundColor:Colors.red));}finally{if(mounted)setState(()=>busy=false);}}
+@override Widget build(BuildContext c){final types=_list(_map(widget.data['leave'])['types']);return Scaffold(appBar:AppBar(title:Text(widget.kind=='leave'?'درخواست مرخصی':widget.kind=='finance'?'وام و مساعده':'ارتقای شغلی')),body:ListView(padding:const EdgeInsets.all(15),children:[
+if(widget.kind=='leave')...[
+DropdownButtonFormField<String>(value:types.isEmpty?null:types.firstWhere((x)=>x['key']==type,orElse:()=>types.first)['key'].toString(),decoration:const InputDecoration(labelText:'نوع مرخصی'),items:types.map((x)=>DropdownMenuItem(value:x['key'].toString(),child:Text(x['label'].toString()))).toList(),onChanged:(v)=>setState(()=>type=v??type)),
+const SizedBox(height:10),input('تاریخ شروع شمسی',a),const SizedBox(height:10),input('تاریخ پایان / ساعت شروع',b),const SizedBox(height:10),input('ساعت پایان',c),const SizedBox(height:10),input('دلیل درخواست',d,lines:3)
+],
+if(widget.kind=='finance')...[
+DropdownButtonFormField<String>(value:fin,decoration:const InputDecoration(labelText:'نوع درخواست'),items:const [DropdownMenuItem(value:'advance',child:Text('مساعده')),DropdownMenuItem(value:'loan',child:Text('وام'))],onChanged:(v)=>setState(()=>fin=v??fin)),
+const SizedBox(height:10),input('مبلغ (ریال)',a,keyboard:TextInputType.number),const SizedBox(height:10),input('شماره شبا',b),CheckboxListTile(value:registered,onChanged:(v)=>setState(()=>registered=v??false),title:const Text('استفاده از شبای ثبت‌شده'))
+],
+if(widget.kind=='promotion')...[
+input('عنوان شغلی درخواستی',a),const SizedBox(height:10),DropdownButtonFormField<String>(value:shift,decoration:const InputDecoration(labelText:'شیفت فعلی'),items:shifts.map((s)=>DropdownMenuItem(value:s,child:Text(s))).toList(),onChanged:(v)=>setState(()=>shift=v??shift)),const SizedBox(height:10),DropdownButtonFormField<String>(value:newShift,decoration:const InputDecoration(labelText:'شیفت درخواستی'),items:shifts.map((s)=>DropdownMenuItem(value:s,child:Text(s))).toList(),onChanged:(v)=>setState(()=>newShift=v??newShift)),const SizedBox(height:10),input('دلیل درخواست',b,lines:3)
+],
+const SizedBox(height:16),FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:teal),child:busy?const CircularProgressIndicator(color:Colors.white):const Text('ارسال درخواست'))
+]));}}
+class Slip extends StatelessWidget{final Map<String,dynamic> slip,user;const Slip({super.key,required this.slip,required this.user});@override Widget build(BuildContext c){final h=_map(slip['header']),t=_map(slip['totals']);return Scaffold(appBar:AppBar(title:const Text('فیش حقوقی')),body:ListView(padding:const EdgeInsets.all(15),children:[Card(color:navy,child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('فیش حقوقی ELZOCO',style:TextStyle(color:Colors.white,fontSize:18,fontWeight:FontWeight.bold)),Text(_map(slip['period'])['label']?.toString()??'',style:const TextStyle(color:Colors.white70)),_info('نام',h['name']??user['name']),_info('کد پرسنلی',h['personnel']??user['personnel_code']),_info('سمت',h['post']??user['post']),_info('روز کارکرد',h['days'])])),_table('دریافتی‌ها',_list(slip['pay'])),_table('کسورات',_list(slip['ded'])),ListTile(title:const Text('خالص پرداختی'),trailing:Text(_money(t['net']),style:const TextStyle(fontWeight:FontWeight.bold,color:teal)))]));}Widget _info(String s,dynamic v)=>Padding(padding:const EdgeInsets.all(6),child:Row(children:[Expanded(child:Text(s,style:const TextStyle(color:Colors.white70))),Text(v?.toString()??'—',style:const TextStyle(color:Colors.white,fontWeight:FontWeight.bold))]));Widget _table(String s,List<dynamic> rows)=>Card(color:Colors.white,child:Column(children:[ListTile(title:Text(s)),...rows.map((x)=>ListTile(dense:true,title:Text(x['label']??''),trailing:Text(_money(x['amount']))))]));}
+Map<String,dynamic> _map(dynamic x)=>x is Map?Map<String,dynamic>.from(x):<String,dynamic>{};List<dynamic> _list(dynamic x)=>x is List?x:<dynamic>[];String _fa(dynamic x)=>(int.tryParse(x?.toString()??'')??0).toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'),(m)=>',');String _money(dynamic x)=>_fa(x)+' ریال';String _stage(dynamic x)=>({'direct':'در انتظار سرپرست','general':'در انتظار مدیر','admin':'در انتظار منابع انسانی','evaluated':'در انتظار تصمیم مدیر','final':'تأیید نهایی','rejected':'رد شده'}[x?.toString()]??x?.toString()??'در حال بررسی');
+),'')+'/admin/panel.php'));
+   if(mounted)setState(()=>ready=true);
+  }catch(e){if(mounted)setState(()=>failure='بارگذاری پنل مدیریت انجام نشد: '+e.toString());}
+ }
+ @override Widget build(BuildContext context){
+  if(failure!=null)return Center(child:Padding(padding:const EdgeInsets.all(20),child:Text(failure!,textAlign:TextAlign.center,style:const TextStyle(color:Colors.red))));
+  if(!ready)return const Center(child:CircularProgressIndicator(color:teal));
+  return WebViewWidget(controller:controller);
+ }
+}
+
 class RequestForm extends StatefulWidget{final String kind;final Map<String,dynamic> data;final Future<Map<String,dynamic>> Function(String,Map<String,dynamic>) send;final Future<void> Function() refresh;const RequestForm({super.key,required this.kind,required this.data,required this.send,required this.refresh});@override State<RequestForm> createState()=>_RequestFormState();}
 class _RequestFormState extends State<RequestForm>{final a=TextEditingController(),b=TextEditingController(),c=TextEditingController(),d=TextEditingController();String type='daily',fin='advance',shift='صبح (۸ ساعته)',newShift='شب (۸ ساعته)';bool registered=false,busy=false;static const shifts=['صبح (۸ ساعته)','شب (۸ ساعته)','فول تایم (۱۲ ساعته)','گردشی'];@override void dispose(){a.dispose();b.dispose();c.dispose();d.dispose();super.dispose();}
 Widget input(String label,TextEditingController x,{TextInputType? keyboard,int lines=1})=>TextField(controller:x,keyboardType:keyboard,maxLines:lines,decoration:InputDecoration(labelText:label));

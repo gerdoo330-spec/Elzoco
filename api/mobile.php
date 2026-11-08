@@ -26,6 +26,32 @@ try{
   else $counts=one('SELECT COUNT(*) total,COALESCE(SUM(in_latest=1 AND inactive=0),0) active,COALESCE(SUM(inactive=1 OR in_latest=0),0) inactive FROM employees WHERE id IN ('.implode(',',array_fill(0,count($scope),'?')).')',$scope);
   json_out(['ok'=>true,'user'=>$u,'counts'=>$counts,'pending'=>admin_pending_counts($a)]);
  }
+
+ if($u['type']==='employee'){
+  $e=one('SELECT * FROM employees WHERE id=? AND in_latest=1 AND inactive=0 LIMIT 1',[$u['id']]);
+  if(!$e) json_out(['ok'=>false,'message'=>'حساب کاربری فعال نیست.','logout'=>true],401);
+  switch($action){
+   case 'profile':
+    json_out(['ok'=>true,'employee'=>['name'=>$e['name'],'national'=>$e['national_code'],'personnel'=>$e['personnel_code'],'post'=>$e['post'],'hire_date'=>(($d=jalali_from_start_code((string)$e['start_code']))?jalali_str($d):'')],'profile'=>employee_profile_get((int)$e['id'])]);
+   case 'payslip':
+    $win=payslip_window(); if(!$win['open']) json_out(['ok'=>false,'message'=>$win['message']]);
+    $periodId=(int)($in['period_id']??$_GET['period_id']??0); $slip=$periodId?payslip_for((int)$e['id'],$periodId):null;
+    if(!$slip) json_out(['ok'=>false,'message'=>'فیش این دوره برای شما ثبت نشده است.'],404);
+    json_out(['ok'=>true,'slip'=>$slip]);
+   case 'advance_submit':
+    json_out(advance_submit($e,$in,'advance')+['advance'=>advance_overview($e,'advance')]);
+   case 'loan_submit':
+    json_out(advance_submit($e,$in,'loan')+['loan'=>advance_overview($e,'loan')]);
+   case 'promo_submit':
+    json_out(promo_submit($e,$in)+['promotion'=>promo_overview($e)]);
+   case 'leave_submit':
+    $lr=leave_submit($e,$in); json_out($lr+['requests'=>leave_list_for((int)$e['id']),'balance'=>leave_annual_balance($e)]);
+   case 'notif_poll':
+    json_out(['ok'=>true,'items'=>notify_poll('emp:'.$e['id'])]);
+   case 'notif_ack':
+    notify_ack('emp:'.$e['id'],(array)($in['ids']??[])); json_out(['ok'=>true]);
+  }
+ }
  if($action==='logout'&&$method==='POST'){$h=(string)($_SERVER['HTTP_AUTHORIZATION']??'');if(preg_match('/^Bearer\s+([a-f0-9]{64})$/i',trim($h),$m))q('UPDATE mobile_tokens SET revoked_at=NOW() WHERE token_hash=?',[hash('sha256',$m[1])]);json_out(['ok'=>true]);}
  json_out(['ok'=>false,'message'=>'این عملیات در نسخه بعدی فعال می‌شود.'],404);
 }catch(Throwable $e){error_log('[mobile api] '.$e->getMessage());json_out(['ok'=>false,'message'=>'خطای داخلی سرور. دوباره تلاش کنید.'],500);}

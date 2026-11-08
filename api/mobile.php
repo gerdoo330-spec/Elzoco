@@ -53,6 +53,37 @@ try{
     notify_ack('emp:'.$e['id'],(array)($in['ids']??[])); json_out(['ok'=>true]);
   }
  }
+
+ if($u['type']==='admin'){
+  $a=['id'=>$u['id'],'name'=>$u['name'],'role'=>$u['role'],'pc'=>$u['personnel_code']];
+  switch($action){
+   case 'manager_leaves':
+    json_out(['ok'=>true,'requests'=>leave_manager_list($a,null,(array)($in['filter']??[]))]);
+   case 'manager_advances':
+    json_out(['ok'=>true,'requests'=>advance_admin_list((array)($in['filter']??[]),$a)]);
+   case 'manager_promotions':
+    json_out(['ok'=>true,'requests'=>promo_admin_list($a,(array)($in['filter']??[]))]);
+   case 'manager_leave_decide':
+    if($method!=='POST') json_out(['ok'=>false,'message'=>'Method not allowed'],405);
+    $result=leave_decide($a,(int)($in['id']??0),(string)($in['decision']??''),(string)($in['note']??''),$u['name']);
+    json_out($result+['pending'=>admin_pending_counts($a)]);
+   case 'manager_advance_decide':
+    if($method!=='POST') json_out(['ok'=>false,'message'=>'Method not allowed'],405);
+    $approved=isset($in['approved'])&&$in['approved']!==''?(int)digits((string)$in['approved']):null;
+    $result=advance_decide($a,(int)($in['id']??0),(string)($in['decision']??''),$approved,(string)($in['note']??''),$u['name']);
+    json_out($result+['pending'=>admin_pending_counts($a)]);
+   case 'manager_promo_decide':
+    if($method!=='POST') json_out(['ok'=>false,'message'=>'Method not allowed'],405);
+    $result=promo_decide($a,(int)($in['id']??0),(string)($in['decision']??''),(string)($in['note']??''),$u['name'],
+      isset($in['score'])?(string)$in['score']:null,isset($in['amount'])?(string)$in['amount']:null);
+    json_out($result+['pending'=>admin_pending_counts($a)]);
+   case 'manager_notif_poll':
+    json_out(['ok'=>true,'items'=>notify_poll('admin:'.$a['id']),'pending'=>admin_pending_counts($a)]);
+   case 'manager_notif_ack':
+    if($method!=='POST') json_out(['ok'=>false,'message'=>'Method not allowed'],405);
+    notify_ack('admin:'.$a['id'],(array)($in['ids']??[])); json_out(['ok'=>true]);
+  }
+ }
  if($action==='logout'&&$method==='POST'){$h=(string)($_SERVER['HTTP_AUTHORIZATION']??'');if(preg_match('/^Bearer\s+([a-f0-9]{64})$/i',trim($h),$m))q('UPDATE mobile_tokens SET revoked_at=NOW() WHERE token_hash=?',[hash('sha256',$m[1])]);json_out(['ok'=>true]);}
  json_out(['ok'=>false,'message'=>'این عملیات در نسخه بعدی فعال می‌شود.'],404);
 }catch(Throwable $e){error_log('[mobile api] '.$e->getMessage());json_out(['ok'=>false,'message'=>'خطای داخلی سرور. دوباره تلاش کنید.'],500);}

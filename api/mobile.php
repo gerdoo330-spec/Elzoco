@@ -57,6 +57,24 @@ try{
  if($u['type']==='admin'){
   $a=['id'=>$u['id'],'name'=>$u['name'],'role'=>$u['role'],'pc'=>$u['personnel_code']];
   switch($action){
+   case 'manager_employees':
+    // The scope is calculated on the server; a client cannot request employees outside it.
+    $scope=admin_employee_scope_ids($a);
+    $search=trim((string)($in['q']??$_GET['q']??''));
+    $where=['in_latest=1'];
+    $params=[];
+    if($scope!==null){
+     if(!$scope) json_out(['ok'=>true,'employees'=>[],'total'=>0]);
+     $where[]='id IN ('.implode(',',array_fill(0,count($scope),'?')).')';
+     $params=array_merge($params,$scope);
+    }
+    if($search!==''){
+     $where[]='(name LIKE ? OR personnel_code LIKE ? OR post LIKE ?)';
+     $like='%'.$search.'%';
+     array_push($params,$like,$like,$like);
+    }
+    $rows=all('SELECT id,name,personnel_code,post,inactive FROM employees WHERE '.implode(' AND ',$where).' ORDER BY name LIMIT 1000',$params);
+    json_out(['ok'=>true,'employees'=>$rows,'total'=>count($rows)]);
    case 'manager_leaves':
     json_out(['ok'=>true,'requests'=>leave_manager_list($a,null,(array)($in['filter']??[]))]);
    case 'manager_advances':

@@ -34,7 +34,8 @@ try{
    case 'profile':
     json_out(['ok'=>true,'employee'=>['name'=>$e['name'],'national'=>$e['national_code'],'personnel'=>$e['personnel_code'],'post'=>$e['post'],'hire_date'=>(($d=jalali_from_start_code((string)$e['start_code']))?jalali_str($d):'')],'profile'=>employee_profile_get((int)$e['id'])]);
    case 'payslip':
-    $win=payslip_window(); if(!$win['open']) json_out(['ok'=>false,'message'=>$win['message']]);
+    // مشاهده‌ی فیش‌های ذخیره‌شده مستقل از باز یا بسته بودن پنجره‌ی ثبت/بارگذاری دوره است.
+    // payslip_for فقط فیش متعلق به همین کارمند را برمی‌گرداند.
     $periodId=(int)($in['period_id']??$_GET['period_id']??0); $slip=$periodId?payslip_for((int)$e['id'],$periodId):null;
     if(!$slip) json_out(['ok'=>false,'message'=>'فیش این دوره برای شما ثبت نشده است.'],404);
     json_out(['ok'=>true,'slip'=>$slip]);

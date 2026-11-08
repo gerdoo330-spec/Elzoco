@@ -2,396 +2,82 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-
-const apiBase = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://YOUR-HOST/payroll');
-const secureStore = FlutterSecureStorage();
-
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarColor: Color(0xFF102B49), statusBarIconBrightness: Brightness.light));
-  runApp(const ElzocoApp());
+const apiBase=String.fromEnvironment('API_BASE_URL',defaultValue:'https://hrsarv.ir/payroll');
+const vault=FlutterSecureStorage();const navy=Color(0xFF173B5C),teal=Color(0xFF0AA992),orange=Color(0xFFF28A24),bg=Color(0xFFF3F6FA),muted=Color(0xFF8292A4);
+void main(){WidgetsFlutterBinding.ensureInitialized();SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarColor:navy,statusBarIconBrightness:Brightness.light));runApp(const App());}
+class Api{
+ static Uri url(String a)=>Uri.parse(apiBase.replaceAll(RegExp(r'/+$'),'')+'/api/mobile.php?action='+a);
+ static Future<Map<String,dynamic>> call(String a,{String method='GET',String? token,Map<String,dynamic>? body})async{
+  final h={'Accept':'application/json','Content-Type':'application/json',if(token!=null)'Authorization':'Bearer '+token};
+  final r=method=='GET'?await http.get(url(a),headers:h):await http.post(url(a),headers:h,body:jsonEncode({...?body,'action':a}));
+  final d=jsonDecode(utf8.decode(r.bodyBytes));if(d is! Map<String,dynamic>)throw Exception('پاسخ سرور معتبر نیست.');
+  if(r.statusCode==401||d['logout']==true)throw Exception('نشست منقضی شده؛ دوباره وارد شوید.');
+  if(r.statusCode<200||r.statusCode>=300||d['ok']==false)throw Exception(d['message']??'عملیات ناموفق بود.');
+  return d;
+ }
 }
+class App extends StatelessWidget{const App({super.key});@override Widget build(BuildContext c)=>MaterialApp(debugShowCheckedModeBanner:false,title:'Elzoco HRM',theme:ThemeData(useMaterial3:true,scaffoldBackgroundColor:bg,colorScheme:ColorScheme.fromSeed(seedColor:teal),appBarTheme:const AppBarTheme(backgroundColor:navy,foregroundColor:Colors.white)),home:const Directionality(textDirection:TextDirection.rtl,child:Gate()));}
+class Gate extends StatefulWidget{const Gate({super.key});@override State<Gate> createState()=>_GateState();}
+class _GateState extends State<Gate>{String? token;Map<String,dynamic>? data;bool wait=true;@override void initState(){super.initState();restore();}Future<void> restore()async{try{final t=await vault.read(key:'access_token');if(t!=null){data=await Api.call('me',token:t);token=t;}}catch(_){await vault.deleteAll();}if(mounted)setState(()=>wait=false);}void logged(String t,Map<String,dynamic>d)=>setState((){token=t;data=d;});void out()=>setState((){token=null;data=null;});@override Widget build(BuildContext c)=>wait?const Scaffold(body:Center(child:CircularProgressIndicator())):token==null?Login(onLogin:logged):Home(token:token!,initial:data!,onLogout:out);}
+class Login extends StatefulWidget{final void Function(String,Map<String,dynamic>) onLogin;const Login({super.key,required this.onLogin});@override State<Login> createState()=>_LoginState();}
+class _LoginState extends State<Login>{String kind='employee';bool busy=false,hide=true;String? error;final national=TextEditingController(),pc=TextEditingController(),phone=TextEditingController(),username=TextEditingController(),password=TextEditingController();@override void dispose(){national.dispose();pc.dispose();phone.dispose();username.dispose();password.dispose();super.dispose();}
+Future<void> submit()async{setState((){busy=true;error=null;});try{final body=kind=='employee'?{'user_type':'employee','national':national.text.trim(),'personnel':pc.text.trim(),'phone':phone.text.trim()}:{'user_type':'admin','username':username.text.trim(),'password':password.text};final x=await Api.call('login',method:'POST',body:body);final t=x['token'].toString();await vault.write(key:'access_token',value:t);final d=await Api.call('me',token:t);if(mounted)widget.onLogin(t,d);}catch(e){if(mounted)setState(()=>error=e.toString());}finally{if(mounted)setState(()=>busy=false);}}
+Widget input(String label,TextEditingController c,{bool secret=false,TextInputType? type})=>TextField(controller:c,keyboardType:type,obscureText:secret&&hide,decoration:InputDecoration(labelText:label,suffixIcon:secret?IconButton(onPressed:()=>setState(()=>hide=!hide),icon:Icon(hide?Icons.visibility:Icons.visibility_off)):null));
+@override Widget build(BuildContext c)=>Scaffold(body:SafeArea(child:Center(child:SingleChildScrollView(padding:const EdgeInsets.all(22),child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:440),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+const SizedBox(height:35),const Icon(Icons.apartment_rounded,color:navy,size:58),const Text('ELZOCO HRM',textAlign:TextAlign.center,style:TextStyle(color:navy,fontSize:27,fontWeight:FontWeight.w900)),const Text('سامانه یکپارچه منابع انسانی',textAlign:TextAlign.center,style:TextStyle(color:muted)),const SizedBox(height:25),
+SegmentedButton<String>(segments:const [ButtonSegment(value:'employee',label:Text('کارمند')),ButtonSegment(value:'admin',label:Text('مدیر و سرپرست'))],selected:{kind},onSelectionChanged:(v)=>setState(()=>kind=v.first)),const SizedBox(height:16),
+if(kind=='employee')...[
+input('کد ملی',national,type:TextInputType.number),const SizedBox(height:10),input('کد پرسنلی کامل',pc,type:TextInputType.number),const SizedBox(height:10),input('شماره موبایل',phone,type:TextInputType.phone)
+]else...[input('نام کاربری',username),const SizedBox(height:10),input('رمز عبور',password,secret:true)],
+if(error!=null)Padding(padding:const EdgeInsets.all(8),child:Text(error!,style:const TextStyle(color:Colors.red))),const SizedBox(height:15),FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:teal,padding:const EdgeInsets.all(15)),child:busy?const CircularProgressIndicator(color:Colors.white):const Text('ورود به سامانه'))
+]))))));}}
 
-class ElzocoApp extends StatelessWidget {
-  const ElzocoApp({super.key});
-  @override Widget build(BuildContext context) => MaterialApp(
-    debugShowCheckedModeBanner: false,
-    title: 'Elzoco HRM',
-    theme: ThemeData(
-      useMaterial3: true,
-      scaffoldBackgroundColor: const Color(0xFFF4F7FB),
-      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0AA992)),
-      textTheme: GoogleFonts.vazirmatnTextTheme(),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true, fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2EAF2))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2EAF2))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF0AA992), width: 1.5)),
-      ),
-    ),
-    home: const Directionality(textDirection: TextDirection.rtl, child: AuthGate()),
-  );
+class Home extends StatefulWidget{final String token;final Map<String,dynamic> initial;final VoidCallback onLogout;const Home({super.key,required this.token,required this.initial,required this.onLogout});@override State<Home> createState()=>_HomeState();}
+class _HomeState extends State<Home>{late Map<String,dynamic> d,u;int tab=0;bool busy=false;List<dynamic> staff=[],leaves=[],finance=[],promos=[],alerts=[];bool get emp=>u['type']=='employee';String get role=>(u['role']??'').toString();bool get admin=>role=='admin'||role=='senior';String get roleName=>({'admin':'مدیر سامانه','senior':'مدیر ارشد','manager':'مدیر','supervisor':'سرپرست','supervisor_manager':'سوپروایزر'}[role]??(emp?'کارمند':'مدیر'));
+@override void initState(){super.initState();d=Map.from(widget.initial);u=_map(d['user']);if(!emp)loadManager();}
+Future<Map<String,dynamic>> api(String a,{String method='GET',Map<String,dynamic>? body})=>Api.call(a,method:method,token:widget.token,body:body);
+Future<void> loadManager()async{try{final x=await Future.wait([api('manager_employees'),api('manager_leaves'),api('manager_advances'),api('manager_promotions')]);staff=_list(x[0]['employees']);leaves=_list(x[1]['requests']);finance=_list(x[2]['requests']);promos=_list(x[3]['requests']);}catch(e){toast(e.toString(),true);}if(mounted)setState((){});}
+Future<void> refresh()async{setState(()=>busy=true);try{d=await api('me');u=_map(d['user']);if(!emp)await loadManager();}catch(e){toast(e.toString(),true);}if(mounted)setState(()=>busy=false);}
+Future<void> logout()async{try{await api('logout',method:'POST');}catch(_){}await vault.deleteAll();widget.onLogout();}
+void toast(String s,[bool bad=false])=>ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s),backgroundColor:bad?Colors.red:teal));
+@override Widget build(BuildContext c){final pages=emp?[_employeeHome(),_employeeRequests(),_slips(),_alerts()]:[_managerHome(),_staff(),_managerRequests(),_alerts()];final labels=emp?const ['خانه','درخواست‌ها','فیش حقوقی','اعلان‌ها']:const ['خانه','کارکنان','درخواست‌ها','اعلان‌ها'];final icons=emp?const [Icons.home,Icons.assignment,Icons.receipt_long,Icons.notifications]:const [Icons.dashboard,Icons.groups,Icons.inbox,Icons.notifications];return Scaffold(appBar:AppBar(title:Text('پنل '+roleName),actions:[IconButton(onPressed:refresh,icon:const Icon(Icons.refresh)),IconButton(onPressed:logout,icon:const Icon(Icons.logout))]),body:busy?const Center(child:CircularProgressIndicator()):IndexedStack(index:tab,children:pages),bottomNavigationBar:NavigationBar(selectedIndex:tab,onDestinationSelected:(v){setState(()=>tab=v);if(v==1&&!emp&&staff.isEmpty)loadManager();if(v==3)loadAlerts();},destinations:List.generate(4,(i)=>NavigationDestination(icon:Icon(icons[i]),label:labels[i]))));}
+Widget heading(String s)=>Padding(padding:const EdgeInsets.symmetric(vertical:10),child:Text(s,style:const TextStyle(fontWeight:FontWeight.w900,color:navy,fontSize:14)));
+Widget hero(String s)=>Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[navy,Color(0xFF087E7C)]),borderRadius:BorderRadius.circular(17)),child:Text(s,style:const TextStyle(color:Colors.white,fontWeight:FontWeight.bold,fontSize:17)));
+Widget card(String s,String sub,IconData icon,VoidCallback tap)=>Card(color:Colors.white,elevation:0,child:ListTile(onTap:tap,leading:Icon(icon,color:teal),title:Text(s,style:const TextStyle(color:navy,fontWeight:FontWeight.bold)),subtitle:Text(sub,style:const TextStyle(fontSize:11,color:muted))));
+Widget empty(String s)=>Padding(padding:const EdgeInsets.all(15),child:Text(s,style:const TextStyle(color:muted,fontSize:12)));
+Widget _employeeHome(){final l=_map(d['leave']),a=_map(d['advance']),p=_map(d['promotion']);return ListView(padding:const EdgeInsets.all(15),children:[hero('سلام '+(u['name']??'همکار گرامی').toString()),heading('اطلاعات پرسنلی'),card('کد پرسنلی: '+(u['personnel_code']??'—').toString(),'سمت: '+(u['post']??'—').toString(),Icons.badge,()=>{}),heading('خدمات کارکنان'),card('فیش حقوقی','مشاهده دوره‌های حقوقی',Icons.receipt_long,()=>setState(()=>tab=2)),card('درخواست مرخصی',_list(l['requests']).length.toString()+' درخواست',Icons.event,()=>openForm('leave')),card('وام و مساعده',_list(a['requests']).length.toString()+' درخواست',Icons.payments,()=>openForm('finance')),card('ارتقای شغلی',_list(p['requests']).length.toString()+' درخواست',Icons.trending_up,()=>openForm('promotion'))]);}
+Widget _employeeRequests(){final l=_map(d['leave']),a=_map(d['advance']),lo=_map(d['loan']),p=_map(d['promotion']);return ListView(padding:const EdgeInsets.all(15),children:[heading('مرخصی‌ها'),..._list(l['requests']).map(history),card('درخواست مرخصی جدید','',Icons.add,()=>openForm('leave')),heading('وام و مساعده'),...[..._list(a['requests']),..._list(lo['requests'])].map(history),card('درخواست مالی جدید','',Icons.add,()=>openForm('finance')),heading('ارتقای شغلی'),..._list(p['requests']).map(history),card('درخواست ارتقای جدید','',Icons.add,()=>openForm('promotion'))]);}
+Widget history(dynamic x){final r=_map(x);return Card(color:Colors.white,elevation:0,child:ListTile(title:Text((r['tracking']??'درخواست').toString()+' · '+(r['type_label']??r['kind']??'پرسنلی').toString()),subtitle:Text('وضعیت: '+(r['status']??_stage(r['stage'])).toString(),style:const TextStyle(fontSize:11))));}
+Widget _slips(){final ps=_list(d['periods']);return ListView(padding:const EdgeInsets.all(15),children:[heading('فیش‌های حقوقی'),if(ps.isEmpty)empty('فیشی ثبت نشده است.'),...ps.map((p)=>card(p['label']??'دوره حقوقی',p['has_work']==true?'مشاهده فیش':'کارکرد ثبت نشده',Icons.receipt_long,()=>showSlip(p)))]);}
+Future<void> showSlip(dynamic p)async{try{final r=await api('payslip',method:'POST',body:{'period_id':int.tryParse(p['id'].toString())??0});if(mounted)Navigator.push(context,MaterialPageRoute(builder:(_)=>Slip(slip:_map(r['slip']),user:u)));}catch(e){toast(e.toString(),true);}}
+Widget _managerHome(){final c=_map(d['counts']),p=_map(d['pending']);final n=p.values.fold<int>(0,(s,v)=>s+(int.tryParse(v.toString())??0));return ListView(padding:const EdgeInsets.all(15),children:[hero('سلام '+(u['name']??'مدیر').toString()+' · '+(admin?'دسترسی کل سامانه':'محدوده کارکنان زیرمجموعه')),heading('آمار'),Wrap(spacing:8,runSpacing:8,children:[_stat('کل کارکنان',c['total']),_stat('فعال',c['active']),_stat('غیرفعال',c['inactive']),_stat('در انتظار',n)]),heading('مدیریت'),card('کارکنان زیرمجموعه','مشاهده کارکنان مجاز',Icons.groups,()=>setState(()=>tab=1)),card('درخواست‌های قابل بررسی','مرخصی، وام، مساعده و ارتقا',Icons.inbox,()=>setState(()=>tab=2))]);}
+Widget _stat(String s,dynamic v)=>Chip(label:Text(s+': '+_fa(v)),avatar:const Icon(Icons.circle,size:9,color:teal),backgroundColor:Colors.white);
+Widget _staff()=>ListView(padding:const EdgeInsets.all(15),children:[heading(admin?'تمام کارکنان':'کارکنان زیرمجموعه'),if(staff.isEmpty)empty('کارمندی یافت نشد.'),...staff.map((x){final e=_map(x);return Card(color:Colors.white,elevation:0,child:ListTile(leading:const Icon(Icons.person,color:teal),title:Text(e['name']??''),subtitle:Text('کد پرسنلی: '+(e['personnel_code']??'—').toString()+' · '+(e['post']??'').toString())));})]);
+Widget _managerRequests()=>ListView(padding:const EdgeInsets.all(15),children:[heading('مرخصی‌ها'),...leaves.map((x)=>managerCard(x,'leave')),if(leaves.isEmpty)empty('درخواستی نیست.'),heading('وام و مساعده'),...finance.map((x)=>managerCard(x,'finance')),if(finance.isEmpty)empty('درخواستی نیست.'),heading('ارتقای شغلی'),...promos.map((x)=>managerCard(x,'promotion')),if(promos.isEmpty)empty('درخواستی نیست.')]);
+Widget managerCard(dynamic x,String kind){final r=_map(x);final can=r['can_decide']==true||r['can_decide']==1;final desc=kind=='leave'?(r['type_label']??'مرخصی').toString()+' · '+(r['from_date']??'').toString():kind=='finance'?(r['kind']=='loan'?'وام':'مساعده')+' · '+_money(r['amount']): (r['job_requested']??'ارتقا').toString()+' · '+(r['shift']??'').toString();return Card(color:Colors.white,elevation:0,child:Padding(padding:const EdgeInsets.all(12),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(r['name']??'کارمند',style:const TextStyle(fontWeight:FontWeight.bold,color:navy)),Text((r['tracking']??'').toString()+' · '+(r['personnel_code']??'').toString(),style:const TextStyle(color:muted,fontSize:10)),Text(desc),if((r['reason']??'').toString().isNotEmpty)Text(r['reason'].toString()),if(can)Row(children:[TextButton(onPressed:()=>decide(kind,r,'reject'),child:const Text('رد')),FilledButton(onPressed:()=>decide(kind,r,'approve'),style:FilledButton.styleFrom(backgroundColor:teal),child:const Text('تأیید'))])])));}
+Future<void> decide(String kind,Map<String,dynamic> r,String decision)async{final note=TextEditingController(),amount=TextEditingController();final ok=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:Text(decision=='approve'?'تأیید درخواست':'رد درخواست'),content:Column(mainAxisSize:MainAxisSize.min,children:[if(decision=='approve'&&(kind=='finance'||(kind=='promotion'&&role=='senior')))TextField(controller:amount,decoration:const InputDecoration(labelText:'مبلغ تأییدشده (ریال)'),keyboardType:TextInputType.number),TextField(controller:note,decoration:InputDecoration(labelText:decision=='reject'?'دلیل رد':'توضیح'),maxLines:2)]),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('انصراف')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('ثبت'))]));if(ok!=true)return;if(decision=='reject'&&note.text.trim().isEmpty){toast('دلیل رد را وارد کنید.',true);return;}try{final a=kind=='leave'?'manager_leave_decide':kind=='finance'?'manager_advance_decide':'manager_promo_decide';final b=<String,dynamic>{'id':r['id'],'decision':decision,'note':note.text.trim()};if(amount.text.isNotEmpty){if(kind=='finance')b['approved']=amount.text;if(kind=='promotion')b['amount']=amount.text;}final x=await api(a,method:'POST',body:b);toast(x['message']??'ثبت شد.');await refresh();}catch(e){toast(e.toString(),true);}finally{note.dispose();amount.dispose();}}
+Widget _alerts()=>ListView(padding:const EdgeInsets.all(15),children:[heading('اعلان‌ها'),if(alerts.isEmpty)empty('اعلانی وجود ندارد.'),...alerts.map((x){final a=_map(x);return Card(color:Colors.white,elevation:0,child:ListTile(title:Text(a['title']??'اعلان'),subtitle:Text(a['body']??a['message']??'')));}),TextButton(onPressed:loadAlerts,child:const Text('بروزرسانی'))]);
+Future<void> loadAlerts()async{try{final r=await api(emp?'notif_poll':'manager_notif_poll');alerts=_list(r['items']);final ids=alerts.map((x)=>x['id']).where((x)=>x!=null).toList();if(ids.isNotEmpty)await api(emp?'notif_ack':'manager_notif_ack',method:'POST',body:{'ids':ids});if(mounted)setState((){});}catch(e){toast(e.toString(),true);}}
+void openForm(String k)=>Navigator.push(context,MaterialPageRoute(builder:(_)=>RequestForm(kind:k,data:d,send:(a,b)=>api(a,method:'POST',body:b),refresh:refresh)));
 }
-
-class MobileApi {
-  static String get _base => apiBase.trim().replaceAll(RegExp(r'/+$'), '');
-
-  static Future<Map<String,dynamic>> post(String action, Map<String,dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$_base/api/mobile.php?action=$action'),
-      headers: {'Content-Type':'application/json','Accept':'application/json'},
-      body: jsonEncode(data),
-    ).timeout(const Duration(seconds: 25));
-    final value = jsonDecode(response.body);
-    if (value is! Map<String,dynamic>) throw Exception('پاسخ سرور معتبر نیست.');
-    return value;
-  }
-
-  static Future<Map<String,dynamic>> me(String token) async {
-    final response = await http.get(
-      Uri.parse('$_base/api/mobile.php?action=me'),
-      headers: {'Accept':'application/json','Authorization':'Bearer $token'},
-    ).timeout(const Duration(seconds: 20));
-    final value = jsonDecode(response.body);
-    if (value is! Map<String,dynamic>) throw Exception('پاسخ سرور معتبر نیست.');
-    if (response.statusCode != 200 || value['ok'] != true) {
-      throw Exception(value['message'] ?? 'نشست معتبر نیست.');
-    }
-    return value;
-  }
-
-  static Future<void> logout(String token) async {
-    await http.post(
-      Uri.parse('$_base/api/mobile.php?action=logout'),
-      headers: {'Accept':'application/json','Authorization':'Bearer $token'},
-    ).timeout(const Duration(seconds: 15));
-  }
-}
-
-class AuthGate extends StatefulWidget {
-  const AuthGate({super.key});
-  @override State<AuthGate> createState() => _AuthGateState();
-}
-
-class _AuthGateState extends State<AuthGate> {
-  bool checking = true;
-  Map<String,dynamic>? user;
-
-  @override void initState() {
-    super.initState();
-    _restoreSession();
-  }
-
-  Future<void> _restoreSession() async {
-    try {
-      final token = await secureStore.read(key:'access_token');
-      if (token != null && token.isNotEmpty) {
-        final result = await MobileApi.me(token);
-        user = Map<String,dynamic>.from(result['user'] as Map);
-      }
-    } catch (_) {
-      await secureStore.deleteAll();
-    }
-    if (mounted) setState(() => checking = false);
-  }
-
-  @override Widget build(BuildContext context) {
-    if (checking) {
-      return const Scaffold(
-        body: Center(child:CircularProgressIndicator(color:Color(0xFF0AA992))),
-      );
-    }
-    return user == null ? const LoginPage() : HomeShell(user:user!);
-  }
-}
-
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-  @override State<LoginPage> createState() => _LoginPageState();
-}
-class _LoginPageState extends State<LoginPage> {
-  String type = 'employee';
-  bool busy = false, hidePassword = true;
-  String? error;
-  final national = TextEditingController(), personnel = TextEditingController(), phone = TextEditingController();
-  final username = TextEditingController(), password = TextEditingController();
-
-  @override void dispose() {
-    national.dispose(); personnel.dispose(); phone.dispose(); username.dispose(); password.dispose(); super.dispose();
-  }
-
-  Future<void> signIn() async {
-    setState(() { busy = true; error = null; });
-    try {
-      final payload = type == 'employee'
-        ? {'user_type':'employee','national':national.text.trim(),'personnel':personnel.text.trim(),'phone':phone.text.trim()}
-        : {'user_type':'admin','username':username.text.trim(),'password':password.text};
-      final result = await MobileApi.post('login', payload);
-      if (result['ok'] != true) throw Exception(result['message'] ?? 'ورود انجام نشد.');
-      await secureStore.write(key:'access_token', value:result['token'] as String);
-      await secureStore.write(key:'user_type', value:type);
-      final session = await MobileApi.me(result['token'] as String);
-      if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeShell(user: Map<String,dynamic>.from(session['user'] as Map))));
-    } catch (e) {
-      await secureStore.deleteAll();
-      if (mounted) setState(() => error = e.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) setState(() => busy = false);
-    }
-  }
-
-  @override Widget build(BuildContext context) => Scaffold(
-    body: Stack(children: [
-      Positioned(top:-90,left:-80,child:Container(width:250,height:250,decoration:const BoxDecoration(shape:BoxShape.circle,color:Color(0x1510A994)))),
-      SafeArea(child:Center(child:SingleChildScrollView(
-        padding:const EdgeInsets.all(22),
-        child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:460),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-          const SizedBox(height:25),
-          Center(child:Container(width:68,height:68,decoration:BoxDecoration(
-            gradient:const LinearGradient(colors:[Color(0xFF173B5C),Color(0xFF0A8F88)]),
-            borderRadius:BorderRadius.circular(21),
-            boxShadow:[BoxShadow(color:const Color(0xFF173B5C).withOpacity(.2),blurRadius:20,offset:const Offset(0,9))],
-          ),child:const Icon(Icons.account_balance_wallet_rounded,color:Colors.white,size:34))),
-          const SizedBox(height:22),
-          const Text('Elzoco HRM',textAlign:TextAlign.center,style:TextStyle(fontSize:27,fontWeight:FontWeight.w900,color:Color(0xFF173B5C))),
-          const SizedBox(height:5),
-          const Text('سامانه یکپارچه منابع انسانی',textAlign:TextAlign.center,style:TextStyle(color:Color(0xFF8292A4))),
-          const SizedBox(height:28),
-          Container(padding:const EdgeInsets.all(5),decoration:BoxDecoration(color:const Color(0xFFE9EFF5),borderRadius:BorderRadius.circular(15)),child:Row(children:[
-            _typeButton('employee','کارمند',Icons.person_outline),
-            _typeButton('admin','مدیر و سرپرست',Icons.admin_panel_settings_outlined),
-          ])),
-          const SizedBox(height:20),
-          if(type=='employee') ...[
-            _field('کد ملی',national,Icons.badge_outlined,keyboard:TextInputType.number),
-            const SizedBox(height:11),
-            _field('کد پرسنلی کامل',personnel,Icons.confirmation_number_outlined,keyboard:TextInputType.number),
-            const SizedBox(height:11),
-            _field('شماره موبایل',phone,Icons.phone_android,keyboard:TextInputType.phone),
-          ] else ...[
-            _field('نام کاربری',username,Icons.person_outline),
-            const SizedBox(height:11),
-            TextField(controller:password,obscureText:hidePassword,decoration:InputDecoration(
-              labelText:'رمز عبور',prefixIcon:const Icon(Icons.lock_outline),
-              suffixIcon:IconButton(onPressed:()=>setState(()=>hidePassword=!hidePassword),icon:Icon(hidePassword?Icons.visibility_outlined:Icons.visibility_off_outlined)),
-            )),
-          ],
-          if(error!=null) ...[
-            const SizedBox(height:12),
-            Container(padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:const Color(0xFFFFF0ED),borderRadius:BorderRadius.circular(12)),child:Text(error!,style:const TextStyle(color:Color(0xFFB84E3F),fontSize:12))),
-          ],
-          const SizedBox(height:18),
-          SizedBox(height:52,child:FilledButton(
-            onPressed:busy?null:signIn,
-            style:FilledButton.styleFrom(backgroundColor:const Color(0xFF0AA992),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14))),
-            child:busy?const SizedBox(width:22,height:22,child:CircularProgressIndicator(strokeWidth:2,color:Colors.white)):const Text('ورود به سامانه',style:TextStyle(fontWeight:FontWeight.bold)),
-          )),
-          const SizedBox(height:24),
-          const Text('ورود امن و یکپارچه با سامانه منابع انسانی الزوکو',textAlign:TextAlign.center,style:TextStyle(color:Color(0xFF9AA7B5),fontSize:11)),
-        ])),
-      ))),
-    ]),
-  );
-
-  Widget _typeButton(String value,String label,IconData icon) => Expanded(child:GestureDetector(
-    onTap:()=>setState(()=>type=value),
-    child:AnimatedContainer(duration:const Duration(milliseconds:180),padding:const EdgeInsets.symmetric(vertical:12),
-      decoration:BoxDecoration(color:type==value?Colors.white:Colors.transparent,borderRadius:BorderRadius.circular(11),boxShadow:type==value?[const BoxShadow(color:Color(0x120F2F4D),blurRadius:9,offset:Offset(0,3))]:[]),
-      child:Row(mainAxisAlignment:MainAxisAlignment.center,children:[
-        Icon(icon,size:17,color:type==value?const Color(0xFF0A9F91):const Color(0xFF8292A4)),
-        const SizedBox(width:6),
-        Flexible(child:Text(label,style:TextStyle(fontSize:12,fontWeight:FontWeight.w700,color:type==value?const Color(0xFF173B5C):const Color(0xFF8292A4)))),
-      ]),
-    ),
-  ));
-  Widget _field(String label,TextEditingController controller,IconData icon,{TextInputType? keyboard}) => TextField(
-    controller:controller,keyboardType:keyboard,decoration:InputDecoration(labelText:label,prefixIcon:Icon(icon)),
-  );
-}
-
-class HomeShell extends StatelessWidget {
-  final Map<String,dynamic> user;
-  const HomeShell({super.key,required this.user});
-  @override Widget build(BuildContext context) {
-    final role=user['role']?.toString();
-    final title=user['type']=='employee'?'پنل کارمند':role=='manager'?'پنل سرپرست':role=='senior'?'پنل مدیر ارشد':'پنل مدیریت';
-    return Scaffold(
-      appBar:AppBar(
-        backgroundColor:const Color(0xFF173B5C),foregroundColor:Colors.white,title:Text(title),
-        actions:[IconButton(onPressed:()async{
-          final token=await secureStore.read(key:'access_token');
-          if(token!=null){try{await MobileApi.logout(token);}catch(_){}}
-          await secureStore.deleteAll();
-          if(context.mounted)Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder:(_)=>const LoginPage()),(_)=>false);
-        },icon:const Icon(Icons.logout_rounded))],
-      ),
-      body:Padding(padding:const EdgeInsets.all(22),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Text('سلام، '+(user['name']??'کاربر').toString(),style:const TextStyle(fontSize:23,fontWeight:FontWeight.w900,color:Color(0xFF173B5C))),
-        const SizedBox(height:8),
-        const Text('به اپلیکیشن منابع انسانی الزوکو خوش آمدید.',style:TextStyle(color:Color(0xFF8292A4))),
-        const SizedBox(height:22),
-        Container(width:double.infinity,padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF173B5C),Color(0xFF0B827E)]),borderRadius:BorderRadius.circular(18)),child:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Text('Elzoco HRM',style:TextStyle(color:Colors.white,fontSize:20,fontWeight:FontWeight.w900)),
-          SizedBox(height:5),Text('اتصال امن به سامانه برقرار شد',style:TextStyle(color:Color(0xFFD1E8E7),fontSize:12)),
-        ])),
-        const SizedBox(height:18),
-        const Text('ماژول‌های مرحله بعد',style:TextStyle(fontWeight:FontWeight.w800,color:Color(0xFF173B5C))),
-        const SizedBox(height:10),
-        Wrap(spacing:9,runSpacing:9,children:(user['type']=='employee'?['فیش حقوقی','درخواست مرخصی','وام و مساعده','ارتقای گروه شغلی','اعلان‌ها']:['داشبورد مدیریتی','کارکنان','درخواست‌های در انتظار','گزارش‌ها']).map((x)=>Chip(avatar:const Icon(Icons.grid_view_rounded,size:17),label:Text(x),backgroundColor:Colors.white,side:BorderSide.none,padding:const EdgeInsets.all(8))).toList()),
-      ])),
-    );
-  }
-}
-), '');
-
-  static Future<Map<String,dynamic>> post(String action, Map<String,dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$_base/api/mobile.php?action=$action'),
-      headers: {'Content-Type':'application/json','Accept':'application/json'},
-      body: jsonEncode(data),
-    ).timeout(const Duration(seconds: 25));
-    final value = jsonDecode(response.body);
-    if (value is! Map<String,dynamic>) throw Exception('پاسخ سرور معتبر نیست.');
-    return value;
-  }
-}
-
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-  @override State<LoginPage> createState() => _LoginPageState();
-}
-class _LoginPageState extends State<LoginPage> {
-  String type = 'employee';
-  bool busy = false, hidePassword = true;
-  String? error;
-  final national = TextEditingController(), personnel = TextEditingController(), phone = TextEditingController();
-  final username = TextEditingController(), password = TextEditingController();
-
-  @override void dispose() {
-    national.dispose(); personnel.dispose(); phone.dispose(); username.dispose(); password.dispose(); super.dispose();
-  }
-
-  Future<void> signIn() async {
-    setState(() { busy = true; error = null; });
-    try {
-      final payload = type == 'employee'
-        ? {'user_type':'employee','national':national.text.trim(),'personnel':personnel.text.trim(),'phone':phone.text.trim()}
-        : {'user_type':'admin','username':username.text.trim(),'password':password.text};
-      final result = await MobileApi.post('login', payload);
-      if (result['ok'] != true) throw Exception(result['message'] ?? 'ورود انجام نشد.');
-      await secureStore.write(key:'access_token', value:result['token'] as String);
-      await secureStore.write(key:'user_type', value:type);
-      if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeShell(user: Map<String,dynamic>.from(result['user'] as Map))));
-    } catch (e) {
-      if (mounted) setState(() => error = e.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) setState(() => busy = false);
-    }
-  }
-
-  @override Widget build(BuildContext context) => Scaffold(
-    body: Stack(children: [
-      Positioned(top:-90,left:-80,child:Container(width:250,height:250,decoration:const BoxDecoration(shape:BoxShape.circle,color:Color(0x1510A994)))),
-      SafeArea(child:Center(child:SingleChildScrollView(
-        padding:const EdgeInsets.all(22),
-        child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:460),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-          const SizedBox(height:25),
-          Center(child:Container(width:68,height:68,decoration:BoxDecoration(
-            gradient:const LinearGradient(colors:[Color(0xFF173B5C),Color(0xFF0A8F88)]),
-            borderRadius:BorderRadius.circular(21),
-            boxShadow:[BoxShadow(color:const Color(0xFF173B5C).withOpacity(.2),blurRadius:20,offset:const Offset(0,9))],
-          ),child:const Icon(Icons.account_balance_wallet_rounded,color:Colors.white,size:34))),
-          const SizedBox(height:22),
-          const Text('Elzoco HRM',textAlign:TextAlign.center,style:TextStyle(fontSize:27,fontWeight:FontWeight.w900,color:Color(0xFF173B5C))),
-          const SizedBox(height:5),
-          const Text('سامانه یکپارچه منابع انسانی',textAlign:TextAlign.center,style:TextStyle(color:Color(0xFF8292A4))),
-          const SizedBox(height:28),
-          Container(padding:const EdgeInsets.all(5),decoration:BoxDecoration(color:const Color(0xFFE9EFF5),borderRadius:BorderRadius.circular(15)),child:Row(children:[
-            _typeButton('employee','کارمند',Icons.person_outline),
-            _typeButton('admin','مدیر و سرپرست',Icons.admin_panel_settings_outlined),
-          ])),
-          const SizedBox(height:20),
-          if(type=='employee') ...[
-            _field('کد ملی',national,Icons.badge_outlined,keyboard:TextInputType.number),
-            const SizedBox(height:11),
-            _field('کد پرسنلی کامل',personnel,Icons.confirmation_number_outlined,keyboard:TextInputType.number),
-            const SizedBox(height:11),
-            _field('شماره موبایل',phone,Icons.phone_android,keyboard:TextInputType.phone),
-          ] else ...[
-            _field('نام کاربری',username,Icons.person_outline),
-            const SizedBox(height:11),
-            TextField(controller:password,obscureText:hidePassword,decoration:InputDecoration(
-              labelText:'رمز عبور',prefixIcon:const Icon(Icons.lock_outline),
-              suffixIcon:IconButton(onPressed:()=>setState(()=>hidePassword=!hidePassword),icon:Icon(hidePassword?Icons.visibility_outlined:Icons.visibility_off_outlined)),
-            )),
-          ],
-          if(error!=null) ...[
-            const SizedBox(height:12),
-            Container(padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:const Color(0xFFFFF0ED),borderRadius:BorderRadius.circular(12)),child:Text(error!,style:const TextStyle(color:Color(0xFFB84E3F),fontSize:12))),
-          ],
-          const SizedBox(height:18),
-          SizedBox(height:52,child:FilledButton(
-            onPressed:busy?null:signIn,
-            style:FilledButton.styleFrom(backgroundColor:const Color(0xFF0AA992),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14))),
-            child:busy?const SizedBox(width:22,height:22,child:CircularProgressIndicator(strokeWidth:2,color:Colors.white)):const Text('ورود به سامانه',style:TextStyle(fontWeight:FontWeight.bold)),
-          )),
-          const SizedBox(height:24),
-          const Text('ورود امن و یکپارچه با سامانه منابع انسانی الزوکو',textAlign:TextAlign.center,style:TextStyle(color:Color(0xFF9AA7B5),fontSize:11)),
-        ])),
-      ))),
-    ]),
-  );
-
-  Widget _typeButton(String value,String label,IconData icon) => Expanded(child:GestureDetector(
-    onTap:()=>setState(()=>type=value),
-    child:AnimatedContainer(duration:const Duration(milliseconds:180),padding:const EdgeInsets.symmetric(vertical:12),
-      decoration:BoxDecoration(color:type==value?Colors.white:Colors.transparent,borderRadius:BorderRadius.circular(11),boxShadow:type==value?[const BoxShadow(color:Color(0x120F2F4D),blurRadius:9,offset:Offset(0,3))]:[]),
-      child:Row(mainAxisAlignment:MainAxisAlignment.center,children:[
-        Icon(icon,size:17,color:type==value?const Color(0xFF0A9F91):const Color(0xFF8292A4)),
-        const SizedBox(width:6),
-        Flexible(child:Text(label,style:TextStyle(fontSize:12,fontWeight:FontWeight.w700,color:type==value?const Color(0xFF173B5C):const Color(0xFF8292A4)))),
-      ]),
-    ),
-  ));
-  Widget _field(String label,TextEditingController controller,IconData icon,{TextInputType? keyboard}) => TextField(
-    controller:controller,keyboardType:keyboard,decoration:InputDecoration(labelText:label,prefixIcon:Icon(icon)),
-  );
-}
-
-class HomeShell extends StatelessWidget {
-  final Map<String,dynamic> user;
-  const HomeShell({super.key,required this.user});
-  @override Widget build(BuildContext context) {
-    final role=user['role']?.toString();
-    final title=user['type']=='employee'?'پنل کارمند':role=='manager'?'پنل سرپرست':role=='senior'?'پنل مدیر ارشد':'پنل مدیریت';
-    return Scaffold(
-      appBar:AppBar(
-        backgroundColor:const Color(0xFF173B5C),foregroundColor:Colors.white,title:Text(title),
-        actions:[IconButton(onPressed:()async{
-          final token=await secureStore.read(key:'access_token');
-          if(token!=null){try{await http.post(Uri.parse('$apiBase/api/mobile.php?action=logout'),headers:{'Authorization':'Bearer $token'});}catch(_){}}
-          await secureStore.deleteAll();
-          if(context.mounted)Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder:(_)=>const LoginPage()),(_)=>false);
-        },icon:const Icon(Icons.logout_rounded))],
-      ),
-      body:Padding(padding:const EdgeInsets.all(22),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Text('سلام، '+(user['name']??'کاربر').toString(),style:const TextStyle(fontSize:23,fontWeight:FontWeight.w900,color:Color(0xFF173B5C))),
-        const SizedBox(height:8),
-        const Text('به اپلیکیشن منابع انسانی الزوکو خوش آمدید.',style:TextStyle(color:Color(0xFF8292A4))),
-        const SizedBox(height:22),
-        Container(width:double.infinity,padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF173B5C),Color(0xFF0B827E)]),borderRadius:BorderRadius.circular(18)),child:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Text('Elzoco HRM',style:TextStyle(color:Colors.white,fontSize:20,fontWeight:FontWeight.w900)),
-          SizedBox(height:5),Text('اتصال امن به سامانه برقرار شد',style:TextStyle(color:Color(0xFFD1E8E7),fontSize:12)),
-        ])),
-        const SizedBox(height:18),
-        const Text('ماژول‌های مرحله بعد',style:TextStyle(fontWeight:FontWeight.w800,color:Color(0xFF173B5C))),
-        const SizedBox(height:10),
-        Wrap(spacing:9,runSpacing:9,children:(user['type']=='employee'?['فیش حقوقی','درخواست مرخصی','وام و مساعده','ارتقای گروه شغلی','اعلان‌ها']:['داشبورد مدیریتی','کارکنان','درخواست‌های در انتظار','گزارش‌ها']).map((x)=>Chip(avatar:const Icon(Icons.grid_view_rounded,size:17),label:Text(x),backgroundColor:Colors.white,side:BorderSide.none,padding:const EdgeInsets.all(8))).toList()),
-      ])),
-    );
-  }
-}
+class RequestForm extends StatefulWidget{final String kind;final Map<String,dynamic> data;final Future<Map<String,dynamic>> Function(String,Map<String,dynamic>) send;final Future<void> Function() refresh;const RequestForm({super.key,required this.kind,required this.data,required this.send,required this.refresh});@override State<RequestForm> createState()=>_RequestFormState();}
+class _RequestFormState extends State<RequestForm>{final a=TextEditingController(),b=TextEditingController(),c=TextEditingController(),d=TextEditingController();String type='daily',fin='advance',shift='صبح (۸ ساعته)',newShift='شب (۸ ساعته)';bool registered=false,busy=false;static const shifts=['صبح (۸ ساعته)','شب (۸ ساعته)','فول تایم (۱۲ ساعته)','گردشی'];@override void dispose(){a.dispose();b.dispose();c.dispose();d.dispose();super.dispose();}
+Widget input(String label,TextEditingController x,{TextInputType? keyboard,int lines=1})=>TextField(controller:x,keyboardType:keyboard,maxLines:lines,decoration:InputDecoration(labelText:label));
+Future<void> submit()async{setState(()=>busy=true);try{late String action;late Map<String,dynamic> body;if(widget.kind=='leave'){action='leave_submit';body={'type':type,'from':a.text,'to':b.text,'start_time':c.text,'end_time':'','reason':d.text};}else if(widget.kind=='finance'){action=fin=='loan'?'loan_submit':'advance_submit';body={'amount':a.text,'sheba':b.text,'use_registered':registered?1:0};}else{action='promo_submit';body={'job':a.text,'current_shift':shift,'shift':newShift,'reason':b.text};}final r=await widget.send(action,body);if(mounted){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(r['message']??'درخواست ثبت شد.')));await widget.refresh();Navigator.pop(context);}}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(e.toString()),backgroundColor:Colors.red));}finally{if(mounted)setState(()=>busy=false);}}
+@override Widget build(BuildContext c){final types=_list(_map(widget.data['leave'])['types']);return Scaffold(appBar:AppBar(title:Text(widget.kind=='leave'?'درخواست مرخصی':widget.kind=='finance'?'وام و مساعده':'ارتقای شغلی')),body:ListView(padding:const EdgeInsets.all(15),children:[
+if(widget.kind=='leave')...[
+DropdownButtonFormField<String>(value:types.isEmpty?null:types.firstWhere((x)=>x['key']==type,orElse:()=>types.first)['key'].toString(),decoration:const InputDecoration(labelText:'نوع مرخصی'),items:types.map((x)=>DropdownMenuItem(value:x['key'].toString(),child:Text(x['label'].toString()))).toList(),onChanged:(v)=>setState(()=>type=v??type)),
+const SizedBox(height:10),input('تاریخ شروع شمسی',a),const SizedBox(height:10),input('تاریخ پایان / ساعت شروع',b),const SizedBox(height:10),input('ساعت پایان',c),const SizedBox(height:10),input('دلیل درخواست',d,lines:3)
+],
+if(widget.kind=='finance')...[
+DropdownButtonFormField<String>(value:fin,decoration:const InputDecoration(labelText:'نوع درخواست'),items:const [DropdownMenuItem(value:'advance',child:Text('مساعده')),DropdownMenuItem(value:'loan',child:Text('وام'))],onChanged:(v)=>setState(()=>fin=v??fin)),
+const SizedBox(height:10),input('مبلغ (ریال)',a,keyboard:TextInputType.number),const SizedBox(height:10),input('شماره شبا',b),CheckboxListTile(value:registered,onChanged:(v)=>setState(()=>registered=v??false),title:const Text('استفاده از شبای ثبت‌شده'))
+],
+if(widget.kind=='promotion')...[
+input('عنوان شغلی درخواستی',a),const SizedBox(height:10),DropdownButtonFormField<String>(value:shift,decoration:const InputDecoration(labelText:'شیفت فعلی'),items:shifts.map((s)=>DropdownMenuItem(value:s,child:Text(s))).toList(),onChanged:(v)=>setState(()=>shift=v??shift)),const SizedBox(height:10),DropdownButtonFormField<String>(value:newShift,decoration:const InputDecoration(labelText:'شیفت درخواستی'),items:shifts.map((s)=>DropdownMenuItem(value:s,child:Text(s))).toList(),onChanged:(v)=>setState(()=>newShift=v??newShift)),const SizedBox(height:10),input('دلیل درخواست',b,lines:3)
+],
+const SizedBox(height:16),FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:teal),child:busy?const CircularProgressIndicator(color:Colors.white):const Text('ارسال درخواست'))
+]));}}
+class Slip extends StatelessWidget{final Map<String,dynamic> slip,user;const Slip({super.key,required this.slip,required this.user});@override Widget build(BuildContext c){final h=_map(slip['header']),t=_map(slip['totals']);return Scaffold(appBar:AppBar(title:const Text('فیش حقوقی')),body:ListView(padding:const EdgeInsets.all(15),children:[Card(color:navy,child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('فیش حقوقی ELZOCO',style:TextStyle(color:Colors.white,fontSize:18,fontWeight:FontWeight.bold)),Text(_map(slip['period'])['label']?.toString()??'',style:const TextStyle(color:Colors.white70)),_info('نام',h['name']??user['name']),_info('کد پرسنلی',h['personnel']??user['personnel_code']),_info('سمت',h['post']??user['post']),_info('روز کارکرد',h['days'])])),_table('دریافتی‌ها',_list(slip['pay'])),_table('کسورات',_list(slip['ded'])),ListTile(title:const Text('خالص پرداختی'),trailing:Text(_money(t['net']),style:const TextStyle(fontWeight:FontWeight.bold,color:teal)))]));}Widget _info(String s,dynamic v)=>Padding(padding:const EdgeInsets.all(6),child:Row(children:[Expanded(child:Text(s,style:const TextStyle(color:Colors.white70))),Text(v?.toString()??'—',style:const TextStyle(color:Colors.white,fontWeight:FontWeight.bold))]));Widget _table(String s,List<dynamic> rows)=>Card(color:Colors.white,child:Column(children:[ListTile(title:Text(s)),...rows.map((x)=>ListTile(dense:true,title:Text(x['label']??''),trailing:Text(_money(x['amount']))))]));}
+Map<String,dynamic> _map(dynamic x)=>x is Map?Map<String,dynamic>.from(x):<String,dynamic>{};List<dynamic> _list(dynamic x)=>x is List?x:<dynamic>[];String _fa(dynamic x)=>(int.tryParse(x?.toString()??'')??0).toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'),(m)=>',');String _money(dynamic x)=>_fa(x)+' ریال';String _stage(dynamic x)=>({'direct':'در انتظار سرپرست','general':'در انتظار مدیر','admin':'در انتظار منابع انسانی','evaluated':'در انتظار تصمیم مدیر','final':'تأیید نهایی','rejected':'رد شده'}[x?.toString()]??x?.toString()??'در حال بررسی');

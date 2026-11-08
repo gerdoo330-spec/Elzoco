@@ -42,3 +42,16 @@ flutter build apk --release --dart-define=API_BASE_URL=https://YOUR-DOMAIN/payro
 ## Current scope
 
 This first slice is the authentication foundation and a minimal role-aware landing screen. Employee workflows (payslips, leave, loans/advances, promotion requests and notifications), followed by manager/supervisor workflows and the full admin panel, are still to be implemented and tested.
+
+
+## Standalone browser test console (no Flutter required)
+
+A single-file browser console is available at the repository root: `mobile-test-console.html`.
+
+1. Upload `mobile-test-console.html` to the same public `payroll` directory that contains `api/` (for example, `public_html/payroll/mobile-test-console.html`).
+2. Open `https://YOUR-DOMAIN/payroll/mobile-test-console.html` on a desktop or Android phone.
+3. Run **بررسی اتصال سرور**. HTTP 401 with `logout:true` is the expected unauthenticated response and confirms that the endpoint is reachable.
+4. Choose employee or admin sign-in and enter authorized test credentials. The page sends credentials only to the same-origin API, does not save credentials or tokens in browser storage, and keeps the Bearer token in page memory only.
+5. After a successful login, it calls `action=me` to verify the session. Use logout to revoke the token.
+
+Use HTTPS only. Do not share passwords, national IDs, phone numbers, or tokens in screenshots or chat. This is a diagnostic page, not the production mobile app.

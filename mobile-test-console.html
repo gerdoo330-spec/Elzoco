@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101c35">
+<title>کنسول تست Elzoco HRM</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#121e33;--panel2:#1a2942;--line:#2a3a55;--text:#f3f6fc;--muted:#9eacc2;--teal:#43d6c0;--red:#ff727d;--amber:#ffc76b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0%,#1b3550 0,transparent 42%),var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;min-height:100vh;padding:24px 14px}
+main{width:min(760px,100%);margin:auto}.top{display:flex;align-items:center;gap:13px;margin:8px 0 22px}.logo{width:48px;height:48px;border-radius:15px;background:linear-gradient(145deg,#43d6c0,#168b9b);display:grid;place-items:center;color:#071b2a;font-size:24px;font-weight:900}.top h1{font-size:20px;margin:0 0 5px}.top p{margin:0;color:var(--muted);font-size:12px}.panel{background:rgba(18,30,51,.94);border:1px solid var(--line);border-radius:20px;padding:20px;margin:14px 0;box-shadow:0 16px 45px #0003}.panel h2{font-size:16px;margin:0 0 8px}.hint{font-size:12px;color:var(--muted);line-height:1.9;margin:0 0 15px}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:0}.field{margin:12px 0}.field label{display:block;color:#c5d0df;font-size:12px;margin:0 0 7px}input{width:100%;border:1px solid #344660;border-radius:12px;background:#0c1729;color:white;padding:13px;font:inherit;font-size:14px;outline:none}input:focus{border-color:var(--teal);box-shadow:0 0 0 3px #43d6c01c}.switch{display:flex;background:#0b1628;padding:4px;border-radius:12px;margin:14px 0}.switch button{flex:1;border:0;border-radius:9px;padding:11px;background:transparent;color:var(--muted);font:inherit;cursor:pointer}.switch button.active{background:#263a55;color:#fff}.btn{border:0;border-radius:12px;padding:13px 16px;font:inherit;font-weight:bold;cursor:pointer;background:var(--teal);color:#08232b}.btn.secondary{background:#263a55;color:#edf4ff}.btn.danger{background:#492b3a;color:#ffd9df}.btn:disabled{opacity:.55;cursor:wait}.status{display:flex;align-items:center;gap:9px;background:#0b1729;border:1px solid var(--line);padding:12px;border-radius:12px;font-size:13px}.dot{width:9px;height:9px;border-radius:50%;background:#8291a8;flex:none}.dot.ok{background:var(--teal);box-shadow:0 0 12px #43d6c080}.dot.bad{background:var(--red)}.dot.wait{background:var(--amber)}.output{white-space:pre-wrap;word-break:break-word;background:#091321;border:1px solid #26364f;border-radius:12px;padding:13px;color:#d7e5f3;font:12px/1.9 Consolas,monospace;min-height:52px;direction:ltr;text-align:left;overflow:auto}.hidden{display:none!important}.small{font-size:11px;color:var(--muted);line-height:1.9}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.actions .btn{flex:1}.pill{font-size:11px;border:1px solid #315b59;color:#8df1df;border-radius:30px;padding:5px 10px}.result{border:1px solid var(--line);border-radius:12px;padding:13px;margin-top:12px;background:#0b1729}.result strong{color:var(--teal)}footer{text-align:center;color:#71829b;font-size:11px;padding:12px}
+</style>
+</head>
+<body>
+<main>
+<header class="top"><div class="logo">E</div><div><h1>ELZOCO HRM</h1><p>کنسول آزمایش ارتباط اپلیکیشن با سامانه</p></div><span class="pill" style="margin-right:auto">TEST CONSOLE</span></header>
+<section class="panel">
+<h2>۱. بررسی ارتباط با سرور</h2>
+<p class="hint">این آزمایش بدون نام کاربری و رمز عبور انجام می‌شود. پاسخ 401 در این مرحله طبیعی است و یعنی API در دسترس است و درخواست بدون توکن را رد می‌کند.</p>
+<div class="status"><span id="connDot" class="dot"></span><span id="connText">هنوز آزمایش نشده است.</span></div>
+<div class="actions"><button class="btn secondary" id="checkBtn">بررسی اتصال سرور</button></div>
+</section>
+<section class="panel">
+<h2>۲. آزمایش ورود</h2>
+<p class="hint">اطلاعات فقط برای ارسال درخواست ورود استفاده می‌شوند؛ در این صفحه ذخیره نمی‌شوند. از حساب آزمایشی یا حسابی استفاده کنید که مجاز به آزمایش آن هستید.</p>
+<div class="switch"><button type="button" id="employeeTab" class="active">ورود کارمند</button><button type="button" id="adminTab">ورود مدیر / سرپرست</button></div>
+<div id="employeeForm">
+<div class="field"><label for="national">کد ملی</label><input id="national" inputmode="numeric" autocomplete="off" placeholder="کد ملی"></div>
+<div class="field"><label for="personnel">کد پرسنلی کامل</label><input id="personnel" inputmode="numeric" autocomplete="off" placeholder="کد پرسنلی کامل، نه فقط پسوند"></div>
+<div class="field"><label for="phone">شماره موبایل (در صورت نیاز به‌ویژه برای کد ملی صفر)</label><input id="phone" inputmode="tel" autocomplete="off" placeholder="شماره موبایل"></div>
+</div>
+<div id="adminForm" class="hidden">
+<div class="field"><label for="username">نام کاربری</label><input id="username" autocomplete="username" placeholder="نام کاربری مدیر"></div>
+<div class="field"><label for="password">رمز عبور</label><input id="password" type="password" autocomplete="current-password" placeholder="رمز عبور"></div>
+</div>
+<div class="actions"><button class="btn" id="loginBtn">آزمایش ورود</button><button class="btn secondary" id="clearBtn" type="button">پاک کردن فرم</button></div>
+<div id="loginResult" class="result hidden" aria-live="polite"></div>
+</section>
+<section class="panel">
+<h2>۳. بررسی نشست و خروج</h2>
+<p class="hint">پس از ورود موفق، کنسول نشست را با درخواست me بررسی می‌کند. توکن فقط تا زمان باز بودن همین صفحه در حافظه نگهداری می‌شود و در حافظه مرورگر یا فایل ذخیره نمی‌شود.</p>
+<div class="status"><span id="sessionDot" class="dot"></span><span id="sessionText">نشستی ایجاد نشده است.</span></div>
+<div class="actions"><button class="btn secondary" id="meBtn" disabled>بررسی مجدد نشست</button><button class="btn danger" id="logoutBtn" disabled>خروج و ابطال توکن</button></div>
+<div id="meResult" class="result hidden"></div>
+</section>
+<section class="panel">
+<h2>تفاصيل آخرین پاسخ سرور</h2>
+<p class="hint">کد وضعیت HTTP و پاسخ JSON برای عیب‌یابی نمایش داده می‌شود. اطلاعات محرمانه مانند رمز عبور و توکن نمایش داده نمی‌شود.</p>
+<pre class="output" id="rawOutput">منتظر اجرای آزمایش...</pre>
+</section>
+<footer>Elzoco HRM · ابزار آزمایشی مستقل · نسخه اولیه</footer>
+</main>
+<script>
+(() => {
+  'use strict';
+  const endpoint = new URL('./api/mobile.php', window.location.href).toString();
+  let userType = 'employee';
+  let token = '';
+  const $ = id => document.getElementById(id);
+  const raw = $('rawOutput');
+  function showRaw(status, data) {
+    const safe = data && typeof data === 'object' ? {...data} : data;
+    if (safe && typeof safe === 'object') {
+      delete safe.token;
+      if (safe.user && typeof safe.user === 'object') safe.user = {...safe.user};
+    }
+    raw.textContent = 'HTTP ' + status + '\n' + JSON.stringify(safe, null, 2);
+  }
+  async function request(action, method='GET', body=null, withToken=false) {
+    const headers = {'Accept':'application/json'};
+    if (body) headers['Content-Type'] = 'application/json';
+    if (withToken && token) headers['Authorization'] = 'Bearer ' + token;
+    const url = method === 'GET' ? endpoint + '?action=' + encodeURIComponent(action) : endpoint;
+    const response = await fetch(url, {method, headers, body: body ? JSON.stringify({...body, action}) : undefined, cache:'no-store', credentials:'same-origin'});
+    let data;
+    try { data = await response.json(); }
+    catch (_) { throw new Error('پاسخ سرور JSON نیست؛ کد HTTP: ' + response.status); }
+    return {status:response.status, data};
+  }
+  function setStatus(dotId, textId, state, text) {
+    $(dotId).className = 'dot ' + state;
+    $(textId).textContent = text;
+  }
+  $('checkBtn').addEventListener('click', async () => {
+    $('checkBtn').disabled = true;
+    setStatus('connDot','connText','wait','در حال بررسی...');
+    try {
+      const r = await request('me');
+      showRaw(r.status, r.data);
+      if (r.status === 401 && r.data.logout === true) setStatus('connDot','connText','ok','سرور در دسترس است؛ API درخواست بدون توکن را به‌درستی رد کرد (401).');
+      else if (r.status >= 200 && r.status < 300) setStatus('connDot','connText','ok','سرور پاسخ موفق داد.');
+      else setStatus('connDot','connText','bad','سرور پاسخ داد، اما نتیجه نیاز به بررسی دارد: HTTP ' + r.status);
+    } catch(e) { setStatus('connDot','connText','bad',e.message); raw.textContent=e.message; }
+    finally {$('checkBtn').disabled=false;}
+  });
+  function selectType(type) {
+    userType=type;
+    $('employeeTab').classList.toggle('active',type==='employee');
+    $('adminTab').classList.toggle('active',type==='admin');
+    $('employeeForm').classList.toggle('hidden',type!=='employee');
+    $('adminForm').classList.toggle('hidden',type!=='admin');
+    $('loginResult').classList.add('hidden');
+  }
+  $('employeeTab').addEventListener('click',()=>selectType('employee'));
+  $('adminTab').addEventListener('click',()=>selectType('admin'));
+  $('clearBtn').addEventListener('click',()=>{
+    ['national','personnel','phone','username','password'].forEach(id=>$(id).value='');
+    $('loginResult').classList.add('hidden');
+  });
+  $('loginBtn').addEventListener('click', async () => {
+    const body = userType==='employee'
+      ? {user_type:'employee', national:$('national').value.trim(), personnel:$('personnel').value.trim(), phone:$('phone').value.trim()}
+      : {user_type:'admin', username:$('username').value.trim(), password:$('password').value};
+    if (userType==='employee' && (!body.national || !body.personnel)) { alert('کد ملی و کد پرسنلی کامل را وارد کنید.'); return; }
+    if (userType==='admin' && (!body.username || !body.password)) { alert('نام کاربری و رمز عبور را وارد کنید.'); return; }
+    $('loginBtn').disabled=true;
+    $('loginResult').classList.remove('hidden');
+    $('loginResult').textContent='در حال ارسال درخواست ورود...';
+    try {
+      const r=await request('login','POST',body);
+      showRaw(r.status,r.data);
+      if (!r.data || r.data.ok!==true || !r.data.token) {
+        $('loginResult').textContent='ورود ناموفق: '+(r.data?.message || 'پاسخ نامعتبر سرور');
+        setStatus('sessionDot','sessionText','bad','ورود انجام نشد.');
+        return;
+      }
+      token=r.data.token;
+      $('password').value='';
+      $('loginResult').innerHTML='<strong>ورود اولیه موفق بود.</strong> در حال بررسی اعتبار نشست...';
+      $('meBtn').disabled=false; $('logoutBtn').disabled=false;
+      await checkMe();
+    } catch(e) {
+      $('loginResult').textContent='خطا در ارتباط: '+e.message;
+      raw.textContent=e.message;
+    } finally {$('loginBtn').disabled=false;}
+  });
+  async function checkMe() {
+    if(!token) return;
+    try {
+      const r=await request('me','GET',null,true);
+      showRaw(r.status,r.data);
+      if(r.status===200 && r.data.ok===true) {
+        const u=r.data.user||{};
+        setStatus('sessionDot','sessionText','ok','نشست معتبر است · '+(u.name||'کاربر')+' · '+(u.type||''));
+        $('meResult').classList.remove('hidden');
+        $('meResult').textContent='تأیید نشست موفق بود. اطلاعات خلاصه حساب: '+JSON.stringify({name:u.name,type:u.type,role:u.role,personnel_code:u.personnel_code,counts:r.data.counts||undefined},null,2);
+        $('loginResult').innerHTML='<strong>ورود و تأیید نشست موفق بود.</strong>';
+      } else {
+        token='';
+        $('meBtn').disabled=true; $('logoutBtn').disabled=true;
+        setStatus('sessionDot','sessionText','bad','نشست توسط سرور تأیید نشد؛ دوباره وارد شوید.');
+        $('meResult').classList.add('hidden');
+      }
+    } catch(e) {setStatus('sessionDot','sessionText','bad',e.message);raw.textContent=e.message;}
+  }
+  $('meBtn').addEventListener('click',checkMe);
+  $('logoutBtn').addEventListener('click',async()=>{
+    if(!token)return;
+    $('logoutBtn').disabled=true;
+    try {
+      const r=await request('logout','POST',{},true);
+      showRaw(r.status,r.data);
+      token='';
+      $('meBtn').disabled=true;
+      setStatus('sessionDot','sessionText',r.data?.ok?'ok':'bad',r.data?.ok?'خروج انجام شد و توکن ابطال شد.':'درخواست خروج ارسال شد؛ وضعیت پاسخ را بررسی کنید.');
+      $('meResult').classList.add('hidden');
+    } catch(e) {raw.textContent=e.message; $('logoutBtn').disabled=false;}
+  });
+})();
+</script>
+</body>
+</html>

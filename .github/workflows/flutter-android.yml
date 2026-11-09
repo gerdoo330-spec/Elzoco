@@ -48,6 +48,33 @@ jobs:
           PY
       - name: Resolve dependencies
         run: flutter pub get
+      - name: Force Android plugins to compile with SDK 36
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          roots = [
+              Path(os.environ.get('PUB_CACHE', str(Path.home() / '.pub-cache'))) / 'hosted' / 'pub.dev',
+              Path.home() / '.pub-cache' / 'hosted' / 'pub.dev',
+          ]
+          changed = 0
+          seen = set()
+          for root in roots:
+              if not root.exists():
+                  continue
+              for pattern in ('**/android/build.gradle', '**/android/build.gradle.kts'):
+                  for p in root.glob(pattern):
+                      if p in seen:
+                          continue
+                      seen.add(p)
+                      s = p.read_text()
+                      updated = s.replace('compileSdk = flutter.compileSdkVersion', 'compileSdk = 36')
+                      updated = updated.replace('compileSdkVersion flutter.compileSdkVersion', 'compileSdkVersion 36')
+                      if updated != s:
+                          p.write_text(updated)
+                          changed += 1
+          print(f'Updated {changed} Android plugin Gradle files to compileSdk 36')
+          PY
       - name: Analyze Dart code
         run: flutter analyze --no-fatal-infos
       - name: Build release APK
@@ -55,5 +82,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: elzoco-hrm-android-apk
-          path: mobile/flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error

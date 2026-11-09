@@ -18,6 +18,29 @@ try{
   json_out(['ok'=>true,'token'=>mobile_token($type,$id),'token_type'=>'Bearer','expires_in'=>2592000,'user'=>$u]);
  }
  $u=mobile_user();if(!$u)json_out(['ok'=>false,'message'=>'نشست معتبر نیست؛ دوباره وارد شوید.','logout'=>true],401);
+
+ // ثبت امن شناسه دستگاه برای ارسال اعلان فوری؛ توکن فقط به حساب احراز هویت‌شده متصل می‌شود.
+ if($action==='push_token_register'&&$method==='POST'){
+  $pushToken=trim((string)($in['token']??''));
+  $platform=(string)($in['platform']??'');
+  if($pushToken===''||strlen($pushToken)>512||preg_match('/\\s/',$pushToken))json_out(['ok'=>false,'message'=>'شناسه اعلان معتبر نیست.'],422);
+  if(!in_array($platform,['android','ios'],true))json_out(['ok'=>false,'message'=>'نوع دستگاه معتبر نیست.'],422);
+  $hash=hash('sha256',$pushToken);
+  q("INSERT INTO mobile_push_tokens(user_type,user_id,token_value,token_hash,platform,created_at,updated_at,last_seen_at,revoked_at)
+     VALUES(?,?,?,?,?,NOW(),NOW(),NOW(),NULL)
+     ON DUPLICATE KEY UPDATE user_type=VALUES(user_type),user_id=VALUES(user_id),token_value=VALUES(token_value),
+     platform=VALUES(platform),updated_at=NOW(),last_seen_at=NOW(),revoked_at=NULL",
+     [$u['type'],$u['id'],$pushToken,$hash,$platform]);
+  json_out(['ok'=>true,'registered'=>true]);
+ }
+ if($action==='push_token_unregister'&&$method==='POST'){
+  $pushToken=trim((string)($in['token']??''));
+  if($pushToken!==''){
+   q('UPDATE mobile_push_tokens SET revoked_at=NOW(),updated_at=NOW() WHERE token_hash=? AND user_type=? AND user_id=?',
+     [hash('sha256',$pushToken),$u['type'],$u['id']]);
+  }
+  json_out(['ok'=>true]);
+ }
  if($action==='me'&&$method==='GET'){
   if($u['type']==='employee'){$e=one('SELECT * FROM employees WHERE id=?',[$u['id']]);$p=employee_periods((int)$e['id']);json_out(['ok'=>true,'user'=>$u,'periods'=>array_map(fn($x)=>['id'=>(int)$x['id'],'label'=>period_label($x),'has_work'=>(bool)$x['has_work']],$p),'advance'=>advance_overview($e),'loan'=>advance_overview($e,'loan'),'promotion'=>promo_overview($e),'leave'=>['types'=>array_map(fn($k,$t)=>['key'=>$k,'label'=>$t['label'],'unit'=>$t['unit']],array_keys(LEAVE_TYPES),LEAVE_TYPES),'requests'=>leave_list_for((int)$e['id']),'balance'=>leave_annual_balance($e),'max_hours'=>(int)cfg('leave_max_hours_per_day',8)],'payslip_window'=>payslip_window()]);}
   $a=['id'=>$u['id'],'name'=>$u['name'],'role'=>$u['role'],'pc'=>$u['personnel_code']];$scope=admin_employee_scope_ids($a);

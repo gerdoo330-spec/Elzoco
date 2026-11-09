@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feature/import-section-from-worksheet-ab
+      - feature/employee-notification-history-2026-11-09
     paths:
       - 'mobile/flutter_app/**'
       - '.github/workflows/flutter-android.yml'

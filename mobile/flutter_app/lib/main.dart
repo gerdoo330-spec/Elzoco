@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'services/push_service.dart';
 
 const apiBase=String.fromEnvironment('API_BASE_URL',defaultValue:'https://hrsarv.ir/payroll');
 const vault=FlutterSecureStorage();
@@ -53,7 +55,7 @@ const adminEntries=[Entry('dashboard','داشبورد',Icons.grid_view_rounded),
 const employeeEntries=[Entry('dashboard','خانه',Icons.home_rounded),Entry('requests','درخواست‌های من',Icons.assignment_rounded),Entry('slips','فیش حقوقی',Icons.receipt_long_rounded),Entry('notifications','اعلان‌ها',Icons.notifications_active_rounded)];
 class Shell extends StatefulWidget{final String token;final Map<String,dynamic> initial;final VoidCallback onLogout;const Shell({super.key,required this.token,required this.initial,required this.onLogout});@override State<Shell> createState()=>_ShellState();}
 class _ShellState extends State<Shell>{late Map<String,dynamic> data,user;String page='dashboard',search='';bool loading=false,uploading=false;List<dynamic> employees=[],leaves=[],finance=[],promos=[],admins=[],alerts=[];Map<String,dynamic> settings={};PlatformFile? file;int year=1405,month=7;bool get employee=>user['type']=='employee';String get role=>(user['role']??'').toString();bool get full=>role=='admin'||role=='senior';List<Entry> get menu=>employee?employeeEntries:adminEntries.where((e)=>!['upload','admins','settings'].contains(e.id)||full).toList();
-@override void initState(){super.initState();data=Map.from(widget.initial);user=m(data['user']);if(!employee)loadAll();}
+@override void initState(){super.initState();data=Map.from(widget.initial);user=m(data['user']);PushService.configure(apiBase:apiBase,accessToken:widget.token,onMessage:(message){final title=message.notification?.title??'اعلان جدید دریافت شد';toast(title);if(page=='notifications')loadAlerts();});if(!employee)loadAll();}
 Future<Map<String,dynamic>> api(String a,{String method='GET',Map<String,dynamic>? body})=>Api.call(a,method:method,token:widget.token,body:body);
 Future<void> loadAll()async{setState(()=>loading=true);try{final x=await Future.wait([api('manager_employees'),api('manager_leaves'),api('manager_advances'),api('manager_promotions')]);employees=l(x[0]['employees']);leaves=l(x[1]['requests']);finance=l(x[2]['requests']);promos=l(x[3]['requests']);}catch(e){toast(e.toString(),true);}if(mounted)setState(()=>loading=false);}
 Future<void> go(String id)async{Navigator.pop(context);setState(()=>page=id);if(id=='admins')await loadAdmins();if(id=='settings')await loadSettings();if(id=='notifications')await loadAlerts();}
@@ -62,7 +64,7 @@ Future<void> loadAdmins()async{try{admins=l((await api('admin_list'))['admins'])
 Future<void> loadSettings()async{try{settings=await api('admin_settings_get');}catch(e){toast(e.toString(),true);}if(mounted)setState((){});}
 Future<void> loadAlerts()async{try{final r=await api(employee?'notif_poll':'manager_notif_poll');alerts=l(r['items']);final ids=alerts.map((e)=>m(e)['id']).where((e)=>e!=null).toList();if(ids.isNotEmpty)await api(employee?'notif_ack':'manager_notif_ack',method:'POST',body:{'ids':ids});}catch(e){toast(e.toString(),true);}if(mounted)setState((){});}
 void toast(String s,[bool bad=false]){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s),backgroundColor:bad?red:navy,behavior:SnackBarBehavior.floating));}
-Future<void> logout()async{try{await api('logout',method:'POST');}catch(_){}await vault.deleteAll();widget.onLogout();}
+Future<void> logout()async{await PushService.unregister(apiBase:apiBase,accessToken:widget.token);try{await api('logout',method:'POST');}catch(_){}await vault.deleteAll();widget.onLogout();}
 @override Widget build(BuildContext c){String title='داشبورد';for(final e in menu){if(e.id==page)title=e.label;}return Scaffold(drawer:DrawerMenu(user:user,role:role,menu:menu,current:page,onSelect:go,onLogout:logout),appBar:AppBar(title:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,style:const TextStyle(fontSize:16,fontWeight:FontWeight.w900,color:ink)),Text(user['name']?.toString()??'همکار الزوکو',style:const TextStyle(fontSize:10,color:muted))]),actions:[IconButton(onPressed:refresh,icon:const Icon(Icons.refresh_rounded)),const SizedBox(width:6)]),body:loading?const Center(child:CircularProgressIndicator()):AnimatedSwitcher(duration:const Duration(milliseconds:260),transitionBuilder:(child,a)=>FadeTransition(opacity:a,child:SlideTransition(position:Tween(begin:const Offset(0,.02),end:Offset.zero).animate(a),child:child)),child:KeyedSubtree(key:ValueKey(page),child:body())),bottomNavigationBar:NavigationBar(
  selectedIndex:(employee?['dashboard','requests','slips','notifications']:['dashboard','employees','leaves','notifications']).indexOf(page).clamp(0,3).toInt(),
  backgroundColor:surface,indicatorColor:blue.withOpacity(.22),labelBehavior:NavigationDestinationLabelBehavior.alwaysShow,

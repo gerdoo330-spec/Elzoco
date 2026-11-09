@@ -29,7 +29,7 @@
 
 `ELZOCO_FIREBASE_SERVICE_ACCOUNT_PATH=/home/ACCOUNT/private/firebase-service-account.json`
 
-نام کاربری هاست را جایگزین کنید. اگر هاست امکان تنظیم متغیر محیطی در cPanel یا PHP-FPM را نمی‌دهد، قبل از ادامه با پشتیبانی هاست هماهنگ کنید. کلید خصوصی را در GitHub، فایل‌های سایت داخل webroot، ZIP عمومی یا پیام چت قرار ندهید.
+نام کاربری هاست را جایگزین کنید. اگر هاست امکان تنظیم متغیر محیطی را نمی‌دهد، مسیر را در آرایه‌ی تنظیمات `config.php` با کلید `firebase_service_account_path` قرار دهید؛ خود فایل JSON همچنان باید خارج از `public_html` بماند. کلید خصوصی را در GitHub، فایل‌های سایت داخل webroot، ZIP عمومی یا پیام چت قرار ندهید.
 5. افزونه‌های PHP یعنی cURL و OpenSSL باید فعال باشند.
 
 ## تنظیم اپ Android و iOS

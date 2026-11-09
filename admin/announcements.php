@@ -35,7 +35,7 @@ body{min-height:100vh;background:#171514;color:#f5eee9}.ann-wrap{max-width:1180p
 <form id="annForm"><div class="ann-grid">
 <div class="ann-field"><label for="annTitle">عنوان اطلاعیه</label><input id="annTitle" name="title" maxlength="190" required placeholder="مثلاً انتشار فیش حقوقی"></div>
 <div class="ann-field"><label for="annKind">نوع اطلاعیه</label><select id="annKind" name="kind"><option value="general">اطلاع‌رسانی عمومی</option><option value="urgent">فوری</option><option value="reminder">یادآوری</option><option value="news">خبر و اطلاعیه</option></select></div>
-<div class="ann-field"><label for="annAudience">مخاطبان</label><select id="annAudience" name="audience"><option value="all">تمام کارکنان فعال</option><option value="section">یک سکشن</option><option value="branch">یک شعبه</option><option value="selected">کارکنان انتخاب‌شده</option></select></div>
+<div class="ann-field"><label for="annAudience">مخاطبان</label><select id="annAudience" name="audience"><option value="all">تمام کارکنان فعال</option><option value="section">یک سکشن</option><option value="branch">یک شعبه</option></select></div>
 <div class="ann-field" id="valueWrap" hidden><label id="valueLabel" for="annValue">مقدار مخاطب</label><input id="annValue" name="audience_value" placeholder="نام دقیق سکشن یا شعبه"></div>
 <div class="ann-field full"><label for="annBody">متن اطلاعیه</label><textarea id="annBody" name="body" maxlength="5000" required placeholder="متن اطلاعیه را بنویسید..."></textarea></div>
 </div>

@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 class PushService {
   static StreamSubscription<String>? _refreshSubscription;
   static StreamSubscription<RemoteMessage>? _foregroundSubscription;
+  static StreamSubscription<RemoteMessage>? _openedSubscription;
   static bool _initialized = false;
 
   static Future<void> configure({
@@ -47,6 +48,15 @@ class PushService {
 
       await _foregroundSubscription?.cancel();
       _foregroundSubscription = FirebaseMessaging.onMessage.listen(onMessage);
+      await messaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      await _openedSubscription?.cancel();
+      _openedSubscription = FirebaseMessaging.onMessageOpenedApp.listen(onMessage);
+      final initialMessage = await messaging.getInitialMessage();
+      if (initialMessage != null) onMessage(initialMessage);
     } catch (error, stack) {
       // Firebase configuration is supplied per app/environment. Missing config
       // must never prevent the HRM application from opening or signing in.

@@ -21,6 +21,21 @@ jobs:
           cache: true
       - name: Generate Android project files
         run: flutter create --platforms=android --project-name elzoco_hrm .
+      - name: Ensure Android internet permission
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          ET.register_namespace('android', 'http://schemas.android.com/apk/res/android')
+          tree = ET.parse(manifest)
+          root = tree.getroot()
+          key = '{http://schemas.android.com/apk/res/android}name'
+          if not any(node.tag == 'uses-permission' and node.get(key) == 'android.permission.INTERNET' for node in root):
+              ET.SubElement(root, 'uses-permission', {key: 'android.permission.INTERNET'})
+          tree.write(manifest, encoding='utf-8', xml_declaration=True)
+          print(manifest.read_text())
+          PY
       - name: Resolve dependencies
         run: flutter pub get
       - name: Analyze Dart code

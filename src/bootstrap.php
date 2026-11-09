@@ -17,6 +17,7 @@ require_once __DIR__ . '/promotion.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/managers.php';
 require_once __DIR__ . '/notify.php';
+require_once __DIR__ . '/push.php';
 require_once __DIR__ . '/employee_history.php';
 require_once __DIR__ . '/employee_profile.php';
 require_once __DIR__ . '/employee_dossier.php';

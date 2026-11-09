@@ -52,24 +52,18 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import os
-          roots = [
-              Path(os.environ.get('PUB_CACHE', str(Path.home() / '.pub-cache'))) / 'hosted' / 'pub.dev',
-              Path.home() / '.pub-cache' / 'hosted' / 'pub.dev',
-          ]
+          import os, re
+          root = Path(os.environ.get('PUB_CACHE', str(Path.home() / '.pub-cache'))) / 'hosted' / 'pub.dev'
           changed = 0
-          seen = set()
-          for root in roots:
-              if not root.exists():
-                  continue
+          if root.exists():
               for pattern in ('**/android/build.gradle', '**/android/build.gradle.kts'):
                   for p in root.glob(pattern):
-                      if p in seen:
-                          continue
-                      seen.add(p)
                       s = p.read_text()
-                      updated = s.replace('compileSdk = flutter.compileSdkVersion', 'compileSdk = 36')
-                      updated = updated.replace('compileSdkVersion flutter.compileSdkVersion', 'compileSdkVersion 36')
+                      updated = re.sub(
+                          r'(?m)^(\\s*)(compileSdkVersion|compileSdk)(\\s*=\\s*|\\s+)(?:flutter\\.compileSdkVersion|safeExtGet\\([^\\n]*?\\)|[0-9]+)(\\s*)$',
+                          lambda m: m.group(1) + m.group(2) + (' = ' if m.group(2) == 'compileSdk' else ' ') + '36' + m.group(4),
+                          s
+                      )
                       if updated != s:
                           p.write_text(updated)
                           changed += 1

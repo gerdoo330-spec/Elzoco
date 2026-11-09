@@ -109,7 +109,39 @@ Widget history(dynamic x){final a=m(x);return ListTile(title:Text((a['tracking']
 Widget slipsPage(){final ps=l(data['periods']);return ListView(padding:const EdgeInsets.all(15),children:[section('فیش‌های حقوقی','دوره‌های ثبت‌شده'),if(ps.isEmpty)empty('فیشی ثبت نشده است.',Icons.receipt_long),...ps.map((p)=>wide(m(p)['label']?.toString()??'دوره حقوقی',m(p)['has_work']==true?'مشاهده فیش':'کارکرد ثبت نشده',Icons.receipt_long,blue,()=>showSlip(p)))]);}
 Future<void> showSlip(dynamic p)async{try{final r=await api('payslip',method:'POST',body:{'period_id':int.tryParse(m(p)['id'].toString())??0});if(mounted)Navigator.push(context,MaterialPageRoute(builder:(_)=>Slip(slip:m(r['slip']),user:user)));}catch(e){toast(e.toString(),true);}}
 void request(String k)=>Navigator.push(context,MaterialPageRoute(builder:(_)=>RequestForm(kind:k,data:data,send:(a,b)=>api(a,method:'POST',body:b),refresh:refresh)));
-Future<void> employeeCreate()async{toast('فرم افزودن کارمند در فاز بعدی API بومی تکمیل می‌شود.');}
+Future<void> employeeCreate()async{
+ final fields=<String,TextEditingController>{
+  'name':TextEditingController(),'national_code':TextEditingController(),'phone':TextEditingController(),
+  'hire_date':TextEditingController(),'personnel_suffix':TextEditingController(),'post':TextEditingController(),
+  'branch':TextEditingController(),'section':TextEditingController(),'sheba':TextEditingController(),
+  'salary':TextEditingController(),'manager_pc':TextEditingController()
+ };
+ final labels=<String,String>{
+  'name':'نام و نام خانوادگی','national_code':'کد ملی ۱۰ رقمی','phone':'شماره موبایل',
+  'hire_date':'تاریخ شروع همکاری شمسی (۱۴۰۵/۰۵/۲۷)','personnel_suffix':'سه رقم انتهایی کد پرسنلی',
+  'post':'عنوان شغلی','branch':'شعبه','section':'سکشن / واحد کاری','sheba':'شماره شبا (اختیاری)',
+  'salary':'حقوق پایه (ریال)','manager_pc':'کد پرسنلی مدیر مستقیم (اختیاری)'
+ };
+ final ok=await showModalBottomSheet<bool>(context:context,isScrollControlled:true,backgroundColor:bg,builder:(c)=>Padding(
+  padding:EdgeInsets.fromLTRB(18,18,18,MediaQuery.of(c).viewInsets.bottom+20),
+  child:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+   const Text('افزودن کارمند',style:TextStyle(fontSize:18,fontWeight:FontWeight.w900,color:ink)),
+   const SizedBox(height:5),const Text('کد پرسنلی بر اساس تاریخ شروع همکاری و سه رقم انتهایی ساخته می‌شود.',style:TextStyle(color:muted,fontSize:10)),
+   const SizedBox(height:14),
+   for(final entry in fields.entries) Padding(padding:const EdgeInsets.only(bottom:9),child:TextField(controller:entry.value,keyboardType:['national_code','phone','personnel_suffix','salary','manager_pc'].contains(entry.key)?TextInputType.number:TextInputType.text,decoration:InputDecoration(labelText:labels[entry.key]))),
+   const SizedBox(height:8),SizedBox(height:48,child:FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('ثبت پرونده کارمند')))
+  ])))
+ );
+ if(ok==true){
+  try{
+   final body=<String,dynamic>{for(final e in fields.entries)e.key:e.value.text.trim()};
+   final result=await api('mobile_employee_create',method:'POST',body:body);
+   toast((result['message']??'کارمند ثبت شد.').toString());
+   await loadAll();
+  }catch(e){toast(e.toString(),true);}
+ }
+ for(final controller in fields.values){controller.dispose();}
+}
 Widget empty(String t,IconData i)=>Container(padding:const EdgeInsets.symmetric(vertical:32,horizontal:16),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(18),border:Border.all(color:line)),child:Column(children:[Icon(i,color:muted,size:34),const SizedBox(height:9),Text(t,style:const TextStyle(color:muted,fontSize:11))]));
 }
 class DrawerMenu extends StatelessWidget {

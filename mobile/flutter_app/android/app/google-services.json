@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "607088625921",
+    "project_id": "elzoco-hrm",
+    "storage_bucket": "elzoco-hrm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607088625921:android:87d78ba4bd0c8aa4c5b300",
+        "android_client_info": {
+          "package_name": "com.example.elzoco_hrm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbzzQxsDRNfJiA_ye_MIj2wyL7s6WF_io"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

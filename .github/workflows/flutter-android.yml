@@ -106,7 +106,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: elzoco-hrm-android-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: mobile/flutter_app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
 
-# Fix Kotlin DSL syntax for cached Android plugins
+# Correct artifact path relative to workspace root

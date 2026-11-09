@@ -206,11 +206,23 @@ function push_send_recipient(string $recipient, string $title, string $body, str
         return 0;
     }
     $type = $match[1] === 'emp' ? 'employee' : 'admin';
-    $rows = all(
-        'SELECT id,token_value FROM mobile_push_tokens
-         WHERE user_type=? AND user_id=? AND revoked_at IS NULL',
-        [$type, (int)$match[2]]
-    );
+    if ($type === 'employee') {
+        $rows = all(
+            'SELECT p.id,p.token_value FROM mobile_push_tokens p
+             INNER JOIN employees e ON e.id=p.user_id
+             WHERE p.user_type=? AND p.user_id=? AND p.revoked_at IS NULL
+               AND e.in_latest=1 AND e.inactive=0',
+            [$type, (int)$match[2]]
+        );
+    } else {
+        $rows = all(
+            'SELECT p.id,p.token_value FROM mobile_push_tokens p
+             INNER JOIN admins a ON a.id=p.user_id
+             WHERE p.user_type=? AND p.user_id=? AND p.revoked_at IS NULL
+               AND a.active=1',
+            [$type, (int)$match[2]]
+        );
+    }
     return push_send_rows($rows, $title, $body, $kind, $tone);
 }
 

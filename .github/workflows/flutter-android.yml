@@ -21,6 +21,16 @@ jobs:
           cache: true
       - name: Generate Android project files
         run: flutter create --platforms=android --project-name elzoco_hrm .
+      - name: Set Android compile SDK
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('android/app/build.gradle.kts')
+          s = p.read_text()
+          s = s.replace('compileSdk = flutter.compileSdkVersion', 'compileSdk = 36')
+          p.write_text(s)
+          print('compileSdk set to 36')
+          PY
       - name: Ensure Android internet permission
         run: |
           python3 - <<'PY'

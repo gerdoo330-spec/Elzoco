@@ -90,6 +90,18 @@ try {
             json_out(['ok' => true, 'items' => notify_poll('emp:' . $emp['id'])]);
         }
 
+        case 'notif_history': {
+            $emp = require_emp_json();
+            $items = all(
+                'SELECT id,kind,tone,title,body,tab,shown,created_at
+                 FROM notifications
+                 WHERE recipient = ? AND created_at >= (NOW() - INTERVAL 30 DAY)
+                 ORDER BY id DESC LIMIT 100',
+                ['emp:' . $emp['id']]
+            );
+            json_out(['ok' => true, 'items' => $items]);
+        }
+
         case 'notif_ack': {
             $emp = require_emp_json();
             notify_ack('emp:' . $emp['id'], (array)($in['ids'] ?? []));

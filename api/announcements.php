@@ -96,6 +96,12 @@ try {
         throw $e;
     }
 
+    try {
+        push_send_employees(array_map(static fn($row) => (int)$row['id'], $employees), $title, $body, $kind, $tone);
+    } catch (Throwable $pushError) {
+        error_log('[announcements push] ' . $pushError->getMessage());
+    }
+
     json_out([
         'ok' => true,
         'id' => $announcementId,

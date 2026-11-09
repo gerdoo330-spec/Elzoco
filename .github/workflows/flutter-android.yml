@@ -4,6 +4,7 @@ on:
     branches:
       - feature/import-section-from-worksheet-ab
       - feature/employee-notification-history-2026-11-09
+      - fix/mobile-core-hr-workflows-2026-11-10
     paths:
       - 'mobile/flutter_app/**'
       - 'api/**'

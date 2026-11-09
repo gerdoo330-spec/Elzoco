@@ -21,13 +21,29 @@ jobs:
           cache: true
       - name: Generate Android project files
         run: flutter create --platforms=android --project-name elzoco_hrm .
+      - name: Pin compatible Android Gradle plugins
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('android/settings.gradle.kts')
+          s = p.read_text()
+          lines = []
+          for line in s.splitlines(keepends=True):
+              if 'com.android.application' in line:
+                  line = re.sub(r'(version\\s+")[^"]+(")', r'\\g<1>8.9.1\\2', line)
+              elif 'org.jetbrains.kotlin.android' in line:
+                  line = re.sub(r'(version\\s+")[^"]+(")', r'\\g<1>2.1.0\\2', line)
+              lines.append(line)
+          p.write_text(''.join(lines))
+          print(p.read_text())
+          PY
       - name: Set Android compile SDK
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p = Path('android/app/build.gradle.kts')
-          s = p.read_text()
-          s = s.replace('compileSdk = flutter.compileSdkVersion', 'compileSdk = 36')
+          s = p.read_text().replace('compileSdk = flutter.compileSdkVersion', 'compileSdk = 36')
           p.write_text(s)
           print('compileSdk set to 36')
           PY
@@ -65,13 +81,13 @@ jobs:
                   stripped = line.lstrip()
                   indent = line[:len(line) - len(stripped)]
                   if stripped.startswith('compileSdkVersion '):
-                      line = indent + 'compileSdkVersion 36\\n'
+                      line = indent + 'compileSdkVersion 36' + chr(10)
                       touched = True
                   elif stripped.startswith('compileSdk '):
-                      line = indent + 'compileSdk 36\\n'
+                      line = indent + 'compileSdk 36' + chr(10)
                       touched = True
                   elif stripped.startswith('compileSdk='):
-                      line = indent + 'compileSdk=36\\n'
+                      line = indent + 'compileSdk=36' + chr(10)
                       touched = True
                   out.append(line)
               if touched:

@@ -103,11 +103,31 @@ try{
   }
  }
 
- if($u['type']==='admin' && in_array($action,['admin_list','admin_save','admin_toggle','admin_settings_get','admin_window_save','admin_rules_save','admin_promo_mode_save','admin_approval_flows_save','mobile_upload','mobile_employee_create'],true)){
+ if($u['type']==='admin' && in_array($action,['admin_list','admin_save','admin_toggle','admin_settings_get','admin_window_save','admin_rules_save','admin_promo_mode_save','admin_approval_flows_save','mobile_upload','mobile_employee_create','admin_announcement_send'],true)){
   $a=['id'=>$u['id'],'name'=>$u['name'],'role'=>$u['role'],'pc'=>$u['personnel_code']];
   $full=in_array((string)$a['role'],['admin','senior'],true);
   if(!$full) json_out(['ok'=>false,'message'=>'دسترسی کافی ندارید.'],403);
   if($action==='admin_list') json_out(['ok'=>true,'admins'=>all('SELECT id,username,name,role,personnel_code,active FROM admins ORDER BY id')]);
+  if($action==='admin_announcement_send'){
+   if($method!=='POST') json_out(['ok'=>false,'message'=>'Method not allowed'],405);
+   $title=trim((string)($in['title']??'')); $body=trim((string)($in['body']??''));
+   if($title===''||$body==='') json_out(['ok'=>false,'message'=>'عنوان و متن اطلاعیه الزامی است.'],422);
+   $kind=in_array((string)($in['kind']??''),['announcement','urgent','reminder'],true)?(string)$in['kind']:'announcement';
+   $tone=$kind==='urgent'?'warning':'info';
+   $target=(string)($in['target']??'all');
+   if($target==='all'){
+    $rows=all('SELECT id FROM employees WHERE in_latest=1 AND inactive=0 ORDER BY id');
+   }elseif($target==='selected'){
+    $ids=array_values(array_unique(array_filter(array_map('intval',(array)($in['employee_ids']??[])),fn($v)=>$v>0)));
+    if(!$ids) json_out(['ok'=>false,'message'=>'حداقل یک کارمند را انتخاب کنید.'],422);
+    $rows=all('SELECT id FROM employees WHERE in_latest=1 AND inactive=0 AND id IN ('.implode(',',array_fill(0,count($ids),'?')).')',$ids);
+   }else{
+    json_out(['ok'=>false,'message'=>'گروه گیرندگان معتبر نیست.'],422);
+   }
+   foreach($rows as $row) notify_emp((int)$row['id'],$kind,$title,$body,$tone);
+   json_out(['ok'=>true,'message'=>'اطلاعیه برای '.count($rows).' کارمند ثبت شد.','sent'=>count($rows)]);
+  }
+
   if($action==='mobile_employee_create'){ $created=employee_create_manual($in,(string)$a['name']); json_out(['ok'=>true]+$created); }
   if($action==='admin_save'){
    $id=(int)($in['id']??0);$username=trim((string)($in['username']??''));$name=trim((string)($in['name']??''));$role=in_array($in['role']??'', ['admin','senior'],true)?$in['role']:'manager';$pc=digits((string)($in['personnel']??''));$pass=(string)($in['password']??'');

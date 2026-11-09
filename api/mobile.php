@@ -103,11 +103,12 @@ try{
   }
  }
 
- if($u['type']==='admin' && in_array($action,['admin_list','admin_save','admin_toggle','admin_settings_get','admin_window_save','admin_rules_save','admin_promo_mode_save','admin_approval_flows_save','mobile_upload'],true)){
+ if($u['type']==='admin' && in_array($action,['admin_list','admin_save','admin_toggle','admin_settings_get','admin_window_save','admin_rules_save','admin_promo_mode_save','admin_approval_flows_save','mobile_upload','mobile_employee_create'],true)){
   $a=['id'=>$u['id'],'name'=>$u['name'],'role'=>$u['role'],'pc'=>$u['personnel_code']];
   $full=in_array((string)$a['role'],['admin','senior'],true);
   if(!$full) json_out(['ok'=>false,'message'=>'دسترسی کافی ندارید.'],403);
   if($action==='admin_list') json_out(['ok'=>true,'admins'=>all('SELECT id,username,name,role,personnel_code,active FROM admins ORDER BY id')]);
+  if($action==='mobile_employee_create'){ $created=employee_create_manual($in,(string)$a['name']); json_out(['ok'=>true]+$created); }
   if($action==='admin_save'){
    $id=(int)($in['id']??0);$username=trim((string)($in['username']??''));$name=trim((string)($in['name']??''));$role=in_array($in['role']??'', ['admin','senior'],true)?$in['role']:'manager';$pc=digits((string)($in['personnel']??''));$pass=(string)($in['password']??'');
    if($pc!==''&&!one('SELECT id FROM employees WHERE personnel_code=? LIMIT 1',[$pc]))json_out(['ok'=>false,'message'=>'کد پرسنلی در فهرست کارکنان پیدا نشد.'],422);

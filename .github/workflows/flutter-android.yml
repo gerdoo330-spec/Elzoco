@@ -25,15 +25,16 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
           p = Path('android/settings.gradle.kts')
           s = p.read_text()
           lines = []
           for line in s.splitlines(keepends=True):
-              if 'com.android.application' in line:
-                  line = re.sub(r'(version\\s+")[^"]+(")', r'\\g<1>8.9.1\\2', line)
-              elif 'org.jetbrains.kotlin.android' in line:
-                  line = re.sub(r'(version\\s+")[^"]+(")', r'\\g<1>2.1.0\\2', line)
+              if 'com.android.application' in line and 'version "' in line:
+                  old = line.split('version "', 1)[1].split('"', 1)[0]
+                  line = line.replace('version "' + old + '"', 'version "8.9.1"')
+              elif 'org.jetbrains.kotlin.android' in line and 'version "' in line:
+                  old = line.split('version "', 1)[1].split('"', 1)[0]
+                  line = line.replace('version "' + old + '"', 'version "2.1.0"')
               lines.append(line)
           p.write_text(''.join(lines))
           print(p.read_text())

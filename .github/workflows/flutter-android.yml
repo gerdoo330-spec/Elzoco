@@ -52,25 +52,34 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import os, re
+          import os
           root = Path(os.environ.get('PUB_CACHE', str(Path.home() / '.pub-cache'))) / 'hosted' / 'pub.dev'
           changed = []
           for p in root.glob('**/android/build.gradle*'):
               if not p.is_file():
                   continue
-              original = p.read_text()
-              updated = re.sub(r'(?m)^(\\s*)compileSdkVersion\\b[^\\n]*$', r'\\g<1>compileSdkVersion 36', original)
-              updated = re.sub(r'(?m)^(\\s*)compileSdk\\s*=\\s*[^\\n]*$', r'\\g<1>compileSdk = 36', updated)
-              if updated != original:
-                  p.write_text(updated)
+              lines = p.read_text().splitlines(keepends=True)
+              out = []
+              touched = False
+              for line in lines:
+                  stripped = line.lstrip()
+                  indent = line[:len(line) - len(stripped)]
+                  if stripped.startswith('compileSdkVersion '):
+                      line = indent + 'compileSdkVersion 36\\n'
+                      touched = True
+                  elif stripped.startswith('compileSdk '):
+                      line = indent + 'compileSdk 36\\n'
+                      touched = True
+                  elif stripped.startswith('compileSdk='):
+                      line = indent + 'compileSdk=36\\n'
+                      touched = True
+                  out.append(line)
+              if touched:
+                  p.write_text(''.join(out))
                   changed.append(str(p))
           print(f'Updated {len(changed)} plugin Gradle files to compileSdk 36')
           for p in changed:
               print(' -', p)
-          picker = list(root.glob('file_picker-*/android/build.gradle*'))
-          for p in picker:
-              print('FILE_PICKER_GRADLE:', p)
-              print(p.read_text())
           PY
       - name: Analyze Dart code
         run: flutter analyze --no-fatal-infos

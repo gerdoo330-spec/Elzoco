@@ -107,3 +107,5 @@ jobs:
           name: elzoco-hrm-android-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+
+# Trigger build with corrected Android Gradle versions

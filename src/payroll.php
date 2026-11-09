@@ -979,6 +979,23 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
         $pdo->rollBack();
         throw $ex;
     }
+    // پس از ثبت موفق دوره، برای کارکنانی که فیش این دوره را دارند اعلان انتشار ثبت می‌شود.
+    // برای جلوگیری از پیام تکراری در بارگذاری مجدد همان دوره، عنوان/دوره قبلاً بررسی می‌شود.
+    try {
+        $noticeTitle = 'فیش حقوقی دوره ' . $year . '/' . str_pad((string)$month, 2, '0', STR_PAD_LEFT) . ' منتشر شد';
+        $published = all('SELECT employee_id FROM payslips WHERE period_id = ? AND has_work = 1', [$periodId]);
+        foreach ($published as $slipRow) {
+            $recipient = 'emp:' . (int)$slipRow['employee_id'];
+            $exists = one('SELECT id FROM notifications WHERE recipient = ? AND kind = ? AND title = ? LIMIT 1',
+                [$recipient, 'payslip', $noticeTitle]);
+            if (!$exists) {
+                notify_emp((int)$slipRow['employee_id'], 'payslip', $noticeTitle,
+                    'فیش حقوقی شما در سامانه ثبت شده است. برای مشاهده وارد بخش فیش حقوقی شوید.', 'ok');
+            }
+        }
+    } catch (Throwable $noticeError) {
+        error_log('[payslip notification] ' . $noticeError->getMessage());
+    }
     return $report + ['period_id' => $periodId];
 }
 

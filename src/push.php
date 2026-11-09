@@ -143,7 +143,7 @@ function push_send_rows(array $rows, string $title, string $body, string $kind =
                     ],
                     'android' => [
                         'priority' => 'HIGH',
-                        'notification' => ['channel_id' => 'elzoco_alerts', 'sound' => 'default'],
+                        'notification' => ['sound' => 'default'],
                     ],
                     'apns' => [
                         'headers' => ['apns-priority' => '10'],

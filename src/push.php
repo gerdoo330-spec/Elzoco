@@ -183,9 +183,12 @@ function push_send_rows(array $rows, string $title, string $body, string $kind =
             $raw = curl_multi_getcontent($ch);
             $response = is_string($raw) ? json_decode($raw, true) : null;
 
+            $errorCode = is_array($response)
+                ? (string)($response['error']['details'][0]['errorCode'] ?? '')
+                : '';
             if ($http >= 200 && $http < 300) {
                 $sent++;
-            } elseif ($http === 404 || (is_array($response) && str_contains((string)($response['error']['details'][0]['errorCode'] ?? ''), 'UNREGISTERED'))) {
+            } elseif ($errorCode === 'UNREGISTERED') {
                 q('UPDATE mobile_push_tokens SET revoked_at=NOW(),updated_at=NOW() WHERE id=?', [(int)$item['row']['id']]);
             } elseif ($http > 0) {
                 error_log('[firebase push] FCM send failed: HTTP ' . $http . ' for device row ' . (int)$item['row']['id']);

@@ -98,6 +98,21 @@ try{
     }
     $rows=all('SELECT id,name,personnel_code,post,inactive FROM employees WHERE '.implode(' AND ',$where).' ORDER BY name LIMIT 1000',$params);
     json_out(['ok'=>true,'employees'=>$rows,'total'=>count($rows)]);
+   case 'manager_employee_dossier': {
+    $employeeId=(int)($in['employee_id']??0);
+    require_employee_scope_access($a,$employeeId);
+    $dossier=employee_dossier_data($employeeId);
+    if(!$dossier) json_out(['ok'=>false,'message'=>'پرونده کارمند پیدا نشد.'],404);
+    json_out(['ok'=>true,'dossier'=>$dossier]);
+   }
+   case 'manager_employee_payslip': {
+    $employeeId=(int)($in['employee_id']??0);
+    $periodId=(int)($in['period_id']??0);
+    require_employee_scope_access($a,$employeeId);
+    $slip=payslip_for($employeeId,$periodId);
+    if(!$slip) json_out(['ok'=>false,'message'=>'فیش این دوره برای کارمند ثبت نشده است.'],404);
+    json_out(['ok'=>true,'slip'=>$slip]);
+   }
    case 'manager_leaves':
     json_out(['ok'=>true,'requests'=>leave_manager_list($a,null,(array)($in['filter']??[]))]);
    case 'manager_advances':

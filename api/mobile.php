@@ -147,7 +147,9 @@ try{
    }else{
     json_out(['ok'=>false,'message'=>'گروه گیرندگان معتبر نیست.'],422);
    }
-   foreach($rows as $row) notify_emp((int)$row['id'],$kind,$title,$body,$tone);
+   foreach($rows as $row) notify_emp((int)$row['id'],$kind,$title,$body,$tone,false);
+   try { push_send_employees(array_map(static fn($row)=>(int)$row['id'],$rows),$title,$body,$kind,$tone); }
+   catch(Throwable $pushError){ error_log('[mobile announcement push] '.$pushError->getMessage()); }
    json_out(['ok'=>true,'message'=>'اطلاعیه برای '.count($rows).' کارمند ثبت شد.','sent'=>count($rows)]);
   }
 

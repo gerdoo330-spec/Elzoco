@@ -132,10 +132,6 @@ jobs:
           for p in changed:
               print(' -', p)
           PY
-      - name: Analyze Dart code
-        run: flutter analyze --no-fatal-infos
-      - name: Build release APK
-        run: flutter build apk --release --dart-define=API_BASE_URL=https://hrsarv.ir/payroll
       - name: Package PHP backend update
         run: |
           mkdir -p ../../dist/elzoco-fcm-backend/api ../../dist/elzoco-fcm-backend/src ../../dist/elzoco-fcm-backend/db/migrations
@@ -153,6 +149,10 @@ jobs:
           name: elzoco-fcm-backend-update
           path: dist/elzoco-fcm-backend-update.zip
           if-no-files-found: error
+      - name: Analyze Dart code
+        run: flutter analyze --no-fatal-infos
+      - name: Build release APK
+        run: flutter build apk --release --dart-define=API_BASE_URL=https://hrsarv.ir/payroll
       - uses: actions/upload-artifact@v4
         with:
           name: elzoco-hrm-android-apk

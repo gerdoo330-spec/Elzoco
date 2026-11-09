@@ -17,6 +17,7 @@ class PushService {
     required String apiBase,
     required String accessToken,
     required void Function(RemoteMessage message) onMessage,
+    required void Function(RemoteMessage message) onOpened,
   }) async {
     try {
       if (!_initialized) {
@@ -54,9 +55,9 @@ class PushService {
         sound: true,
       );
       await _openedSubscription?.cancel();
-      _openedSubscription = FirebaseMessaging.onMessageOpenedApp.listen(onMessage);
+      _openedSubscription = FirebaseMessaging.onMessageOpenedApp.listen(onOpened);
       final initialMessage = await messaging.getInitialMessage();
-      if (initialMessage != null) onMessage(initialMessage);
+      if (initialMessage != null) onOpened(initialMessage);
     } catch (error, stack) {
       // Firebase configuration is supplied per app/environment. Missing config
       // must never prevent the HRM application from opening or signing in.

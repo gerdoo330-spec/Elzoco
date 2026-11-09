@@ -102,6 +102,42 @@ try{
     notify_ack('admin:'.$a['id'],(array)($in['ids']??[])); json_out(['ok'=>true]);
   }
  }
+
+ if($u['type']==='admin' && in_array($action,['admin_list','admin_save','admin_toggle','admin_settings_get','admin_window_save','admin_rules_save','admin_promo_mode_save','admin_approval_flows_save','mobile_upload'],true)){
+  $a=['id'=>$u['id'],'name'=>$u['name'],'role'=>$u['role'],'pc'=>$u['personnel_code']];
+  $full=in_array((string)$a['role'],['admin','senior'],true);
+  if(!$full) json_out(['ok'=>false,'message'=>'دسترسی کافی ندارید.'],403);
+  if($action==='admin_list') json_out(['ok'=>true,'admins'=>all('SELECT id,username,name,role,personnel_code,active FROM admins ORDER BY id')]);
+  if($action==='admin_save'){
+   $id=(int)($in['id']??0);$username=trim((string)($in['username']??''));$name=trim((string)($in['name']??''));$role=in_array($in['role']??'', ['admin','senior'],true)?$in['role']:'manager';$pc=digits((string)($in['personnel']??''));$pass=(string)($in['password']??'');
+   if($pc!==''&&!one('SELECT id FROM employees WHERE personnel_code=? LIMIT 1',[$pc]))json_out(['ok'=>false,'message'=>'کد پرسنلی در فهرست کارکنان پیدا نشد.'],422);
+   if($username===''||$name==='')json_out(['ok'=>false,'message'=>'نام کاربری و نام نمایشی الزامی است.'],422);
+   if($id){q('UPDATE admins SET username=?,name=?,role=?,personnel_code=? WHERE id=?',[$username,$name,$role,$pc,$id]);if($pass!==''){if(strlen($pass)<8)json_out(['ok'=>false,'message'=>'رمز عبور باید حداقل ۸ کاراکتر باشد.'],422);q('UPDATE admins SET password_hash=? WHERE id=?',[password_hash($pass,PASSWORD_DEFAULT),$id]);}}
+   else{if(strlen($pass)<8)json_out(['ok'=>false,'message'=>'برای حساب جدید رمز حداقل ۸ کاراکتر باشد.'],422);q('INSERT INTO admins(username,password_hash,name,role,personnel_code,active,created_at) VALUES(?,?,?,?,?,1,NOW())',[$username,password_hash($pass,PASSWORD_DEFAULT),$name,$role,$pc]);}
+   json_out(['ok'=>true,'message'=>'حساب مدیریتی ذخیره شد.']);
+  }
+  if($action==='admin_toggle'){ $id=(int)($in['id']??0);if($id===$a['id'])json_out(['ok'=>false,'message'=>'امکان غیرفعال‌کردن حساب خودتان وجود ندارد.'],422);q('UPDATE admins SET active=1-active WHERE id=?',[$id]);json_out(['ok'=>true,'message'=>'وضعیت حساب تغییر کرد.']);}
+  if($action==='admin_settings_get')json_out(['ok'=>true,'windows'=>['advance'=>advance_window('advance'),'loan'=>advance_window('loan'),'payslip'=>payslip_window()],'rules'=>fin_rules(),'promo_mode'=>promo_apply_mode(),'approval_flows'=>approval_flows()]);
+  if($action==='admin_window_save'){
+   $which=(string)($in['which']??'');$prefix=$which==='payslip'?'pay':($which==='advance'?'adv':($which==='loan'?'loan':''));if($prefix==='')json_out(['ok'=>false,'message'=>'نوع بازه معتبر نیست.'],422);
+   if(!empty($in['clear'])){set_setting($prefix.'_start',null);set_setting($prefix.'_end',null);json_out(['ok'=>true,'message'=>'بازه پاک شد.']);}
+   $s=jalali_parse((string)($in['start']??''));$e=jalali_parse((string)($in['end']??''));if(!$s||!$e||jalali_num($s)>jalali_num($e))json_out(['ok'=>false,'message'=>'بازه تاریخ شمسی معتبر نیست.'],422);set_setting($prefix.'_start',jalali_str($s));set_setting($prefix.'_end',jalali_str($e));json_out(['ok'=>true,'message'=>'بازه ذخیره شد.']);
+  }
+  if($action==='admin_rules_save')json_out(fin_rules_save($in));
+  if($action==='admin_promo_mode_save')json_out(promo_mode_save($in));
+  if($action==='admin_approval_flows_save')json_out(approval_flows_save($in));
+  if($action==='mobile_upload'){
+   if($method!=='POST')json_out(['ok'=>false,'message'=>'Method not allowed'],405);
+   $year=(int)($_POST['year']??0);$month=(int)($_POST['month']??0);
+   if($year<1390||$year>1500||$month<1||$month>12)json_out(['ok'=>false,'message'=>'سال و ماه دوره را درست انتخاب کنید.'],422);
+   if(empty($_FILES['file'])||$_FILES['file']['error']!==UPLOAD_ERR_OK)json_out(['ok'=>false,'message'=>'فایل اکسل دریافت نشد.'],422);
+   $file=$_FILES['file'];$name=(string)$file['name'];if(!preg_match('/\\.xlsx$/i',$name))json_out(['ok'=>false,'message'=>'فقط فایل xlsx پذیرفته می‌شود.'],422);
+   if((int)$file['size']>cfg('upload_max_mb',40)*1024*1024)json_out(['ok'=>false,'message'=>'حجم فایل بیش از حد مجاز است.'],413);
+   $report=payroll_import((string)$file['tmp_name'],$year,$month,$name,(string)$a['name']);
+   json_out(['ok'=>true,'report'=>$report,'message'=>'فایل با موفقیت بارگذاری و اطلاعات به‌روز شد.']);
+  }
+ }
+
  if($action==='logout'&&$method==='POST'){$h=(string)($_SERVER['HTTP_AUTHORIZATION']??'');if(preg_match('/^Bearer\s+([a-f0-9]{64})$/i',trim($h),$m))q('UPDATE mobile_tokens SET revoked_at=NOW() WHERE token_hash=?',[hash('sha256',$m[1])]);if($u['type']==='admin'){start_session_secure();unset($_SESSION['admin']);session_regenerate_id(true);}json_out(['ok'=>true]);}
  json_out(['ok'=>false,'message'=>'این عملیات در نسخه بعدی فعال می‌شود.'],404);
 }catch(Throwable $e){error_log('[mobile api] '.$e->getMessage());json_out(['ok'=>false,'message'=>'خطای داخلی سرور. دوباره تلاش کنید.'],500);}

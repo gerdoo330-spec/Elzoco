@@ -169,7 +169,9 @@ function push_send_rows(array $rows, string $title, string $body, string $kind =
         }
 
         do {
-            $status = curl_multi_exec($multi, $active);
+            do {
+                $status = curl_multi_exec($multi, $active);
+            } while ($status === CURLM_CALL_MULTI_PERFORM);
             if ($active && $status === CURLM_OK) {
                 curl_multi_select($multi, 1.0);
             }

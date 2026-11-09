@@ -54,20 +54,23 @@ jobs:
           from pathlib import Path
           import os, re
           root = Path(os.environ.get('PUB_CACHE', str(Path.home() / '.pub-cache'))) / 'hosted' / 'pub.dev'
-          changed = 0
-          if root.exists():
-              for pattern in ('**/android/build.gradle', '**/android/build.gradle.kts'):
-                  for p in root.glob(pattern):
-                      s = p.read_text()
-                      updated = re.sub(
-                          r'(?m)^(\\s*)(compileSdkVersion|compileSdk)(\\s*=\\s*|\\s+)(?:flutter\\.compileSdkVersion|safeExtGet\\([^\\n]*?\\)|[0-9]+)(\\s*)$',
-                          lambda m: m.group(1) + m.group(2) + (' = ' if m.group(2) == 'compileSdk' else ' ') + '36' + m.group(4),
-                          s
-                      )
-                      if updated != s:
-                          p.write_text(updated)
-                          changed += 1
-          print(f'Updated {changed} Android plugin Gradle files to compileSdk 36')
+          changed = []
+          for p in root.glob('**/android/build.gradle*'):
+              if not p.is_file():
+                  continue
+              original = p.read_text()
+              updated = re.sub(r'(?m)^(\\s*)compileSdkVersion\\b[^\\n]*$', r'\\g<1>compileSdkVersion 36', original)
+              updated = re.sub(r'(?m)^(\\s*)compileSdk\\s*=\\s*[^\\n]*$', r'\\g<1>compileSdk = 36', updated)
+              if updated != original:
+                  p.write_text(updated)
+                  changed.append(str(p))
+          print(f'Updated {len(changed)} plugin Gradle files to compileSdk 36')
+          for p in changed:
+              print(' -', p)
+          picker = list(root.glob('file_picker-*/android/build.gradle*'))
+          for p in picker:
+              print('FILE_PICKER_GRADLE:', p)
+              print(p.read_text())
           PY
       - name: Analyze Dart code
         run: flutter analyze --no-fatal-infos

@@ -75,6 +75,7 @@ jobs:
           for p in root.glob('**/android/build.gradle*'):
               if not p.is_file():
                   continue
+              is_kotlin = p.name.endswith('.kts')
               lines = p.read_text().splitlines(keepends=True)
               out = []
               touched = False
@@ -82,10 +83,10 @@ jobs:
                   stripped = line.lstrip()
                   indent = line[:len(line) - len(stripped)]
                   if stripped.startswith('compileSdkVersion '):
-                      line = indent + 'compileSdkVersion 36' + chr(10)
+                      line = indent + ('compileSdk = 36' if is_kotlin else 'compileSdkVersion 36') + chr(10)
                       touched = True
-                  elif stripped.startswith('compileSdk '):
-                      line = indent + 'compileSdk 36' + chr(10)
+                  elif stripped.startswith('compileSdk ') or stripped.startswith('compileSdk ='):
+                      line = indent + ('compileSdk = 36' if is_kotlin else 'compileSdk 36') + chr(10)
                       touched = True
                   elif stripped.startswith('compileSdk='):
                       line = indent + 'compileSdk=36' + chr(10)
@@ -108,4 +109,4 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
 
-# Trigger build with corrected Android Gradle versions
+# Fix Kotlin DSL syntax for cached Android plugins

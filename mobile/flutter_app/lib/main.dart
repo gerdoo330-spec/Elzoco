@@ -24,7 +24,7 @@ class Icon3D extends StatelessWidget {
  const Icon3D(this.icon,{super.key,required this.color,this.size=42,this.compact=false});
  @override Widget build(BuildContext context){final radius=BorderRadius.circular(size*.29);return SizedBox(width:size,height:size,child:Stack(clipBehavior:Clip.none,children:[Positioned(left:2,top:4,child:Container(width:size-3,height:size-3,decoration:BoxDecoration(color:color.withOpacity(.20),borderRadius:radius,boxShadow:[BoxShadow(color:color.withOpacity(.22),blurRadius:compact?5:11,offset:Offset(0,size*.12))]))),Positioned(left:0,top:0,child:Container(width:size-3,height:size-3,decoration:BoxDecoration(gradient:LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color.lerp(color,Colors.white,.58)!,color,Color.lerp(color,Colors.black,.18)!]),borderRadius:radius,border:Border.all(color:Colors.white.withOpacity(.72),width:1.2),boxShadow:[BoxShadow(color:color.withOpacity(.22),blurRadius:compact?4:9,offset:Offset(0,size*.07))]),child:Center(child:Icon(icon,color:Colors.white,size:size*.52))))]));}
 }
-\nclass MobileApi{
+class MobileApi{
  static String get root=>apiBase.replaceAll(RegExp(r'/+$'),'');
  static Uri url(String a)=>Uri.parse(root+'/api/mobile.php?action='+a);
  static Future<Map<String,dynamic>> call(String a,{String method='GET',String? token,Map<String,dynamic>? body})async{

@@ -6,6 +6,10 @@ on:
       - feature/employee-notification-history-2026-11-09
     paths:
       - 'mobile/flutter_app/**'
+      - 'api/**'
+      - 'src/**'
+      - 'db/schema.sql'
+      - 'db/migrations/**'
       - '.github/workflows/flutter-android.yml'
   workflow_dispatch:
 jobs:

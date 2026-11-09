@@ -19,7 +19,7 @@ function push_firebase_credentials(): ?array
         return $credentials;
     }
 
-    $path = trim((string)(getenv('ELZOCO_FIREBASE_SERVICE_ACCOUNT_PATH') ?: ''));
+    $path = trim((string)(getenv('ELZOCO_FIREBASE_SERVICE_ACCOUNT_PATH') ?: cfg('firebase_service_account_path', '')));
     if ($path === '' || !is_file($path) || !is_readable($path)) {
         $credentials = null;
         return null;

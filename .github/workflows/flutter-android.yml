@@ -55,19 +55,19 @@ jobs:
         run: |
           if [ -f android/app/google-services.json ]; then
             python3 - <<'PY'
-            from pathlib import Path
-            settings = Path('android/settings.gradle.kts')
-            text = settings.read_text()
-            if 'com.google.gms.google-services' not in text:
-                text = text.replace('plugins {', 'plugins {\n    id("com.google.gms.google-services") version "4.4.3" apply false', 1)
-                settings.write_text(text)
-            app = Path('android/app/build.gradle.kts')
-            text = app.read_text()
-            if 'com.google.gms.google-services' not in text:
-                text = text.replace('plugins {', 'plugins {\n    id("com.google.gms.google-services")', 1)
-                app.write_text(text)
-            print('Firebase Android Gradle plugin enabled.')
-            PY
+          from pathlib import Path
+          settings = Path('android/settings.gradle.kts')
+          text = settings.read_text()
+          if 'com.google.gms.google-services' not in text:
+              text = text.replace('plugins {', 'plugins {\n    id("com.google.gms.google-services") version "4.4.3" apply false', 1)
+              settings.write_text(text)
+          app = Path('android/app/build.gradle.kts')
+          text = app.read_text()
+          if 'com.google.gms.google-services' not in text:
+              text = text.replace('plugins {', 'plugins {\n    id("com.google.gms.google-services")', 1)
+              app.write_text(text)
+          print('Firebase Android Gradle plugin enabled.')
+          PY
           else
             echo 'google-services.json not supplied; Firebase runtime setup will remain inactive.'
           fi

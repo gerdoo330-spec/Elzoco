@@ -30,6 +30,7 @@ $appName = cfg('app_name');
     <section class="card" id="info" style="margin-bottom:18px"></section>
     <nav class="tabs" id="tabs">
       <button data-tab="payslip" onclick="switchTab('payslip')">فیش حقوقی</button>
+      <button type="button" onclick="location.href='notifications.php'">تاریخچه اعلان‌ها</button>
       <div class="dd" id="ddReq">
         <button type="button" class="dd-btn" data-tab="requests" aria-haspopup="true" aria-expanded="false" aria-controls="ddMenu" onclick="toggleReqMenu(event)">
           <span>درخواست‌های من</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>

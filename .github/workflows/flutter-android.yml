@@ -31,10 +31,10 @@ jobs:
           for line in s.splitlines(keepends=True):
               if 'com.android.application' in line and 'version "' in line:
                   old = line.split('version "', 1)[1].split('"', 1)[0]
-                  line = line.replace('version "' + old + '"', 'version "8.9.1"')
+                  line = line.replace('version "' + old + '"', 'version "8.11.1"')
               elif 'org.jetbrains.kotlin.android' in line and 'version "' in line:
                   old = line.split('version "', 1)[1].split('"', 1)[0]
-                  line = line.replace('version "' + old + '"', 'version "2.1.0"')
+                  line = line.replace('version "' + old + '"', 'version "2.2.20"')
               lines.append(line)
           p.write_text(''.join(lines))
           print(p.read_text())

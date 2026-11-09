@@ -16,6 +16,13 @@ jobs:
         working-directory: mobile/flutter_app
     steps:
       - uses: actions/checkout@v4
+      - name: Check PHP syntax
+        run: |
+          php -l ../../api/mobile.php
+          php -l ../../api/announcements.php
+          php -l ../../src/bootstrap.php
+          php -l ../../src/notify.php
+          php -l ../../src/push.php
       - uses: subosito/flutter-action@v2
         with:
           channel: stable

@@ -27,6 +27,23 @@ jobs:
           php -l ../../src/bootstrap.php
           php -l ../../src/notify.php
           php -l ../../src/push.php
+      - name: Package PHP backend update
+        run: |
+          mkdir -p ../../dist/elzoco-fcm-backend/api ../../dist/elzoco-fcm-backend/src ../../dist/elzoco-fcm-backend/db/migrations
+          cp ../../api/mobile.php ../../dist/elzoco-fcm-backend/api/mobile.php
+          cp ../../api/announcements.php ../../dist/elzoco-fcm-backend/api/announcements.php
+          cp ../../src/bootstrap.php ../../dist/elzoco-fcm-backend/src/bootstrap.php
+          cp ../../src/notify.php ../../dist/elzoco-fcm-backend/src/notify.php
+          cp ../../src/push.php ../../dist/elzoco-fcm-backend/src/push.php
+          cp ../../db/migrations/2026-11-09-mobile-push-tokens.sql ../../dist/elzoco-fcm-backend/db/migrations/
+          cp ../../mobile/FCM-SETUP-FA.md ../../dist/elzoco-fcm-backend/راهنمای-نصب.md
+          cd ../../dist
+          zip -qr elzoco-fcm-backend-update.zip elzoco-fcm-backend
+      - uses: actions/upload-artifact@v4
+        with:
+          name: elzoco-fcm-backend-update
+          path: dist/elzoco-fcm-backend-update.zip
+          if-no-files-found: error
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -132,23 +149,6 @@ jobs:
           for p in changed:
               print(' -', p)
           PY
-      - name: Package PHP backend update
-        run: |
-          mkdir -p ../../dist/elzoco-fcm-backend/api ../../dist/elzoco-fcm-backend/src ../../dist/elzoco-fcm-backend/db/migrations
-          cp ../../api/mobile.php ../../dist/elzoco-fcm-backend/api/mobile.php
-          cp ../../api/announcements.php ../../dist/elzoco-fcm-backend/api/announcements.php
-          cp ../../src/bootstrap.php ../../dist/elzoco-fcm-backend/src/bootstrap.php
-          cp ../../src/notify.php ../../dist/elzoco-fcm-backend/src/notify.php
-          cp ../../src/push.php ../../dist/elzoco-fcm-backend/src/push.php
-          cp ../../db/migrations/2026-11-09-mobile-push-tokens.sql ../../dist/elzoco-fcm-backend/db/migrations/
-          cp ../../mobile/FCM-SETUP-FA.md ../../dist/elzoco-fcm-backend/راهنمای-نصب.md
-          cd ../../dist
-          zip -qr elzoco-fcm-backend-update.zip elzoco-fcm-backend
-      - uses: actions/upload-artifact@v4
-        with:
-          name: elzoco-fcm-backend-update
-          path: dist/elzoco-fcm-backend-update.zip
-          if-no-files-found: error
       - name: Analyze Dart code
         run: flutter analyze --no-fatal-infos
       - name: Build release APK

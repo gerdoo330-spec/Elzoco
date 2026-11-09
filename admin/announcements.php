@@ -29,17 +29,16 @@ body{min-height:100vh;background:#171514;color:#f5eee9}.ann-wrap{max-width:1180p
 @media(max-width:650px){.ann-grid{grid-template-columns:1fr}.ann-field.full{grid-column:auto}.ann-card{padding:16px}.ann-wrap{padding:18px 12px 40px}}
 </style></head><body>
 <main class="ann-wrap">
-<header class="ann-top"><div><h1>مرکز اطلاعیه‌ها و اعلان‌ها</h1><p>ارسال پیام به کارکنان، شعبه‌ها یا سکشن‌های انتخاب‌شده</p></div>
+<header class="ann-top"><div><h1>مرکز اطلاعیه‌ها و اعلان‌ها</h1><p>ارسال پیام به تمام کارکنان فعال سامانه</p></div>
 <a class="ann-btn alt" href="panel.php">بازگشت به پنل</a></header>
 <section class="ann-card">
 <form id="annForm"><div class="ann-grid">
 <div class="ann-field"><label for="annTitle">عنوان اطلاعیه</label><input id="annTitle" name="title" maxlength="190" required placeholder="مثلاً انتشار فیش حقوقی"></div>
 <div class="ann-field"><label for="annKind">نوع اطلاعیه</label><select id="annKind" name="kind"><option value="general">اطلاع‌رسانی عمومی</option><option value="urgent">فوری</option><option value="reminder">یادآوری</option><option value="news">خبر و اطلاعیه</option></select></div>
-<div class="ann-field"><label for="annAudience">مخاطبان</label><select id="annAudience" name="audience"><option value="all">تمام کارکنان فعال</option><option value="section">یک سکشن</option><option value="branch">یک شعبه</option></select></div>
-<div class="ann-field" id="valueWrap" hidden><label id="valueLabel" for="annValue">مقدار مخاطب</label><input id="annValue" name="audience_value" placeholder="نام دقیق سکشن یا شعبه"></div>
+<div class="ann-field"><label>مخاطبان</label><input value="تمام کارکنان فعال" readonly aria-readonly="true"></div>
 <div class="ann-field full"><label for="annBody">متن اطلاعیه</label><textarea id="annBody" name="body" maxlength="5000" required placeholder="متن اطلاعیه را بنویسید..."></textarea></div>
 </div>
-<p class="ann-help">در این نسخه پیام در صندوق اعلان داخل سامانه ثبت می‌شود. برای نمایش اعلان در گوشی هنگام بسته بودن برنامه، پس از آماده‌سازی اتصال Firebase باید تنظیمات اختصاصی پروژه تکمیل شود.</p>
+<p class="ann-help">این پیام در صندوق اعلان داخلی تمام کارکنان فعال ثبت می‌شود. ارسال اعلان فوری روی گوشی هنگام بسته بودن برنامه، به راه‌اندازی Firebase و ثبت تنظیمات امن سرور نیاز دارد و هنوز فعال نشده است.</p>
 <div class="ann-actions"><button class="ann-btn" id="sendBtn" type="submit">ثبت و ارسال اطلاعیه</button><span class="ann-status" id="status" role="status"></span></div></form>
 </section>
 <section class="ann-card"><h2>سوابق اطلاعیه‌ها</h2><div id="annList" class="ann-list"><div class="ann-empty">در حال دریافت...</div></div></section>
@@ -47,11 +46,9 @@ body{min-height:100vh;background:#171514;color:#f5eee9}.ann-wrap{max-width:1180p
 <script>
 const csrf=document.querySelector('meta[name="csrf"]').content;
 const api=async(action,data={})=>{const r=await fetch('../api/announcements.php',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({action,...data})});return r.json()};
-const audience=document.getElementById('annAudience'),wrap=document.getElementById('valueWrap'),valueLabel=document.getElementById('valueLabel');
-audience.addEventListener('change',()=>{wrap.hidden=!['section','branch'].includes(audience.value);valueLabel.textContent=audience.value==='section'?'نام سکشن':'نام شعبه';});
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 async function load(){const r=await api('list');const root=document.getElementById('annList');if(!r.ok){root.innerHTML='<div class="ann-empty">دریافت سوابق ناموفق بود.</div>';return;}if(!r.announcements.length){root.innerHTML='<div class="ann-empty">هنوز اطلاعیه‌ای ثبت نشده است.</div>';return;}root.innerHTML=r.announcements.map(x=>'<article class="ann-item"><header><h3>'+esc(x.title)+'</h3><span class="ann-meta">'+(Number(x.active)?'فعال':'غیرفعال')+' · '+esc(x.recipient_count)+' نفر</span></header><p>'+esc(x.body)+'</p><div class="ann-meta">'+esc(x.created_at)+' · '+esc(x.audience)+'</div>'+(Number(x.active)?'<button class="ann-btn alt" type="button" data-off="'+Number(x.id)+'">غیرفعال‌سازی</button>':'')+'</article>').join('');}
 document.getElementById('annList').addEventListener('click',async e=>{const b=e.target.closest('[data-off]');if(!b)return;if(!confirm('این اطلاعیه غیرفعال شود؟'))return;const r=await api('deactivate',{id:Number(b.dataset.off)});document.getElementById('status').textContent=r.message||'';load();});
-document.getElementById('annForm').addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget,btn=document.getElementById('sendBtn'),status=document.getElementById('status');btn.disabled=true;status.textContent='در حال ثبت...';const data=Object.fromEntries(new FormData(f).entries());try{const r=await api('create',data);status.textContent=r.message||'درخواست انجام نشد.';if(r.ok){f.reset();wrap.hidden=true;load();}}catch(_){status.textContent='ارتباط با سرور برقرار نشد.';}finally{btn.disabled=false;}});
+document.getElementById('annForm').addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget,btn=document.getElementById('sendBtn'),status=document.getElementById('status');btn.disabled=true;status.textContent='در حال ثبت...';const data=Object.fromEntries(new FormData(f).entries());try{const r=await api('create',data);status.textContent=r.message||'درخواست انجام نشد.';if(r.ok){f.reset();load();}}catch(_){status.textContent='ارتباط با سرور برقرار نشد.';}finally{btn.disabled=false;}});
 load();
 </script></body></html>

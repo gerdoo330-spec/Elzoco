@@ -271,7 +271,7 @@ class EmployeePayslipsScreen extends StatelessWidget{
     const SizedBox(height:9),Text('${slips.length} دوره حقوقی',style:const TextStyle(color:Colors.white70,fontSize:10))
    ])),
    const SizedBox(height:15),
-   if(slips.isEmpty)empty('برای این کارمند فیش حقوقی ثبت نشده است.',Icons.receipt_long_outlined),
+   if(slips.isEmpty)Container(padding:const EdgeInsets.symmetric(vertical:32,horizontal:16),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(18),border:Border.all(color:line)),child:const Column(children:[Icon(Icons.receipt_long_outlined,color:muted,size:34),SizedBox(height:9),Text('برای این کارمند فیش حقوقی ثبت نشده است.',style:TextStyle(color:muted,fontSize:11))])),
    ...slips.map((x){final p=m(x);return Container(margin:const EdgeInsets.only(bottom:10),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(17),border:Border.all(color:line)),child:ListTile(
     contentPadding:const EdgeInsets.symmetric(horizontal:15,vertical:7),
     leading:Container(width:43,height:43,decoration:BoxDecoration(color:blue.withOpacity(.09),borderRadius:BorderRadius.circular(13)),child:const Icon(Icons.receipt_long_rounded,color:blue)),

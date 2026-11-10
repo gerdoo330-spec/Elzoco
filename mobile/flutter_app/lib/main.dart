@@ -66,53 +66,190 @@ class MobileApi{
   return d;
  }
 }
-class ElzocoApp extends StatelessWidget{const ElzocoApp({super.key});@override Widget build(BuildContext c)=>MaterialApp(debugShowCheckedModeBanner:false,title:'ELZOCO HRM',theme:ThemeData(useMaterial3:true,brightness:Brightness.dark,scaffoldBackgroundColor:bg,colorScheme:ColorScheme.fromSeed(seedColor:blue,primary:blue,secondary:cyan,brightness:Brightness.dark),appBarTheme:const AppBarTheme(backgroundColor:bg,foregroundColor:ink,elevation:0,scrolledUnderElevation:0),inputDecorationTheme:InputDecorationTheme(filled:true,fillColor:surface,contentPadding:const EdgeInsets.symmetric(horizontal:16,vertical:17),border:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(17)),borderSide:BorderSide(color:line)),enabledBorder:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(17)),borderSide:BorderSide(color:line)),focusedBorder:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(17)),borderSide:BorderSide(color:blue,width:1.6))),filledButtonTheme:FilledButtonThemeData(style:FilledButton.styleFrom(minimumSize:const Size.fromHeight(48),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(15)),textStyle:const TextStyle(fontWeight:FontWeight.w800))),snackBarTheme:const SnackBarThemeData(behavior:SnackBarBehavior.floating)),locale:const Locale('fa'),supportedLocales:const [Locale('fa'),Locale('en')],localizationsDelegates:GlobalMaterialLocalizations.delegates,localeResolutionCallback:(deviceLocale,supported){return const Locale('fa');},builder:(context,child)=>Directionality(textDirection:TextDirection.rtl,child:child??const SizedBox.shrink()),home:const Gate());}
-class Gate extends StatefulWidget{const Gate({super.key});@override State<Gate> createState()=>_GateState();}
-class _GateState extends State<Gate>{
- final LocalAuthentication auth=LocalAuthentication();
- String? token,savedToken;Map<String,dynamic>? data;bool busy=true,biometricReady=false;
- @override void initState(){super.initState();restore();}
- Future<void> validateAndEnter(String t)async{final d=await MobileApi.call('me',token:t);if(!mounted)return;setState((){token=t;data=d;savedToken=null;});}
- Future<void> restore()async{
-  try{
-   final t=await vault.read(key:'access_token');
-   final enabled=await vault.read(key:'biometric_enabled')=='true';
-   if(t!=null&&enabled){
-    savedToken=t;
-    final supported=await auth.isDeviceSupported();
-    final can=await auth.canCheckBiometrics;
-    if(supported&&can){
-     biometricReady=true;
-     try{
-      final ok=await auth.authenticate(
-       localizedReason:'برای ورود امن به سامانه الزوکو هویت خود را تأیید کنید',
-       options:const AuthenticationOptions(biometricOnly:true,stickyAuth:true),
-      );
-      if(ok)await validateAndEnter(t);
-      // لغو یا ناموفق بودن احراز هویت نباید توکن معتبر را حذف کند.
-     }catch(_){
-      // کاربر می‌تواند از صفحه ورود دوباره اثر انگشت را امتحان کند.
-     }
-    }else{
-     await vault.write(key:'biometric_enabled',value:'false');
-     biometricReady=false;
-     await validateAndEnter(t);
-    }
-   }else if(t!=null){
-    await validateAndEnter(t);
-   }
-  }catch(_){
-   await vault.delete(key:'access_token');
-   await vault.delete(key:'biometric_enabled');
-   savedToken=null;
-   biometricReady=false;
+class AppAppearance extends ChangeNotifier {
+  static const palettes = <String, Color>{
+    'copper': Color(0xFFE8873A),
+    'blue': Color(0xFF4C8DDB),
+    'green': Color(0xFF28A879),
+    'silver': Color(0xFF9AA8B8),
+  };
+  String palette = 'copper';
+  ThemeMode mode = ThemeMode.dark;
+  Color get accent => palettes[palette] ?? palettes['copper']!;
+  Future<void> load() async {
+    palette = await vault.read(key: 'ui_palette') ?? 'copper';
+    if (!palettes.containsKey(palette)) palette = 'copper';
+    mode = (await vault.read(key: 'ui_theme_mode')) == 'light' ? ThemeMode.light : ThemeMode.dark;
+    notifyListeners();
   }
-  if(mounted)setState(()=>busy=false);
- }
- Future<void> biometricLogin()async{final t=savedToken;if(t==null)return;try{final ok=await auth.authenticate(localizedReason:'برای ورود به سامانه الزوکو اثر انگشت یا روش زیستی گوشی را تأیید کنید',options:const AuthenticationOptions(biometricOnly:true,stickyAuth:true));if(ok)await validateAndEnter(t);}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('ورود زیستی انجام نشد: $e')));}}
- void logged(String t,Map<String,dynamic>d)=>setState((){token=t;data=d;savedToken=null;});
- void logout()=>setState((){token=null;data=null;savedToken=null;biometricReady=false;});
- @override Widget build(BuildContext c)=>busy?const Scaffold(body:Center(child:CircularProgressIndicator())):token==null?Login(onLogin:logged,onBiometric:biometricReady?biometricLogin:null):Shell(token:token!,initial:data!,onLogout:logout);
+  Future<void> setPalette(String value) async {
+    if (!palettes.containsKey(value)) return;
+    palette = value;
+    await vault.write(key: 'ui_palette', value: value);
+    notifyListeners();
+  }
+  Future<void> setMode(ThemeMode value) async {
+    mode = value;
+    await vault.write(key: 'ui_theme_mode', value: value == ThemeMode.light ? 'light' : 'dark');
+    notifyListeners();
+  }
+}
+final appearance = AppAppearance();
+
+ThemeData buildTheme(Brightness brightness) {
+  final dark = brightness == Brightness.dark;
+  final accent = appearance.accent;
+  final scheme = ColorScheme.fromSeed(seedColor: accent, brightness: brightness,
+    surface: dark ? const Color(0xFF211A16) : const Color(0xFFFFFFFF));
+  return ThemeData(
+    useMaterial3: true, brightness: brightness, colorScheme: scheme,
+    scaffoldBackgroundColor: dark ? const Color(0xFF100D0B) : const Color(0xFFF3F5F8),
+    appBarTheme: AppBarTheme(backgroundColor: dark ? const Color(0xFF100D0B) : const Color(0xFFF3F5F8),
+      foregroundColor: dark ? ink : const Color(0xFF20242A), elevation: 0, scrolledUnderElevation: 0),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true, fillColor: dark ? const Color(0xFF211A16) : Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: BorderSide(color: dark ? line : const Color(0xFFDCE2E9))),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: BorderSide(color: dark ? line : const Color(0xFFDCE2E9))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: BorderSide(color: accent, width: 1.6))),
+    filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48),
+      backgroundColor: accent, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      textStyle: const TextStyle(fontWeight: FontWeight.w800))),
+    snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+  );
+}
+class ElzocoApp extends StatefulWidget {
+  const ElzocoApp({super.key});
+  @override State<ElzocoApp> createState() => _ElzocoAppState();
+}
+class _ElzocoAppState extends State<ElzocoApp> {
+  @override void initState() { super.initState(); appearance.load(); }
+  @override Widget build(BuildContext c) => AnimatedBuilder(
+    animation: appearance,
+    builder: (_, __) => MaterialApp(
+      debugShowCheckedModeBanner: false, title: 'ELZOCO HRM',
+      theme: buildTheme(Brightness.light), darkTheme: buildTheme(Brightness.dark), themeMode: appearance.mode,
+      locale: const Locale('fa'), supportedLocales: const [Locale('fa'), Locale('en')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      localeResolutionCallback: (deviceLocale, supported) => const Locale('fa'),
+      builder: (context, child) => Directionality(textDirection: TextDirection.rtl, child: child ?? const SizedBox.shrink()),
+      home: const Gate()));
+}
+class Gate extends StatefulWidget {
+  const Gate({super.key});
+  @override State<Gate> createState() => _GateState();
+}
+class _GateState extends State<Gate> {
+  final LocalAuthentication auth = LocalAuthentication();
+  String? token, savedToken;
+  Map<String,dynamic>? data, savedData;
+  bool busy = true, biometricReady = false, authenticating = false;
+  @override void initState() { super.initState(); restore(); }
+  Future<void> validateAndEnter(String t) async {
+    final d = await MobileApi.call('me', token: t);
+    if (!mounted) return;
+    setState(() { token=t; data=d; savedToken=null; savedData=null; });
+  }
+  Future<void> restore() async {
+    try {
+      final t = await vault.read(key: 'access_token');
+      final enabled = await vault.read(key: 'biometric_enabled') == 'true';
+      if (t != null && t.isNotEmpty) {
+        final d = await MobileApi.call('me', token: t);
+        if (enabled) {
+          final supported = await auth.isDeviceSupported();
+          final can = await auth.canCheckBiometrics;
+          if (supported && can) {
+            savedToken = t; savedData = d; biometricReady = true;
+          } else {
+            await vault.write(key: 'biometric_enabled', value: 'false');
+            token = t; data = d;
+          }
+        } else { token=t; data=d; }
+      }
+    } catch (_) {
+      await vault.delete(key: 'access_token');
+      await vault.delete(key: 'biometric_enabled');
+      savedToken=null; savedData=null; biometricReady=false;
+    }
+    if (mounted) setState(() => busy=false);
+  }
+  Future<void> biometricLogin() async {
+    final t=savedToken;
+    if (t==null || authenticating) return;
+    setState(() => authenticating=true);
+    try {
+      final ok=await auth.authenticate(
+        localizedReason:'برای ورود امن به سامانه الزوکو هویت خود را تأیید کنید',
+        options:const AuthenticationOptions(biometricOnly:true,stickyAuth:true));
+      if (ok) await validateAndEnter(t);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('احراز هویت انجام نشد: $e')));
+    } finally { if (mounted) setState(() => authenticating=false); }
+  }
+  void logged(String t,Map<String,dynamic>d) => setState(() { token=t; data=d; savedToken=null; savedData=null; });
+  void logout() => setState(() { token=null; data=null; savedToken=null; savedData=null; biometricReady=false; });
+  @override Widget build(BuildContext c) {
+    if (busy) return const Scaffold(body:Center(child:CircularProgressIndicator()));
+    if (token!=null) return Shell(token:token!,initial:data!,onLogout:logout);
+    if (savedToken!=null && savedData!=null) return BiometricGate(
+      user:m(savedData!['user']), busy:authenticating, onAuthenticate:biometricLogin,
+      onUsePassword:() => setState(() { savedToken=null; savedData=null; biometricReady=false; }));
+    return Login(onLogin:logged);
+  }
+}
+class BiometricGate extends StatelessWidget {
+  final Map<String,dynamic> user;
+  final bool busy;
+  final VoidCallback onAuthenticate, onUsePassword;
+  const BiometricGate({super.key,required this.user,required this.busy,required this.onAuthenticate,required this.onUsePassword});
+  @override Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(gradient:LinearGradient(begin:Alignment.topCenter,end:Alignment.bottomCenter,
+          colors:[Color(0xFF100D0B),Color(0xFF211710),Color(0xFF100D0B)])),
+        child: SafeArea(child: Center(child: SingleChildScrollView(padding:const EdgeInsets.all(26),
+          child: ConstrainedBox(constraints:const BoxConstraints(maxWidth:430),child:Column(
+            crossAxisAlignment:CrossAxisAlignment.center,children:[
+              const SizedBox(height:24),
+              Container(width:76,height:76,decoration:BoxDecoration(
+                gradient:const LinearGradient(colors:[Color(0xFFFFB15C),Color(0xFFE87527)]),
+                borderRadius:BorderRadius.circular(24),boxShadow:[BoxShadow(color:blue.withOpacity(.24),blurRadius:28,offset:const Offset(0,10))]),
+                child:const Icon(Icons.restaurant_menu_rounded,color:Colors.white,size:39)),
+              const SizedBox(height:18),
+              const Text('ELZOCO HRM',style:TextStyle(color:ink,fontSize:19,fontWeight:FontWeight.w900,letterSpacing:2)),
+              const SizedBox(height:8),
+              const Text('ورود امن به حساب کاربری',style:TextStyle(color:muted,fontSize:13,fontWeight:FontWeight.w600)),
+              const SizedBox(height:35),
+              Container(width:214,height:214,decoration:BoxDecoration(shape:BoxShape.circle,
+                border:Border.all(color:blue.withOpacity(.25),width:1.5),
+                boxShadow:[BoxShadow(color:blue.withOpacity(.08),blurRadius:35,spreadRadius:10)]),
+                child:Center(child:Container(width:166,height:166,decoration:BoxDecoration(shape:BoxShape.circle,
+                  color:surface,border:Border.all(color:gold.withOpacity(.32),width:1.2)),
+                  child:Icon(Icons.fingerprint_rounded,size:104,color:blue)))),
+              const SizedBox(height:27),
+              Text((user['name']??'کاربر الزوکو').toString(),style:const TextStyle(color:ink,fontSize:19,fontWeight:FontWeight.w900)),
+              const SizedBox(height:6),
+              Text(roleText(user['role']??(user['type']=='employee'?'employee':'manager')),
+                style:const TextStyle(color:muted,fontSize:12)),
+              const SizedBox(height:12),
+              Container(padding:const EdgeInsets.symmetric(horizontal:13,vertical:8),
+                decoration:BoxDecoration(color:blue.withOpacity(.12),borderRadius:BorderRadius.circular(30),border:Border.all(color:blue.withOpacity(.28))),
+                child:const Row(mainAxisSize:MainAxisSize.min,children:[Icon(Icons.verified_user_outlined,color:mint,size:16),SizedBox(width:7),
+                  Text('حساب شما روی این دستگاه امن است',style:TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w700))])),
+              const SizedBox(height:30),
+              SizedBox(width:double.infinity,height:55,child:FilledButton.icon(
+                onPressed:busy?null:onAuthenticate,
+                icon:busy?const SizedBox(width:19,height:19,child:CircularProgressIndicator(strokeWidth:2,color:Colors.white)):const Icon(Icons.fingerprint_rounded,size:23),
+                label:Text(busy?'در حال بررسی هویت...':'ورود با اثر انگشت',style:const TextStyle(fontSize:14,fontWeight:FontWeight.w900)))),
+              const SizedBox(height:13),
+              TextButton.icon(onPressed:busy?null:onUsePassword,icon:const Icon(Icons.password_rounded),
+                label:const Text('استفاده از روش ورود دیگر')),
+              const SizedBox(height:24),
+              const Text('تأیید هویت توسط سیستم‌عامل دستگاه انجام می‌شود.',textAlign:TextAlign.center,
+                style:TextStyle(color:muted,fontSize:10,height:1.6))
+            ]))))));
+  }
 }
 class Login extends StatefulWidget{final void Function(String,Map<String,dynamic>) onLogin;final Future<void> Function()? onBiometric;const Login({super.key,required this.onLogin,this.onBiometric});@override State<Login> createState()=>_LoginState();}
 class _LoginState extends State<Login>{
@@ -364,7 +501,39 @@ Widget adminsPage()=>ListView(padding:const EdgeInsets.all(15),children:[
 ]);
 Future<void> editAdmin([Map<String,dynamic>? a])async{final un=TextEditingController(text:a?['username']?.toString()??''),name=TextEditingController(text:a?['name']?.toString()??''),pass=TextEditingController(),pc=TextEditingController(text:a?['personnel_code']?.toString()??'');String r=a?['role']?.toString()??'manager';final ok=await showModalBottomSheet<bool>(context:context,isScrollControlled:true,builder:(c)=>StatefulBuilder(builder:(c,set)=>Padding(padding:EdgeInsets.fromLTRB(18,18,18,MediaQuery.of(c).viewInsets.bottom+20),child:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[Text(a==null?'ایجاد حساب مدیریتی':'ویرایش حساب',style:const TextStyle(fontSize:17,fontWeight:FontWeight.w900)),const SizedBox(height:12),TextField(controller:un,textDirection:TextDirection.ltr,textAlign:TextAlign.left,decoration:const InputDecoration(labelText:'نام کاربری')),const SizedBox(height:9),TextField(controller:name,decoration:const InputDecoration(labelText:'نام نمایشی')),const SizedBox(height:9),DropdownButtonFormField<String>(value:r,decoration:const InputDecoration(labelText:'نقش'),items:const [DropdownMenuItem(value:'manager',child:Text('مدیر / سرپرست')),DropdownMenuItem(value:'senior',child:Text('مدیر ارشد')),DropdownMenuItem(value:'admin',child:Text('ادمین'))],onChanged:(v)=>set(()=>r=v??r)),const SizedBox(height:9),TextField(controller:pc,textDirection:TextDirection.ltr,textAlign:TextAlign.left,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'کد پرسنلی مرتبط')),const SizedBox(height:9),TextField(controller:pass,textDirection:TextDirection.ltr,textAlign:TextAlign.left,obscureText:true,decoration:InputDecoration(labelText:a==null?'رمز عبور (حداقل ۸ کاراکتر)':'رمز جدید (اختیاری)')),const SizedBox(height:15),SizedBox(width:double.infinity,child:FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('ذخیره حساب')))])))));if(ok==true){try{final x=await api('admin_save',method:'POST',body:{'id':a?['id']??0,'username':un.text,'name':name.text,'role':r,'personnel':pc.text,'password':pass.text});toast(x['message']??'ذخیره شد.');await loadAdmins();}catch(e){toast(e.toString(),true);}}un.dispose();name.dispose();pass.dispose();pc.dispose();}
 Future<void> toggleAdmin(Map<String,dynamic> a)async{try{final x=await api('admin_toggle',method:'POST',body:{'id':a['id']});toast(x['message']??'وضعیت تغییر کرد.');await loadAdmins();}catch(e){toast(e.toString(),true);}}
-Widget settingsPage(){final w=m(settings['windows']),rules=m(settings['rules']);return ListView(padding:const EdgeInsets.all(15),children:[section('تنظیمات سامانه','کنترل زمان‌بندی و سیاست‌های منابع انسانی'),setting('مشاهده فیش حقوقی',windowText(w['payslip']),Icons.receipt_long,()=>windowEdit('payslip',w['payslip'])),setting('ثبت درخواست مساعده',windowText(w['advance']),Icons.payments,()=>windowEdit('advance',w['advance'])),setting('ثبت درخواست وام',windowText(w['loan']),Icons.account_balance_wallet,()=>windowEdit('loan',w['loan'])),note('قوانین مالی','سابقه مساعده: '+(rules['adv_wait_months']??'—').toString()+' ماه · سقف: '+(rules['adv_ratio_pct']??'—').toString()+'٪\\nسابقه وام: '+(rules['loan_wait_months']??'—').toString()+' ماه · سقف: '+(rules['loan_ratio_pct']??'—').toString()+'٪',Icons.rule_folder_outlined),setting('حساب‌های مدیران','مدیریت نقش و دسترسی مدیران',Icons.admin_panel_settings,()=>goDirect('admins'))]);}
+Widget appearanceSettings() => Container(
+  margin:const EdgeInsets.only(bottom:16),padding:const EdgeInsets.all(15),
+  decoration:BoxDecoration(color:surface,borderRadius:BorderRadius.circular(18),border:Border.all(color:line)),
+  child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    const Text('شخصی‌سازی ظاهر برنامه',style:TextStyle(color:ink,fontSize:13,fontWeight:FontWeight.w900)),
+    const SizedBox(height:5),
+    const Text('پوسته و حالت روشن یا تیره فقط روی همین دستگاه ذخیره می‌شود.',style:TextStyle(color:muted,fontSize:10)),
+    const SizedBox(height:13),
+    Wrap(spacing:9,runSpacing:9,children:[
+      for(final entry in AppAppearance.palettes.entries)
+        InkWell(onTap:()=>appearance.setPalette(entry.key),borderRadius:BorderRadius.circular(12),
+          child:Container(padding:const EdgeInsets.symmetric(horizontal:11,vertical:9),
+            decoration:BoxDecoration(borderRadius:BorderRadius.circular(12),
+              border:Border.all(color:appearance.palette==entry.key?entry.value:line,width:appearance.palette==entry.key?2:1),
+              color:entry.value.withOpacity(.10)),
+            child:Row(mainAxisSize:MainAxisSize.min,children:[
+              Container(width:13,height:13,decoration:BoxDecoration(color:entry.value,shape:BoxShape.circle)),
+              const SizedBox(width:7),
+              Text(const {'copper':'مسی','blue':'آبی','green':'سبز','silver':'نقره‌ای'}[entry.key]!,
+                style:const TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w800)),
+              if(appearance.palette==entry.key) ...[const SizedBox(width:5),Icon(Icons.check_circle,color:entry.value,size:14)]
+            ]))),
+    ]),
+    const SizedBox(height:13),
+    Row(children:[
+      const Expanded(child:Text('حالت نمایش',style:TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w800))),
+      SegmentedButton<ThemeMode>(segments:const [
+        ButtonSegment(value:ThemeMode.dark,label:Text('تیره'),icon:Icon(Icons.dark_mode_outlined)),
+        ButtonSegment(value:ThemeMode.light,label:Text('روشن'),icon:Icon(Icons.light_mode_outlined)),
+      ],selected:{appearance.mode},onSelectionChanged:(v)=>appearance.setMode(v.first))
+    ])
+  ]));
+Widget settingsPage(){final w=m(settings['windows']),rules=m(settings['rules']);return ListView(padding:const EdgeInsets.all(15),children:[section('تنظیمات سامانه','کنترل زمان‌بندی و سیاست‌های منابع انسانی'),appearanceSettings(),setting('مشاهده فیش حقوقی',windowText(w['payslip']),Icons.receipt_long,()=>windowEdit('payslip',w['payslip'])),setting('ثبت درخواست مساعده',windowText(w['advance']),Icons.payments,()=>windowEdit('advance',w['advance'])),setting('ثبت درخواست وام',windowText(w['loan']),Icons.account_balance_wallet,()=>windowEdit('loan',w['loan'])),note('قوانین مالی','سابقه مساعده: '+(rules['adv_wait_months']??'—').toString()+' ماه · سقف: '+(rules['adv_ratio_pct']??'—').toString()+'٪\\nسابقه وام: '+(rules['loan_wait_months']??'—').toString()+' ماه · سقف: '+(rules['loan_ratio_pct']??'—').toString()+'٪',Icons.rule_folder_outlined),setting('حساب‌های مدیران','مدیریت نقش و دسترسی مدیران',Icons.admin_panel_settings,()=>goDirect('admins'))]);}
 String windowText(dynamic x){final a=m(x);return (a['start']??'بدون محدودیت').toString()+' تا '+(a['end']??'بدون محدودیت').toString();}
 Widget setting(String t,String s,IconData i,VoidCallback f)=>Card(child:ListTile(onTap:f,leading:Icon(i,color:blue),title:Text(t,style:const TextStyle(fontWeight:FontWeight.w900,fontSize:12)),subtitle:Text(s,style:const TextStyle(fontSize:10,color:muted)),trailing:const Icon(Icons.chevron_left,color:muted)));
 Future<void> windowEdit(String which,dynamic value)async{final v=m(value),start=TextEditingController(text:v['start']?.toString()??''),end=TextEditingController(text:v['end']?.toString()??'');final ok=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:Text('تنظیم بازه '+which),content:Column(mainAxisSize:MainAxisSize.min,children:[TextField(controller:start,textDirection:TextDirection.ltr,textAlign:TextAlign.left,decoration:const InputDecoration(labelText:'شروع شمسی')),const SizedBox(height:8),TextField(controller:end,textDirection:TextDirection.ltr,textAlign:TextAlign.left,decoration:const InputDecoration(labelText:'پایان شمسی'))]),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('انصراف')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('ذخیره'))]));if(ok==true){try{await api('admin_window_save',method:'POST',body:{'which':which,'start':start.text,'end':end.text});toast('بازه ذخیره شد.');await loadSettings();}catch(e){toast(e.toString(),true);}}start.dispose();end.dispose();}

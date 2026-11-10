@@ -84,6 +84,12 @@ class AppAppearance extends ChangeNotifier {
       await vault.write(key: 'ui_palette', value: palette);
     }
     mode = (await vault.read(key: 'ui_theme_mode')) == 'light' ? ThemeMode.light : ThemeMode.dark;
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: mode == ThemeMode.dark ? Brightness.light : Brightness.dark,
+      systemNavigationBarColor: mode == ThemeMode.dark ? bg : const Color(0xFFF3F4F6),
+      systemNavigationBarIconBrightness: mode == ThemeMode.dark ? Brightness.light : Brightness.dark,
+    ));
     notifyListeners();
   }
   Future<void> setPalette(String value) async {
@@ -95,6 +101,12 @@ class AppAppearance extends ChangeNotifier {
   Future<void> setMode(ThemeMode value) async {
     mode = value;
     await vault.write(key: 'ui_theme_mode', value: value == ThemeMode.light ? 'light' : 'dark');
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: value == ThemeMode.dark ? Brightness.light : Brightness.dark,
+      systemNavigationBarColor: value == ThemeMode.dark ? bg : const Color(0xFFF3F4F6),
+      systemNavigationBarIconBrightness: value == ThemeMode.dark ? Brightness.light : Brightness.dark,
+    ));
     notifyListeners();
   }
 }
@@ -269,7 +281,7 @@ class _LoginState extends State<Login>{
    if(enable)enable=await auth.authenticate(localizedReason:'برای فعال‌سازی ورود زیستی، هویت خود را تأیید کنید',options:const AuthenticationOptions(biometricOnly:true,stickyAuth:true));
   }}catch(_){enable=false;}await vault.write(key:'biometric_enabled',value:enable?'true':'false');widget.onLogin(t,d);}
  }catch(e){if(mounted)setState(()=>error=e.toString());}finally{if(mounted)setState(()=>busy=false);}}
- Widget _label(String value)=>Padding(padding:const EdgeInsets.only(bottom:7),child:Align(alignment:Alignment.centerRight,child:Text(value,style:const TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w800))));
+ Widget _label(String value)=>Padding(padding:const EdgeInsets.only(bottom:7),child:Align(alignment:Alignment.centerRight,child:Text(value,style:const TextStyle(color:navy,fontSize:11,fontWeight:FontWeight.w800))));
  Widget _modeTile(String label,bool selected,VoidCallback onTap,IconData icon)=>Expanded(child:Material(color:selected?navy:Colors.transparent,borderRadius:BorderRadius.circular(11),child:InkWell(onTap:onTap,borderRadius:BorderRadius.circular(11),child:AnimatedContainer(duration:const Duration(milliseconds:180),height:45,alignment:Alignment.center,padding:const EdgeInsets.symmetric(horizontal:8),decoration:BoxDecoration(borderRadius:BorderRadius.circular(11),boxShadow:selected?[BoxShadow(color:navy.withOpacity(.13),blurRadius:10,offset:const Offset(0,4))]:[]),child:Row(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(icon,size:17,color:selected?Colors.white:muted),const SizedBox(width:7),Flexible(child:Text(label,maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(color:selected?Colors.white:muted,fontSize:11,fontWeight:FontWeight.w800)))])))));
  Widget field(String label,TextEditingController c,{bool secret=false,TextInputType? type})=>TextField(controller:c,textDirection:(type!=null||secret||kind=='admin')?TextDirection.ltr:TextDirection.rtl,textAlign:(type!=null||secret||kind=='admin')?TextAlign.left:TextAlign.right,keyboardType:type,obscureText:secret&&hide,decoration:InputDecoration(labelText:label,prefixIcon:Icon(secret?Icons.lock_outline:Icons.person_outline),suffixIcon:secret?IconButton(onPressed:()=>setState(()=>hide=!hide),icon:Icon(hide?Icons.visibility:Icons.visibility_off)):null));
  @override Widget build(BuildContext c)=>Scaffold(
@@ -321,12 +333,12 @@ void toast(String s,[bool bad=false]){if(mounted)ScaffoldMessenger.of(context).s
 Future<void> logout()async{await PushService.unregister(apiBase:apiBase,accessToken:widget.token);try{await api('logout',method:'POST');}catch(_){}await vault.deleteAll();widget.onLogout();}
 @override Widget build(BuildContext c){String title='داشبورد';for(final e in menu){if(e.id==page)title=e.label;}return Scaffold(drawer:DrawerMenu(user:user,role:role,menu:menu,current:page,onSelect:go,onLogout:logout),appBar:AppBar(title:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,style:const TextStyle(fontSize:16,fontWeight:FontWeight.w900,color:ink)),Text(user['name']?.toString()??'همکار الزوکو',style:const TextStyle(fontSize:10,color:muted))]),actions:[IconButton(onPressed:refresh,icon:const Icon(Icons.refresh_rounded)),const SizedBox(width:6)]),body:SafeArea(top:false,child:loading?const Center(child:CircularProgressIndicator()):AnimatedSwitcher(duration:const Duration(milliseconds:300),transitionBuilder:(child,a)=>FadeTransition(opacity:a,child:SlideTransition(position:Tween(begin:const Offset(0,.025),end:Offset.zero).animate(a),child:child)),child:KeyedSubtree(key:ValueKey(page),child:body()))),bottomNavigationBar:SafeArea(top:false,child:Padding(padding:const EdgeInsets.fromLTRB(10,3,10,7),child:ClipRRect(borderRadius:BorderRadius.circular(22),child:NavigationBar(
  selectedIndex:(employee?['dashboard','requests','slips','notifications']:['dashboard','employees','leaves','notifications']).indexOf(page).clamp(0,3).toInt(),
- backgroundColor:surface,elevation:0,indicatorColor:blue.withOpacity(.18),labelBehavior:NavigationDestinationLabelBehavior.alwaysShow,
+ backgroundColor:surface,elevation:0,indicatorColor:(employee?cyan:blue).withOpacity(.20),labelBehavior:NavigationDestinationLabelBehavior.alwaysShow,
  onDestinationSelected:(i){final dest=(employee?['dashboard','requests','slips','notifications']:['dashboard','employees','leaves','notifications'])[i];setState(()=>page=dest);if(dest=='notifications')loadAlerts();},
  destinations:employee?const [
-  NavigationDestination(icon:Icon3D(Icons.home_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.home_rounded,color:blue,size:30,compact:true),label:'خانه'),
-  NavigationDestination(icon:Icon3D(Icons.assignment_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.assignment_rounded,color:blue,size:30,compact:true),label:'درخواست‌ها'),
-  NavigationDestination(icon:Icon3D(Icons.receipt_long_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.receipt_long_rounded,color:blue,size:30,compact:true),label:'فیش حقوقی'),
+  NavigationDestination(icon:Icon3D(Icons.home_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.home_rounded,color:cyan,size:30,compact:true),label:'خانه'),
+  NavigationDestination(icon:Icon3D(Icons.assignment_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.assignment_rounded,color:cyan,size:30,compact:true),label:'درخواست‌ها'),
+  NavigationDestination(icon:Icon3D(Icons.receipt_long_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.receipt_long_rounded,color:cyan,size:30,compact:true),label:'فیش حقوقی'),
   NavigationDestination(icon:Icon3D(Icons.notifications_none,color:blue,size:28,compact:true),selectedIcon:Icon3D(Icons.notifications_active,color:blue,size:30,compact:true),label:'اعلان‌ها'),
  ]:const [
   NavigationDestination(icon:Icon3D(Icons.grid_view_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.grid_view_rounded,color:blue,size:30,compact:true),label:'خانه'),
@@ -672,8 +684,8 @@ class DrawerMenu extends StatelessWidget {
    Expanded(child:ListView(padding:const EdgeInsets.all(12),children:[
     for(final g in groups.entries) Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
      Padding(padding:const EdgeInsets.fromLTRB(12,13,12,7),child:Text(g.key=='personnel'?'امور پرسنلی':g.key=='system'?'مدیریت سامانه':'منوی اصلی',style:const TextStyle(color:Color(0xFF91A8CA),fontSize:10,fontWeight:FontWeight.w800))),
-     for(final e in g.value) Padding(padding:const EdgeInsets.only(bottom:4),child:Material(color:e.id==current?Colors.white.withOpacity(.13):Colors.transparent,borderRadius:BorderRadius.circular(13),child:InkWell(onTap:()=>onSelect(e.id),borderRadius:BorderRadius.circular(13),child:Padding(padding:const EdgeInsets.symmetric(horizontal:12,vertical:10),child:Row(children:[
-      Icon3D(e.icon,color:e.id==current?gold:cyan,size:38,compact:true),
+     for(final e in g.value) Padding(padding:const EdgeInsets.only(bottom:4),child:Material(color:e.id==current?(role=='employee'?blue.withOpacity(.13):blue.withOpacity(.23)):Colors.transparent,borderRadius:BorderRadius.circular(13),child:InkWell(onTap:()=>onSelect(e.id),borderRadius:BorderRadius.circular(13),child:Padding(padding:const EdgeInsets.symmetric(horizontal:12,vertical:10),child:Row(children:[
+      Icon3D(e.icon,color:e.id==current?blue:cyan,size:38,compact:true),
       const SizedBox(width:12),Expanded(child:Text(e.label,style:TextStyle(color:e.id==current?Colors.white:const Color(0xFFC5D2E5),fontWeight:e.id==current?FontWeight.w900:FontWeight.w600,fontSize:12))),
       if(e.id==current)const Icon(Icons.circle,size:7,color:gold)
      ])))))

@@ -51,6 +51,20 @@ jobs:
           cache: true
       - name: Generate Android project files
         run: flutter create --platforms=android --project-name elzoco_hrm .
+      - name: Configure biometric authentication
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          source = manifest.read_text()
+          if 'android.permission.USE_BIOMETRIC' not in source:
+              source = re.sub(r'(<manifest[^>]*>)', r'\\1\\n    <uses-permission android:name="android.permission.USE_BIOMETRIC" />\\n    <uses-permission android:name="android.permission.USE_FINGERPRINT" />', source, count=1)
+          manifest.write_text(source)
+          main = Path('android/app/src/main/kotlin/com/example/elzoco_hrm/MainActivity.kt')
+          main.parent.mkdir(parents=True, exist_ok=True)
+          main.write_text('package com.example.elzoco_hrm\\n\\nimport io.flutter.embedding.android.FlutterFragmentActivity\\n\\nclass MainActivity : FlutterFragmentActivity()\\n')
+          PY
       - name: Pin compatible Android Gradle plugins
         run: |
           python3 - <<'PY'

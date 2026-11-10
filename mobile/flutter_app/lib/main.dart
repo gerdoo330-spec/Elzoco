@@ -21,7 +21,7 @@ String fa(dynamic x){
 String money(dynamic x)=>fa(x)+' ریال';
 // مقادیر عددی و شناسه‌ها مستقل از راست‌چین بودن رابط فارسی، چپ‌به‌راست نمایش داده می‌شوند.
 Widget ltrValue(String value,{TextStyle? style,TextAlign align=TextAlign.left})=>Directionality(textDirection:TextDirection.ltr,child:Text(value,style:style,textAlign:align));
-bool _containsPersian(String value)=>RegExp(r'[\\u0600-\\u06FF]').hasMatch(value);
+bool _containsPersian(String value)=>RegExp(r'[\u0600-\u06FF]').hasMatch(value);
 Widget valueText(dynamic value,{TextStyle? style}){final v=(value==null||value.toString().isEmpty)?'—':value.toString();return _containsPersian(v)?Text(v,style:style):ltrValue(v,style:style);}
 
 String stage(dynamic x)=>({'direct':'در انتظار سرپرست','general':'در انتظار مدیر','admin':'در انتظار منابع انسانی','evaluated':'در انتظار تصمیم مدیر','final':'تأیید نهایی','rejected':'رد شده'}[x?.toString()]??x?.toString()??'در حال بررسی');

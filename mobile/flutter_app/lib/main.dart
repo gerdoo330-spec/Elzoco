@@ -10,7 +10,7 @@ import 'services/push_service.dart';
 
 const apiBase=String.fromEnvironment('API_BASE_URL',defaultValue:'https://hrsarv.ir/payroll');
 const vault=FlutterSecureStorage();
-const ink=Color(0xFF10264A),navy=Color(0xFF0B1D3A),blue=Color(0xFFF07818),cyan=Color(0xFF2859A5),mint=Color(0xFF1FA66A),gold=Color(0xFFFFA52E),bg=Color(0xFFF4F7FC),surface=Color(0xFFFFFFFF),muted=Color(0xFF718096),line=Color(0xFFE2E8F0),red=Color(0xFFE05252);
+const ink=Color(0xFFF7EEE7),navy=Color(0xFF0B0908),blue=Color(0xFFF28A32),cyan=Color(0xFFB87545),mint=Color(0xFF20B879),gold=Color(0xFFFFAD55),bg=Color(0xFF100D0B),surface=Color(0xFF211A16),muted=Color(0xFFB6A69A),line=Color(0xFF49362B),red=Color(0xFFE05252);
 void main(){WidgetsFlutterBinding.ensureInitialized();SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarColor:Colors.transparent,statusBarIconBrightness:Brightness.light,systemNavigationBarColor:bg,systemNavigationBarIconBrightness:Brightness.light));runApp(const ElzocoApp());}
 Map<String,dynamic> m(dynamic x)=>x is Map?Map<String,dynamic>.from(x):<String,dynamic>{};
 List<dynamic> l(dynamic x)=>x is List?x:<dynamic>[];
@@ -66,7 +66,7 @@ class MobileApi{
   return d;
  }
 }
-class ElzocoApp extends StatelessWidget{const ElzocoApp({super.key});@override Widget build(BuildContext c)=>MaterialApp(debugShowCheckedModeBanner:false,title:'ELZOCO HRM',theme:ThemeData(useMaterial3:true,scaffoldBackgroundColor:bg,colorScheme:ColorScheme.fromSeed(seedColor:blue,primary:blue,secondary:cyan,brightness:Brightness.light),appBarTheme:const AppBarTheme(backgroundColor:bg,foregroundColor:ink,elevation:0,scrolledUnderElevation:0),inputDecorationTheme:InputDecorationTheme(filled:true,fillColor:surface,contentPadding:const EdgeInsets.symmetric(horizontal:16,vertical:17),border:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(17)),borderSide:BorderSide(color:line)),enabledBorder:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(17)),borderSide:BorderSide(color:line)),focusedBorder:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(17)),borderSide:BorderSide(color:blue,width:1.6))),filledButtonTheme:FilledButtonThemeData(style:FilledButton.styleFrom(minimumSize:const Size.fromHeight(48),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(15)),textStyle:const TextStyle(fontWeight:FontWeight.w800))),snackBarTheme:const SnackBarThemeData(behavior:SnackBarBehavior.floating)),locale:const Locale('fa'),supportedLocales:const [Locale('fa'),Locale('en')],localizationsDelegates:GlobalMaterialLocalizations.delegates,localeResolutionCallback:(deviceLocale,supported){return const Locale('fa');},builder:(context,child)=>Directionality(textDirection:TextDirection.rtl,child:child??const SizedBox.shrink()),home:const Gate());}
+class ElzocoApp extends StatelessWidget{const ElzocoApp({super.key});@override Widget build(BuildContext c)=>MaterialApp(debugShowCheckedModeBanner:false,title:'ELZOCO HRM',theme:ThemeData(useMaterial3:true,brightness:Brightness.dark,scaffoldBackgroundColor:bg,colorScheme:ColorScheme.fromSeed(seedColor:blue,primary:blue,secondary:cyan,brightness:Brightness.dark),appBarTheme:const AppBarTheme(backgroundColor:bg,foregroundColor:ink,elevation:0,scrolledUnderElevation:0),inputDecorationTheme:InputDecorationTheme(filled:true,fillColor:surface,contentPadding:const EdgeInsets.symmetric(horizontal:16,vertical:17),border:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(17)),borderSide:BorderSide(color:line)),enabledBorder:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(17)),borderSide:BorderSide(color:line)),focusedBorder:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(17)),borderSide:BorderSide(color:blue,width:1.6))),filledButtonTheme:FilledButtonThemeData(style:FilledButton.styleFrom(minimumSize:const Size.fromHeight(48),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(15)),textStyle:const TextStyle(fontWeight:FontWeight.w800))),snackBarTheme:const SnackBarThemeData(behavior:SnackBarBehavior.floating)),locale:const Locale('fa'),supportedLocales:const [Locale('fa'),Locale('en')],localizationsDelegates:GlobalMaterialLocalizations.delegates,localeResolutionCallback:(deviceLocale,supported){return const Locale('fa');},builder:(context,child)=>Directionality(textDirection:TextDirection.rtl,child:child??const SizedBox.shrink()),home:const Gate());}
 class Gate extends StatefulWidget{const Gate({super.key});@override State<Gate> createState()=>_GateState();}
 class _GateState extends State<Gate>{
  final LocalAuthentication auth=LocalAuthentication();
@@ -195,15 +195,101 @@ Future<void> logout()async{await PushService.unregister(apiBase:apiBase,accessTo
  ])))),
  floatingActionButton:page=='employees'&&full?FloatingActionButton.extended(onPressed:employeeCreate,backgroundColor:blue,icon:const Icon(Icons.person_add,color:Colors.white),label:const Text('افزودن کارمند',style:TextStyle(color:Colors.white))):null);}
 Widget body(){switch(page){case 'dashboard':return employee?employeeDashboard():dashboard();case 'employees':return employeesPage();case 'upload':return uploadPage();case 'advances':return requestsPage('finance');case 'leaves':return requestsPage('leave');case 'promotions':return requestsPage('promotion');case 'admins':return adminsPage();case 'settings':return settingsPage();case 'notifications':return notificationsPage();case 'requests':return employeeRequests();case 'slips':return slipsPage();default:return dashboard();}}
-Widget welcome(){return Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF172E52),Color(0xFF2856A4),Color(0xFF287D86)]),borderRadius:BorderRadius.circular(23),boxShadow:[BoxShadow(color:navy.withOpacity(.16),blurRadius:24,offset:const Offset(0,10))]),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[const Icon(Icons.waving_hand_rounded,color:gold),const SizedBox(width:9),const Text('خوش آمدید',style:TextStyle(color:Colors.white70,fontSize:11))]),const SizedBox(height:12),Text(user['name']?.toString()??'همکار گرامی',style:const TextStyle(color:Colors.white,fontSize:22,fontWeight:FontWeight.w900)),const SizedBox(height:5),Text(employee?'پرتال خدمات کارکنان':roleText(role)+' · '+(full?'دسترسی کامل سامانه':'مدیریت زیرمجموعه'),style:const TextStyle(color:Colors.white70,fontSize:11)),const SizedBox(height:15),Container(padding:const EdgeInsets.symmetric(horizontal:10,vertical:6),decoration:BoxDecoration(color:Colors.white.withOpacity(.14),borderRadius:BorderRadius.circular(20)),child:const Text('ELZOCO PEOPLE & OPERATIONS',style:TextStyle(color:Colors.white,fontSize:9,fontWeight:FontWeight.bold,letterSpacing:1))) ]));}
-Widget section(String a,String b)=>Padding(padding:const EdgeInsets.only(bottom:12),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(a,style:const TextStyle(fontSize:16,color:ink,fontWeight:FontWeight.w900)),Text(b,style:const TextStyle(fontSize:10,color:muted))]));
-Widget dashboard(){final c=m(data['counts']),p=m(data['pending']);final n=p.values.fold<int>(0,(s,v)=>s+(int.tryParse(v.toString())??0));return RefreshIndicator(onRefresh:refresh,child:ListView(padding:const EdgeInsets.all(17),children:[welcome(),const SizedBox(height:20),section('نمای کلی سازمان','گزارش کارکنان و درخواست‌ها'),GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:2,childAspectRatio:1.65,crossAxisSpacing:10,mainAxisSpacing:10,children:[metric('کل کارکنان',c['total'],Icons.groups_rounded,blue),metric('فعال',c['active'],Icons.verified_user_rounded,mint),metric('غیرفعال',c['inactive'],Icons.person_off_rounded,red),metric('در انتظار بررسی',n,Icons.hourglass_top_rounded,gold)]),const SizedBox(height:22),section('دسترسی سریع','بخش‌های پرکاربرد'),GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:2,childAspectRatio:1.55,crossAxisSpacing:10,mainAxisSpacing:10,children:[quick('کارمندان','فهرست و جستجو',Icons.groups_2,blue,()=>goDirect('employees')),quick('مرخصی‌ها','بررسی درخواست‌ها',Icons.event_available,cyan,()=>goDirect('leaves')),quick('وام و مساعده','درخواست‌های مالی',Icons.payments,mint,()=>goDirect('advances')),quick('ارتقای شغلی','درخواست‌های ارتقا',Icons.trending_up,gold,()=>goDirect('promotions')),quick('اعلان‌ها','پیام‌ها و اطلاعیه‌ها',Icons.notifications_active,blue,()=>goDirect('notifications')),...(full?[quick('بارگذاری اکسل','ثبت دوره جدید',Icons.upload_file,navy,()=>goDirect('upload'))]:[])]),const SizedBox(height:15),note('محدوده دسترسی',full?'دسترسی شما شامل تمام شعب و کارکنان سامانه است.':'اطلاعات کارکنان و درخواست‌ها از سمت سرور به محدوده زیرمجموعه شما محدود شده است.',Icons.shield_outlined)]));}
+Widget welcome(){
+ return Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(
+  gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF332016),Color(0xFF17110E),Color(0xFF0D0B0A)]),
+  borderRadius:BorderRadius.circular(25),border:Border.all(color:const Color(0xFF9B6037).withOpacity(.65)),
+  boxShadow:[BoxShadow(color:blue.withOpacity(.12),blurRadius:26,offset:const Offset(0,11))]),
+  child:Stack(children:[
+   Positioned(left:-16,top:-20,child:Container(width:130,height:130,decoration:BoxDecoration(shape:BoxShape.circle,border:Border.all(color:gold.withOpacity(.10),width:18)))),
+   Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    Row(children:[const Icon(Icons.waving_hand_rounded,color:gold),const SizedBox(width:9),const Text('خوش آمدید',style:TextStyle(color:Color(0xFFD6B69C),fontSize:11)),const Spacer(),const Icon(Icons.restaurant_menu_rounded,color:blue,size:28)]),
+    const SizedBox(height:13),Text(user['name']?.toString()??'همکار گرامی',style:const TextStyle(color:Colors.white,fontSize:23,fontWeight:FontWeight.w900)),
+    const SizedBox(height:5),Text(employee?'پرتال خدمات کارکنان':roleText(role)+' · '+(full?'دسترسی کامل سامانه':'مدیریت زیرمجموعه'),style:const TextStyle(color:Color(0xFFD1B9A7),fontSize:11)),
+    const SizedBox(height:15),Container(padding:const EdgeInsets.symmetric(horizontal:11,vertical:7),decoration:BoxDecoration(color:blue.withOpacity(.16),borderRadius:BorderRadius.circular(20),border:Border.all(color:blue.withOpacity(.35))),child:const Text('ELZOCO  •  HUMAN RESOURCE MANAGEMENT',style:TextStyle(color:Color(0xFFFFC18A),fontSize:8,fontWeight:FontWeight.w900,letterSpacing:.8)))
+   ])
+  ])
+ );
+}
+Widget section(String a,String b)=>Padding(padding:const EdgeInsets.only(bottom:13),child:Row(crossAxisAlignment:CrossAxisAlignment.center,children:[
+ Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+  Text(a,style:const TextStyle(fontSize:16,color:ink,fontWeight:FontWeight.w900)),
+  const SizedBox(height:3),Text(b,style:const TextStyle(fontSize:10,color:muted))
+ ])),
+ Container(width:34,height:3,decoration:BoxDecoration(color:blue,borderRadius:BorderRadius.circular(5)))
+]));
+Widget dashboard(){
+ final c=m(data['counts']),p=m(data['pending']);
+ final n=p.values.fold<int>(0,(s,v)=>s+(int.tryParse(v.toString())??0));
+ final shortcuts=<Widget>[
+  quick('مدیریت کارکنان','فهرست و پرونده پرسنلی',Icons.groups_2_rounded,blue,()=>goDirect('employees')),
+  quick('بارگذاری اکسل','ثبت دوره حقوقی جدید',Icons.table_view_rounded,mint,()=>goDirect('upload')),
+  quick('مرخصی‌ها','بررسی و تصمیم‌گیری',Icons.calendar_month_rounded,gold,()=>goDirect('leaves')),
+  quick('مساعده و وام','درخواست‌های مالی',Icons.account_balance_wallet_rounded,cyan,()=>goDirect('advances')),
+  quick('ارتقای شغلی','سوابق و درخواست‌ها',Icons.trending_up_rounded,blue,()=>goDirect('promotions')),
+  quick('گزارش‌ها','نمای کلی و آمار',Icons.analytics_rounded,gold,()=>goDirect('employees')),
+  quick('اطلاعیه‌ها','پیام‌های سازمانی',Icons.campaign_rounded,cyan,()=>goDirect('notifications')),
+  if(full)quick('تنظیمات سامانه','قوانین و دسترسی‌ها',Icons.settings_rounded,muted,()=>goDirect('settings')),
+ ];
+ return RefreshIndicator(onRefresh:refresh,color:blue,backgroundColor:surface,child:ListView(padding:const EdgeInsets.fromLTRB(16,12,16,28),children:[
+  welcome(),const SizedBox(height:21),
+  section('نمای کلی سازمان','خلاصه وضعیت کارکنان و گردش درخواست‌ها'),
+  GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:2,childAspectRatio:1.55,crossAxisSpacing:10,mainAxisSpacing:10,children:[
+   metric('کل کارکنان',c['total'],Icons.groups_rounded,blue),
+   metric('کارکنان فعال',c['active'],Icons.verified_user_rounded,mint),
+   metric('غیرفعال',c['inactive'],Icons.person_off_rounded,red),
+   metric('در انتظار بررسی',n,Icons.hourglass_top_rounded,gold)
+  ]),
+  const SizedBox(height:23),
+  Row(children:[Expanded(child:section('دسترسی سریع','میانبرهای اصلی مدیریت سامانه')),Container(padding:const EdgeInsets.symmetric(horizontal:10,vertical:6),decoration:BoxDecoration(color:blue.withOpacity(.13),borderRadius:BorderRadius.circular(20),border:Border.all(color:blue.withOpacity(.3))),child:const Row(children:[Icon(Icons.bolt_rounded,color:gold,size:15),SizedBox(width:4),Text('سریع',style:TextStyle(color:gold,fontSize:9,fontWeight:FontWeight.w900))]))]),
+  GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:3,childAspectRatio:.91,crossAxisSpacing:9,mainAxisSpacing:10,children:shortcuts),
+  const SizedBox(height:12),
+  note('محدوده دسترسی',full?'دسترسی شما شامل تمام شعب و کارکنان سامانه است.':'اطلاعات کارکنان و درخواست‌ها فقط در محدوده زیرمجموعه شما نمایش داده می‌شود.',Icons.shield_outlined)
+ ]));
+}
 void goDirect(String id){setState(()=>page=id);if(id=='admins')loadAdmins();if(id=='settings')loadSettings();}
-Widget employeeDashboard(){return ListView(padding:const EdgeInsets.all(17),children:[welcome(),const SizedBox(height:18),section('خدمات من','دسترسی سریع به خدمات منابع انسانی'),wide('فیش حقوقی','مشاهده دوره‌های حقوقی',Icons.receipt_long,blue,()=>goDirect('slips')),wide('درخواست مرخصی','ثبت و پیگیری درخواست',Icons.event_available,cyan,()=>request('leave')),wide('وام و مساعده','ثبت درخواست مالی',Icons.account_balance_wallet,mint,()=>request('finance')),wide('ارتقای شغلی','درخواست تغییر گروه شغلی',Icons.trending_up,gold,()=>request('promotion')),wide('اعلان‌ها','پیام‌ها و اطلاعیه‌های من',Icons.notifications_active,blue,()=>goDirect('notifications')),note('اطلاعات پرسنلی','کد پرسنلی: '+(user['personnel_code']??'—').toString()+' · سمت: '+(user['post']??'—').toString(),Icons.badge_outlined)]);}
-Widget metric(String t,dynamic v,IconData i,Color col)=>Container(padding:const EdgeInsets.all(15),decoration:BoxDecoration(gradient:LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Colors.white,Color.lerp(col,Colors.white,.94)!]),borderRadius:BorderRadius.circular(20),border:Border.all(color:col.withOpacity(.10)),boxShadow:[BoxShadow(color:navy.withOpacity(.055),blurRadius:18,offset:const Offset(0,7))]),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon3D(i,color:col,size:40),const Spacer(),ltrValue(fa(v),style:const TextStyle(fontSize:22,fontWeight:FontWeight.w900,color:ink)),Text(t,style:const TextStyle(fontSize:10,color:muted,fontWeight:FontWeight.w700))]));
-Widget quick(String t,String s,IconData i,Color col,VoidCallback tap)=>Material(color:Colors.white,borderRadius:BorderRadius.circular(18),child:InkWell(onTap:tap,borderRadius:BorderRadius.circular(18),child:Container(padding:const EdgeInsets.all(14),decoration:BoxDecoration(borderRadius:BorderRadius.circular(18),border:Border.all(color:line),boxShadow:[BoxShadow(color:navy.withOpacity(.055),blurRadius:16,offset:const Offset(0,6))]),child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Icon3D(i,color:col,size:48),Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(t,style:const TextStyle(color:ink,fontWeight:FontWeight.w900,fontSize:12)),Text(s,style:const TextStyle(color:muted,fontSize:9))])]))));
-Widget wide(String t,String s,IconData i,Color col,VoidCallback tap)=>Container(margin:const EdgeInsets.only(bottom:10),child:Material(color:Colors.white,borderRadius:BorderRadius.circular(17),child:InkWell(onTap:tap,borderRadius:BorderRadius.circular(17),child:Padding(padding:const EdgeInsets.all(14),child:Row(children:[Icon3D(i,color:col,size:50),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(t,style:const TextStyle(fontWeight:FontWeight.w900,color:ink)),Text(s,style:const TextStyle(color:muted,fontSize:10))])),const Icon(Icons.chevron_left,color:muted)])))));
-Widget note(String t,String s,IconData i)=>Container(margin:const EdgeInsets.only(top:12),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:const Color(0xFFEDF3FF),borderRadius:BorderRadius.circular(16)),child:Row(children:[Icon(i,color:blue),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(t,style:const TextStyle(color:navy,fontWeight:FontWeight.w900,fontSize:11)),Text(s,style:const TextStyle(color:muted,fontSize:10,height:1.6))]))]));
+Widget employeeDashboard(){
+ return ListView(padding:const EdgeInsets.fromLTRB(16,12,16,28),children:[
+  welcome(),const SizedBox(height:21),
+  section('دسترسی سریع','خدمات پرکاربرد شما در یک نگاه'),
+  GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:3,childAspectRatio:.91,crossAxisSpacing:9,mainAxisSpacing:10,children:[
+   quick('فیش حقوقی','مشاهده دریافتی',Icons.receipt_long_rounded,blue,()=>goDirect('slips')),
+   quick('مرخصی‌ها','ثبت درخواست',Icons.calendar_month_rounded,gold,()=>request('leave')),
+   quick('مساعده و وام','درخواست مالی',Icons.account_balance_wallet_rounded,cyan,()=>request('finance')),
+   quick('ارتقای شغلی','درخواست ارتقا',Icons.trending_up_rounded,mint,()=>request('promotion')),
+   quick('درخواست‌های من','پیگیری وضعیت',Icons.assignment_turned_in_rounded,blue,()=>goDirect('requests')),
+   quick('اطلاعیه‌ها','پیام‌های سازمان',Icons.campaign_rounded,gold,()=>goDirect('notifications'))
+  ]),
+  const SizedBox(height:18),
+  section('اطلاعات پرسنلی','مشخصات حساب کاربری'),
+  wide('کد پرسنلی',(user['personnel_code']??'—').toString(),Icons.badge_outlined,blue,()=>goDirect('requests')),
+  wide('عنوان شغلی',(user['post']??'ثبت نشده').toString(),Icons.work_outline_rounded,cyan,()=>goDirect('requests'))
+ ]);
+}
+Widget metric(String t,dynamic v,IconData i,Color col)=>Container(
+ padding:const EdgeInsets.all(14),decoration:BoxDecoration(
+ color:surface,borderRadius:BorderRadius.circular(19),
+ border:Border.all(color:col.withOpacity(.38)),
+ boxShadow:[BoxShadow(color:col.withOpacity(.08),blurRadius:17,offset:const Offset(0,6))]),
+ child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+  Row(children:[Icon3D(i,color:col,size:39),const Spacer(),Container(width:6,height:6,decoration:BoxDecoration(color:col,shape:BoxShape.circle))]),
+  const Spacer(),ltrValue(fa(v),style:TextStyle(fontSize:23,fontWeight:FontWeight.w900,color:col)),
+  Text(t,style:const TextStyle(fontSize:10,color:muted,fontWeight:FontWeight.w700))
+ ]));
+Widget quick(String t,String s,IconData i,Color col,VoidCallback tap)=>Material(
+ color:surface,borderRadius:BorderRadius.circular(18),child:InkWell(onTap:tap,borderRadius:BorderRadius.circular(18),
+ child:Container(padding:const EdgeInsets.fromLTRB(9,12,9,11),decoration:BoxDecoration(
+ borderRadius:BorderRadius.circular(18),gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF2A211C),Color(0xFF171210)]),
+ border:Border.all(color:col.withOpacity(.38)),boxShadow:[BoxShadow(color:Colors.black.withOpacity(.22),blurRadius:13,offset:const Offset(0,6))]),
+ child:Column(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[
+  Icon3D(i,color:col,size:45),
+  Column(children:[Text(t,textAlign:TextAlign.center,maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontWeight:FontWeight.w900,fontSize:10.5)),const SizedBox(height:3),Text(s,textAlign:TextAlign.center,maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:8))])
+ ]))));
+Widget wide(String t,String s,IconData i,Color col,VoidCallback tap)=>Container(margin:const EdgeInsets.only(bottom:10),child:Material(
+ color:surface,borderRadius:BorderRadius.circular(17),child:InkWell(onTap:tap,borderRadius:BorderRadius.circular(17),
+ child:Container(padding:const EdgeInsets.all(13),decoration:BoxDecoration(borderRadius:BorderRadius.circular(17),border:Border.all(color:line),boxShadow:[BoxShadow(color:Colors.black.withOpacity(.18),blurRadius:13,offset:const Offset(0,5))]),
+ child:Row(children:[Icon3D(i,color:col,size:46),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(t,style:const TextStyle(fontWeight:FontWeight.w900,color:ink,fontSize:12)),Text(s,style:const TextStyle(color:muted,fontSize:10))])),const Icon(Icons.chevron_left_rounded,color:gold)])))));
+Widget note(String t,String s,IconData i)=>Container(margin:const EdgeInsets.only(top:12),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:const Color(0xFF251A13),borderRadius:BorderRadius.circular(16),border:Border.all(color:blue.withOpacity(.35))),child:Row(children:[Icon(i,color:gold),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(t,style:const TextStyle(color:gold,fontWeight:FontWeight.w900,fontSize:11)),Text(s,style:const TextStyle(color:muted,fontSize:10,height:1.6))]))]));
 Widget employeesPage(){
  final sections=<String>{'همه',...employees.map((x)=>(m(x)['section']??'بدون سکشن').toString())}.toList();
  final list=employees.where((x){final e=m(x);final q=search.toLowerCase().trim();final matchesQuery=q.isEmpty||['name','personnel_code','post','national_code'].any((k)=>(e[k]??'').toString().toLowerCase().contains(q));final matchesSection=sectionFilter=='همه'||(e['section']??'بدون سکشن').toString()==sectionFilter;return matchesQuery&&matchesSection;}).toList();
@@ -222,7 +308,39 @@ Widget _employeeMeta(IconData icon,String label)=>Container(padding:const EdgeIn
 Future<void> openEmployeeDossier(Map<String,dynamic> row,{bool openPayslips=false})async{try{final id=int.tryParse(row['id'].toString())??0;final r=await api('manager_employee_dossier',method:'POST',body:{'employee_id':id});if(!mounted)return;final dossier=m(r['dossier']);if(openPayslips){Navigator.push(context,MaterialPageRoute(builder:(_)=>EmployeePayslipsScreen(employee:m(dossier['employee']),slips:l(dossier['payslips']),onSlip:(periodId)=>openEmployeeSlip(id,periodId))));return;}Navigator.push(context,MaterialPageRoute(builder:(_)=>EmployeeDossierScreen(dossier:dossier,onSlip:(periodId)=>openEmployeeSlip(id,periodId))));}catch(e){toast(e.toString(),true);}}
 Future<void> openEmployeeSlip(int employeeId,int periodId)async{try{final r=await api('manager_employee_payslip',method:'POST',body:{'employee_id':employeeId,'period_id':periodId});if(mounted)Navigator.push(context,MaterialPageRoute(builder:(_)=>Slip(slip:m(r['slip']),user:const {})));}catch(e){toast(e.toString(),true);}}
 Widget requestsPage(String kind){final rows=kind=='leave'?leaves:kind=='finance'?finance:promos;final title=kind=='leave'?'درخواست مرخصی':kind=='finance'?'مساعده و وام':'ارتقای شغلی';return RefreshIndicator(onRefresh:loadAll,child:rows.isEmpty?ListView(padding:const EdgeInsets.all(18),children:[section(title,'درخواست‌های قابل مشاهده برای حساب شما'),empty('درخواستی برای بررسی وجود ندارد.',Icons.inbox_outlined)]):ListView(padding:const EdgeInsets.all(15),children:[section(title,rows.length.toString()+' درخواست در محدوده دسترسی شما'),...rows.map((x)=>requestCard(x,kind))]));}
-Widget requestCard(dynamic x,String kind){final r=m(x);final can=r['can_decide']==true||r['can_decide']==1;final name=r['name']?.toString()??'کارمند';final detail=kind=='leave'?(r['type_label']??'مرخصی').toString()+' · '+(r['from_date']??'').toString():kind=='finance'?(r['kind']=='loan'?'وام':'مساعده')+' · '+money(r['amount']): (r['job_requested']??'ارتقای شغلی').toString();return Container(margin:const EdgeInsets.only(bottom:11),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(19),border:Border.all(color:line),boxShadow:[BoxShadow(color:navy.withOpacity(.06),blurRadius:18,offset:const Offset(0,7))]),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[CircleAvatar(backgroundColor:blue.withOpacity(.1),child:Text(name.isEmpty?'؟':name.substring(0,1),style:const TextStyle(color:blue))),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(name,style:const TextStyle(fontWeight:FontWeight.w900)),Text((r['tracking']??'').toString()+' · '+(r['personnel_code']??'').toString(),style:const TextStyle(color:muted,fontSize:9))])),Text((r['status']??stage(r['stage'])).toString(),style:const TextStyle(color:Color(0xFF9B6A10),fontSize:9,fontWeight:FontWeight.w900))]),const SizedBox(height:12),Text(detail,style:const TextStyle(color:navy,fontWeight:FontWeight.w800,fontSize:12)),if((r['reason']??'').toString().isNotEmpty)Padding(padding:const EdgeInsets.only(top:6),child:Text(r['reason'].toString(),style:const TextStyle(color:muted,fontSize:10))),if(can)Padding(padding:const EdgeInsets.only(top:12),child:Row(children:[Expanded(child:OutlinedButton(onPressed:()=>decide(kind,r,'reject'),style:OutlinedButton.styleFrom(foregroundColor:red),child:const Text('رد'))),const SizedBox(width:8),Expanded(child:FilledButton(onPressed:()=>decide(kind,r,'approve'),style:FilledButton.styleFrom(backgroundColor:mint),child:const Text('تأیید')))]))]));}
+Widget requestCard(dynamic x,String kind){
+ final r=m(x),can=r['can_decide']==true||r['can_decide']==1;
+ final name=r['name']?.toString()??'کارمند';
+ final detail=kind=='leave'?(r['type_label']??'مرخصی').toString()+' · '+(r['from_date']??'').toString():kind=='finance'?(r['kind']=='loan'?'وام':'مساعده')+' · '+money(r['amount']):(r['job_requested']??'ارتقای شغلی').toString();
+ final raw=((r['status']??stage(r['stage'])).toString()).toLowerCase();
+ final rejected=raw.contains('رد')||raw.contains('reject');
+ final approved=raw.contains('تأیید نهایی')||raw.contains('تایید نهایی')||raw.contains('approved')||raw=='final';
+ final waiting=!rejected&&!approved;
+ final statusColor=rejected?red:approved?mint:gold;
+ final statusLabel=rejected?'رد شده':approved?'تأیید نهایی':(r['status']??stage(r['stage'])).toString();
+ return Container(margin:const EdgeInsets.only(bottom:12),padding:const EdgeInsets.all(15),decoration:BoxDecoration(
+ color:surface,borderRadius:BorderRadius.circular(20),
+ border:Border(right:BorderSide(color:statusColor,width:4),top:BorderSide(color:statusColor.withOpacity(.20)),left:BorderSide(color:line),bottom:BorderSide(color:line)),
+ boxShadow:[BoxShadow(color:Colors.black.withOpacity(.20),blurRadius:16,offset:const Offset(0,6))]),
+ child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+  Row(children:[
+   CircleAvatar(backgroundColor:statusColor.withOpacity(.16),child:Text(name.isEmpty?'؟':name.substring(0,1),style:TextStyle(color:statusColor,fontWeight:FontWeight.w900))),
+   const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    Text(name,style:const TextStyle(fontWeight:FontWeight.w900,color:ink)),
+    const SizedBox(height:3),Text((r['tracking']??'').toString()+' · '+(r['personnel_code']??'').toString(),style:const TextStyle(color:muted,fontSize:9))
+   ])),
+   Container(padding:const EdgeInsets.symmetric(horizontal:10,vertical:7),decoration:BoxDecoration(color:statusColor.withOpacity(.14),borderRadius:BorderRadius.circular(10),border:Border.all(color:statusColor.withOpacity(.4))),child:Row(mainAxisSize:MainAxisSize.min,children:[
+    Icon(rejected?Icons.cancel_rounded:approved?Icons.check_circle_rounded:Icons.hourglass_top_rounded,color:statusColor,size:13),const SizedBox(width:5),Text(statusLabel,style:TextStyle(color:statusColor,fontSize:9,fontWeight:FontWeight.w900))
+   ]))
+  ]),
+  const SizedBox(height:13),Container(width:double.infinity,padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:Colors.black.withOpacity(.13),borderRadius:BorderRadius.circular(12)),child:Text(detail,style:const TextStyle(color:ink,fontWeight:FontWeight.w800,fontSize:12))),
+  if((r['reason']??'').toString().isNotEmpty)Padding(padding:const EdgeInsets.only(top:9),child:Text(r['reason'].toString(),style:const TextStyle(color:muted,fontSize:10))),
+  if(can&&waiting)Padding(padding:const EdgeInsets.only(top:12),child:Row(children:[
+   Expanded(child:OutlinedButton(onPressed:()=>decide(kind,r,'reject'),style:OutlinedButton.styleFrom(foregroundColor:red,side:const BorderSide(color:red)),child:const Text('رد درخواست'))),
+   const SizedBox(width:9),Expanded(child:FilledButton(onPressed:()=>decide(kind,r,'approve'),style:FilledButton.styleFrom(backgroundColor:mint,foregroundColor:Colors.white),child:const Text('تأیید درخواست')))
+  ]))
+ ])
+);
 Future<void> decide(String kind,Map<String,dynamic> r,String d)async{final noteCtrl=TextEditingController(),amount=TextEditingController();final ok=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:Text(d=='approve'?'تأیید درخواست':'رد درخواست'),content:Column(mainAxisSize:MainAxisSize.min,children:[if(d=='approve'&&kind=='finance')TextField(controller:amount,textDirection:TextDirection.ltr,textAlign:TextAlign.left,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'مبلغ تأییدشده (ریال)')),TextField(controller:noteCtrl,maxLines:2,decoration:InputDecoration(labelText:d=='reject'?'دلیل رد':'توضیح'))]),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('انصراف')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('ثبت'))]));if(ok==true){try{final action=kind=='leave'?'manager_leave_decide':kind=='finance'?'manager_advance_decide':'manager_promo_decide';final b=<String,dynamic>{'id':r['id'],'decision':d,'note':noteCtrl.text};if(amount.text.isNotEmpty)b['approved']=amount.text;final x=await api(action,method:'POST',body:b);toast(x['message']??'ثبت شد.');await loadAll();}catch(e){toast(e.toString(),true);}}noteCtrl.dispose();amount.dispose();}
 Widget uploadPage()=>ListView(padding:const EdgeInsets.all(16),children:[section('بارگذاری اکسل ماهانه','ثبت دوره جدید مستقیماً از داخل اپلیکیشن'),Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(19),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('دوره حقوقی',style:TextStyle(fontWeight:FontWeight.w900)),const SizedBox(height:12),Row(children:[Expanded(child:TextFormField(initialValue:year.toString(),textDirection:TextDirection.ltr,textAlign:TextAlign.left,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'سال'),onChanged:(v)=>year=int.tryParse(v)??year)),const SizedBox(width:10),Expanded(child:DropdownButtonFormField<int>(value:month,decoration:const InputDecoration(labelText:'ماه'),items:List.generate(12,(i)=>DropdownMenuItem(value:i+1,child:Text(months[i]))),onChanged:(v)=>setState(()=>month=v??month)))]),const SizedBox(height:16),InkWell(onTap:pickFile,child:Container(width:double.infinity,padding:const EdgeInsets.symmetric(vertical:25),decoration:BoxDecoration(color:const Color(0xFFF5F8FF),borderRadius:BorderRadius.circular(16),border:Border.all(color:blue.withOpacity(.35))),child:Column(children:[Icon(file==null?Icons.cloud_upload_outlined:Icons.description_rounded,size:38,color:blue),const SizedBox(height:8),Text(file?.name??'انتخاب فایل اکسل ماهانه',style:const TextStyle(fontWeight:FontWeight.w900,color:navy)),const Text('فرمت مجاز: XLSX',style:TextStyle(color:muted,fontSize:10))]))),const SizedBox(height:15),SizedBox(width:double.infinity,height:50,child:FilledButton.icon(onPressed:file==null||uploading?null:upload,icon:uploading?const SizedBox(width:18,height:18,child:CircularProgressIndicator(color:Colors.white,strokeWidth:2)):const Icon(Icons.upload_rounded),label:Text(uploading?'در حال پردازش...':'بارگذاری و به‌روزرسانی')))])),note('حفظ سوابق','اطلاعات و سوابق دوره‌های قبلی حذف نمی‌شوند؛ فایل جدید دوره انتخاب‌شده را به‌روزرسانی می‌کند.',Icons.info_outline)]);
 Future<void> pickFile()async{final r=await FilePicker.platform.pickFiles(type:FileType.custom,allowedExtensions:['xlsx'],withData:true);if(r!=null&&r.files.isNotEmpty)setState(()=>file=r.files.first);}
@@ -276,7 +394,20 @@ Widget notificationsPage()=>RefreshIndicator(onRefresh:loadAlerts,child:ListView
  ...alerts.map((x){final a=m(x);return Padding(padding:const EdgeInsets.only(bottom:9),child:wide(a['title']?.toString()??'اعلان',a['body']?.toString()??a['message']?.toString()??'',Icons.notifications_active,cyan,(){}));})
 ]));
 Widget employeeRequests()=>ListView(padding:const EdgeInsets.all(15),children:[section('درخواست‌های من','ثبت درخواست و پیگیری وضعیت'),wide('درخواست مرخصی','ثبت درخواست جدید',Icons.event,cyan,()=>request('leave')),wide('وام و مساعده','ثبت درخواست مالی',Icons.payments,mint,()=>request('finance')),wide('ارتقای شغلی','درخواست ارتقا',Icons.trending_up,gold,()=>request('promotion')),...l(m(data['leave'])['requests']).map(history),...l(m(data['advance'])['requests']).map(history),...l(m(data['loan'])['requests']).map(history),...l(m(data['promotion'])['requests']).map(history)]);
-Widget history(dynamic x){final a=m(x);return ListTile(title:Text((a['tracking']??'درخواست').toString()+' · '+(a['type_label']??a['kind']??'پرسنلی').toString()),subtitle:Text('وضعیت: '+(a['status']??stage(a['stage'])).toString()));}
+Widget history(dynamic x){
+ final a=m(x),raw=((a['status']??stage(a['stage'])).toString()).toLowerCase();
+ final rejected=raw.contains('رد')||raw.contains('reject');
+ final approved=raw.contains('تأیید نهایی')||raw.contains('تایید نهایی')||raw.contains('approved')||raw=='final';
+ final col=rejected?red:approved?mint:gold;
+ final label=rejected?'رد شده':approved?'تأیید نهایی':(a['status']??stage(a['stage'])).toString();
+ return Container(margin:const EdgeInsets.only(bottom:9),padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:surface,borderRadius:BorderRadius.circular(16),border:Border(right:BorderSide(color:col,width:4),top:BorderSide(color:line),left:BorderSide(color:line),bottom:BorderSide(color:line))),child:Row(children:[
+  Icon(rejected?Icons.cancel_rounded:approved?Icons.check_circle_rounded:Icons.hourglass_top_rounded,color:col,size:22),const SizedBox(width:10),
+  Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+   Text((a['tracking']??'درخواست').toString()+' · '+(a['type_label']??a['kind']??'پرسنلی').toString(),style:const TextStyle(color:ink,fontWeight:FontWeight.w800,fontSize:11)),
+   const SizedBox(height:4),Text(label,style:TextStyle(color:col,fontWeight:FontWeight.w900,fontSize:10))
+  ]))
+ ]));
+}
 Widget slipsPage(){final ps=l(data['periods']);return ListView(padding:const EdgeInsets.all(15),children:[section('فیش‌های حقوقی','دوره‌های ثبت‌شده'),if(ps.isEmpty)empty('فیشی ثبت نشده است.',Icons.receipt_long),...ps.map((p)=>wide(m(p)['label']?.toString()??'دوره حقوقی',m(p)['has_work']==true?'مشاهده فیش':'کارکرد ثبت نشده',Icons.receipt_long,blue,()=>showSlip(p)))]);}
 Future<void> showSlip(dynamic p)async{try{final r=await api('payslip',method:'POST',body:{'period_id':int.tryParse(m(p)['id'].toString())??0});if(mounted)Navigator.push(context,MaterialPageRoute(builder:(_)=>Slip(slip:m(r['slip']),user:user)));}catch(e){toast(e.toString(),true);}}
 void request(String k)=>Navigator.push(context,MaterialPageRoute(builder:(_)=>RequestForm(kind:k,data:data,send:(a,b)=>api(a,method:'POST',body:b),refresh:refresh)));

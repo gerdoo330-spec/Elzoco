@@ -248,7 +248,7 @@ class BiometricGate extends StatelessWidget {
               const SizedBox(height:24),
               const Text('تأیید هویت توسط سیستم‌عامل دستگاه انجام می‌شود.',textAlign:TextAlign.center,
                 style:TextStyle(color:muted,fontSize:10,height:1.6))
-            ]))))));
+            ])))))));
   }
 }
 class Login extends StatefulWidget{final void Function(String,Map<String,dynamic>) onLogin;final Future<void> Function()? onBiometric;const Login({super.key,required this.onLogin,this.onBiometric});@override State<Login> createState()=>_LoginState();}

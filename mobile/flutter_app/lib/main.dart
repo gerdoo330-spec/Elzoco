@@ -10,7 +10,7 @@ import 'services/push_service.dart';
 
 const apiBase=String.fromEnvironment('API_BASE_URL',defaultValue:'https://hrsarv.ir/payroll');
 const vault=FlutterSecureStorage();
-const ink=Color(0xFFF7EEE7),navy=Color(0xFF0B0908),blue=Color(0xFFF28A32),cyan=Color(0xFFB87545),mint=Color(0xFF20B879),gold=Color(0xFFFFAD55),bg=Color(0xFF100D0B),surface=Color(0xFF211A16),muted=Color(0xFFB6A69A),line=Color(0xFF49362B),red=Color(0xFFE05252);
+const ink=Color(0xFFF8FAFC),navy=Color(0xFF111827),blue=Color(0xFF3B82F6),cyan=Color(0xFF60A5FA),mint=Color(0xFF22C55E),gold=Color(0xFFF59E0B),bg=Color(0xFF111827),surface=Color(0xFF1F2937),muted=Color(0xFF9CA3AF),line=Color(0xFF374151),red=Color(0xFFEF4444);
 void main(){WidgetsFlutterBinding.ensureInitialized();SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarColor:Colors.transparent,statusBarIconBrightness:Brightness.light,systemNavigationBarColor:bg,systemNavigationBarIconBrightness:Brightness.light));runApp(const ElzocoApp());}
 Map<String,dynamic> m(dynamic x)=>x is Map?Map<String,dynamic>.from(x):<String,dynamic>{};
 List<dynamic> l(dynamic x)=>x is List?x:<dynamic>[];
@@ -68,17 +68,21 @@ class MobileApi{
 }
 class AppAppearance extends ChangeNotifier {
   static const palettes = <String, Color>{
+    'midnight': Color(0xFF3B82F6),
     'copper': Color(0xFFE8873A),
-    'blue': Color(0xFF4C8DDB),
     'green': Color(0xFF28A879),
     'silver': Color(0xFF9AA8B8),
   };
-  String palette = 'copper';
+  String palette = 'midnight';
   ThemeMode mode = ThemeMode.dark;
-  Color get accent => palettes[palette] ?? palettes['copper']!;
+  Color get accent => palettes[palette] ?? palettes['midnight']!;
   Future<void> load() async {
-    palette = await vault.read(key: 'ui_palette') ?? 'copper';
-    if (!palettes.containsKey(palette)) palette = 'copper';
+    palette = await vault.read(key: 'ui_palette') ?? 'midnight';
+    // Migrate the former default palette so existing installations adopt Midnight Blue.
+    if (palette == 'copper' || !palettes.containsKey(palette)) {
+      palette = 'midnight';
+      await vault.write(key: 'ui_palette', value: palette);
+    }
     mode = (await vault.read(key: 'ui_theme_mode')) == 'light' ? ThemeMode.light : ThemeMode.dark;
     notifyListeners();
   }
@@ -100,16 +104,16 @@ ThemeData buildTheme(Brightness brightness) {
   final dark = brightness == Brightness.dark;
   final accent = appearance.accent;
   final scheme = ColorScheme.fromSeed(seedColor: accent, brightness: brightness,
-    surface: dark ? const Color(0xFF211A16) : const Color(0xFFFFFFFF));
+    surface: dark ? const Color(0xFF1F2937) : const Color(0xFFFFFFFF));
   return ThemeData(
     useMaterial3: true, brightness: brightness, colorScheme: scheme,
-    scaffoldBackgroundColor: dark ? const Color(0xFF100D0B) : const Color(0xFFF3F5F8),
-    appBarTheme: AppBarTheme(backgroundColor: dark ? const Color(0xFF100D0B) : const Color(0xFFF3F5F8),
+    scaffoldBackgroundColor: dark ? const Color(0xFF111827) : const Color(0xFFF3F4F6),
+    appBarTheme: AppBarTheme(backgroundColor: dark ? const Color(0xFF111827) : const Color(0xFFF3F4F6),
       foregroundColor: dark ? ink : const Color(0xFF20242A), elevation: 0, scrolledUnderElevation: 0),
     inputDecorationTheme: InputDecorationTheme(
-      filled: true, fillColor: dark ? const Color(0xFF211A16) : Colors.white,
+      filled: true, fillColor: dark ? const Color(0xFF1F2937) : Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: BorderSide(color: dark ? line : const Color(0xFFDCE2E9))),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: BorderSide(color: dark ? line : const Color(0xFFD1D5DB))),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: BorderSide(color: dark ? line : const Color(0xFFDCE2E9))),
       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: BorderSide(color: accent, width: 1.6))),
     filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48),
@@ -213,7 +217,7 @@ class BiometricGate extends StatelessWidget {
             crossAxisAlignment:CrossAxisAlignment.center,children:[
               const SizedBox(height:24),
               Container(width:76,height:76,decoration:BoxDecoration(
-                gradient:const LinearGradient(colors:[Color(0xFFFFB15C),Color(0xFFE87527)]),
+                gradient:const LinearGradient(colors:[Color(0xFF60A5FA),Color(0xFF2563EB)]),
                 borderRadius:BorderRadius.circular(24),boxShadow:[BoxShadow(color:blue.withOpacity(.24),blurRadius:28,offset:const Offset(0,10))]),
                 child:const Icon(Icons.restaurant_menu_rounded,color:Colors.white,size:39)),
               const SizedBox(height:18),
@@ -269,7 +273,7 @@ class _LoginState extends State<Login>{
  Widget _modeTile(String label,bool selected,VoidCallback onTap,IconData icon)=>Expanded(child:Material(color:selected?navy:Colors.transparent,borderRadius:BorderRadius.circular(11),child:InkWell(onTap:onTap,borderRadius:BorderRadius.circular(11),child:AnimatedContainer(duration:const Duration(milliseconds:180),height:45,alignment:Alignment.center,padding:const EdgeInsets.symmetric(horizontal:8),decoration:BoxDecoration(borderRadius:BorderRadius.circular(11),boxShadow:selected?[BoxShadow(color:navy.withOpacity(.13),blurRadius:10,offset:const Offset(0,4))]:[]),child:Row(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(icon,size:17,color:selected?Colors.white:muted),const SizedBox(width:7),Flexible(child:Text(label,maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(color:selected?Colors.white:muted,fontSize:11,fontWeight:FontWeight.w800)))])))));
  Widget field(String label,TextEditingController c,{bool secret=false,TextInputType? type})=>TextField(controller:c,textDirection:(type!=null||secret||kind=='admin')?TextDirection.ltr:TextDirection.rtl,textAlign:(type!=null||secret||kind=='admin')?TextAlign.left:TextAlign.right,keyboardType:type,obscureText:secret&&hide,decoration:InputDecoration(labelText:label,prefixIcon:Icon(secret?Icons.lock_outline:Icons.person_outline),suffixIcon:secret?IconButton(onPressed:()=>setState(()=>hide=!hide),icon:Icon(hide?Icons.visibility:Icons.visibility_off)):null));
  @override Widget build(BuildContext c)=>Scaffold(
- backgroundColor:const Color(0xFFF3F5F8),
+ backgroundColor:Theme.of(c).scaffoldBackgroundColor,
  body:Stack(children:[
   Positioned(top:-90,left:-80,child:Container(width:260,height:260,decoration:BoxDecoration(shape:BoxShape.circle,color:blue.withOpacity(.12)))),
   Positioned(bottom:-120,right:-100,child:Container(width:300,height:300,decoration:BoxDecoration(shape:BoxShape.circle,color:cyan.withOpacity(.10)))),
@@ -279,10 +283,10 @@ class _LoginState extends State<Login>{
     const Text('سامانه منابع انسانی',style:TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700))
    ]),
    const SizedBox(height:22),
-   Container(padding:const EdgeInsets.all(23),decoration:BoxDecoration(gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF18385F),Color(0xFF0B1D38),Color(0xFF10294D)]),borderRadius:BorderRadius.circular(28),boxShadow:[BoxShadow(color:navy.withOpacity(.20),blurRadius:28,offset:const Offset(0,13))]),child:Stack(children:[
+   Container(padding:const EdgeInsets.all(23),decoration:BoxDecoration(gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF1E3A8A),Color(0xFF111827),Color(0xFF172554)]),borderRadius:BorderRadius.circular(28),boxShadow:[BoxShadow(color:navy.withOpacity(.20),blurRadius:28,offset:const Offset(0,13))]),child:Stack(children:[
     Positioned(left:-20,top:-25,child:Container(width:135,height:135,decoration:BoxDecoration(shape:BoxShape.circle,border:Border.all(color:Colors.white.withOpacity(.07),width:20)))),
     Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-     Row(children:[Container(width:52,height:52,decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFFFFB65D),Color(0xFFE76E18)]),borderRadius:BorderRadius.circular(17),boxShadow:[BoxShadow(color:Colors.black.withOpacity(.2),blurRadius:12,offset:const Offset(0,6))]),child:const Icon(Icons.restaurant_rounded,color:Colors.white,size:28)),const SizedBox(width:12),const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('ELZOCO',style:TextStyle(color:Colors.white,fontSize:22,fontWeight:FontWeight.w900,letterSpacing:2)),Text('PEOPLE  •  PAYROLL  •  OPERATIONS',style:TextStyle(color:Color(0xFFB9C8DA),fontSize:8,fontWeight:FontWeight.w800,letterSpacing:1))])]),
+     Row(children:[Container(width:52,height:52,decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF93C5FD),Color(0xFF3B82F6)]),borderRadius:BorderRadius.circular(17),boxShadow:[BoxShadow(color:Colors.black.withOpacity(.2),blurRadius:12,offset:const Offset(0,6))]),child:const Icon(Icons.restaurant_rounded,color:Colors.white,size:28)),const SizedBox(width:12),const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('ELZOCO',style:TextStyle(color:Colors.white,fontSize:22,fontWeight:FontWeight.w900,letterSpacing:2)),Text('PEOPLE  •  PAYROLL  •  OPERATIONS',style:TextStyle(color:Color(0xFFB9C8DA),fontSize:8,fontWeight:FontWeight.w800,letterSpacing:1))])]),
      const SizedBox(height:25),const Text('مدیریت هوشمند\nسرمایه انسانی',style:TextStyle(color:Colors.white,fontSize:25,height:1.4,fontWeight:FontWeight.w900)),const SizedBox(height:7),const Text('دسترسی یکپارچه و امن به خدمات سازمانی الزوکو',style:TextStyle(color:Color(0xFFC2D0E1),fontSize:11))
     ])
    ])),
@@ -334,8 +338,8 @@ Future<void> logout()async{await PushService.unregister(apiBase:apiBase,accessTo
 Widget body(){switch(page){case 'dashboard':return employee?employeeDashboard():dashboard();case 'employees':return employeesPage();case 'upload':return uploadPage();case 'advances':return requestsPage('finance');case 'leaves':return requestsPage('leave');case 'promotions':return requestsPage('promotion');case 'admins':return adminsPage();case 'settings':return settingsPage();case 'appearance':return appearancePage();case 'notifications':return notificationsPage();case 'requests':return employeeRequests();case 'slips':return slipsPage();default:return dashboard();}}
 Widget welcome(){
  return Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(
-  gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF332016),Color(0xFF17110E),Color(0xFF0D0B0A)]),
-  borderRadius:BorderRadius.circular(25),border:Border.all(color:const Color(0xFF9B6037).withOpacity(.65)),
+  gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF1E3A8A),Color(0xFF172554),Color(0xFF111827)]),
+  borderRadius:BorderRadius.circular(25),border:Border.all(color:const Color(0xFF3B82F6).withOpacity(.45)),
   boxShadow:[BoxShadow(color:blue.withOpacity(.12),blurRadius:26,offset:const Offset(0,11))]),
   child:Stack(children:[
    Positioned(left:-16,top:-20,child:Container(width:130,height:130,decoration:BoxDecoration(shape:BoxShape.circle,border:Border.all(color:gold.withOpacity(.10),width:18)))),
@@ -416,7 +420,7 @@ Widget metric(String t,dynamic v,IconData i,Color col)=>Container(
 Widget quick(String t,String s,IconData i,Color col,VoidCallback tap)=>Material(
  color:surface,borderRadius:BorderRadius.circular(18),child:InkWell(onTap:tap,borderRadius:BorderRadius.circular(18),
  child:Container(padding:const EdgeInsets.fromLTRB(9,12,9,11),decoration:BoxDecoration(
- borderRadius:BorderRadius.circular(18),gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF2A211C),Color(0xFF171210)]),
+ borderRadius:BorderRadius.circular(18),gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF1F2937),Color(0xFF111827)]),
  border:Border.all(color:col.withOpacity(.38)),boxShadow:[BoxShadow(color:Colors.black.withOpacity(.22),blurRadius:13,offset:const Offset(0,6))]),
  child:Column(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[
   Icon3D(i,color:col,size:45),
@@ -426,7 +430,7 @@ Widget wide(String t,String s,IconData i,Color col,VoidCallback tap)=>Container(
  color:surface,borderRadius:BorderRadius.circular(17),child:InkWell(onTap:tap,borderRadius:BorderRadius.circular(17),
  child:Container(padding:const EdgeInsets.all(13),decoration:BoxDecoration(borderRadius:BorderRadius.circular(17),border:Border.all(color:line),boxShadow:[BoxShadow(color:Colors.black.withOpacity(.18),blurRadius:13,offset:const Offset(0,5))]),
  child:Row(children:[Icon3D(i,color:col,size:46),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(t,style:const TextStyle(fontWeight:FontWeight.w900,color:ink,fontSize:12)),Text(s,style:const TextStyle(color:muted,fontSize:10))])),const Icon(Icons.chevron_left_rounded,color:gold)])))));
-Widget note(String t,String s,IconData i)=>Container(margin:const EdgeInsets.only(top:12),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:const Color(0xFF251A13),borderRadius:BorderRadius.circular(16),border:Border.all(color:blue.withOpacity(.35))),child:Row(children:[Icon(i,color:gold),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(t,style:const TextStyle(color:gold,fontWeight:FontWeight.w900,fontSize:11)),Text(s,style:const TextStyle(color:muted,fontSize:10,height:1.6))]))]));
+Widget note(String t,String s,IconData i)=>Container(margin:const EdgeInsets.only(top:12),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:const Color(0xFF1F2937),borderRadius:BorderRadius.circular(16),border:Border.all(color:blue.withOpacity(.35))),child:Row(children:[Icon(i,color:gold),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(t,style:const TextStyle(color:gold,fontWeight:FontWeight.w900,fontSize:11)),Text(s,style:const TextStyle(color:muted,fontSize:10,height:1.6))]))]));
 Widget employeesPage(){
  final sections=<String>{'همه',...employees.map((x)=>(m(x)['section']??'بدون سکشن').toString())}.toList();
  final list=employees.where((x){final e=m(x);final q=search.toLowerCase().trim();final matchesQuery=q.isEmpty||['name','personnel_code','post','national_code'].any((k)=>(e[k]??'').toString().toLowerCase().contains(q));final matchesSection=sectionFilter=='همه'||(e['section']??'بدون سکشن').toString()==sectionFilter;return matchesQuery&&matchesSection;}).toList();
@@ -507,7 +511,7 @@ Widget appearanceSettings() => Container(
   child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
     const Text('شخصی‌سازی ظاهر برنامه',style:TextStyle(color:ink,fontSize:13,fontWeight:FontWeight.w900)),
     const SizedBox(height:5),
-    const Text('پوسته و حالت روشن یا تیره فقط روی همین دستگاه ذخیره می‌شود.',style:TextStyle(color:muted,fontSize:10)),
+    const Text('پوسته آبی نیمه‌شب و حالت روشن یا تیره فقط روی همین دستگاه ذخیره می‌شود.',style:TextStyle(color:muted,fontSize:10)),
     const SizedBox(height:13),
     Wrap(spacing:9,runSpacing:9,children:[
       for(final entry in AppAppearance.palettes.entries)
@@ -519,7 +523,7 @@ Widget appearanceSettings() => Container(
             child:Row(mainAxisSize:MainAxisSize.min,children:[
               Container(width:13,height:13,decoration:BoxDecoration(color:entry.value,shape:BoxShape.circle)),
               const SizedBox(width:7),
-              Text({'copper':'مسی','blue':'آبی','green':'سبز','silver':'نقره‌ای'}[entry.key]!,
+              Text({'midnight':'آبی نیمه‌شب','copper':'مسی','green':'سبز','silver':'نقره‌ای'}[entry.key]!,
                 style:const TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w800)),
               if(appearance.palette==entry.key) ...[const SizedBox(width:5),Icon(Icons.check_circle,color:entry.value,size:14)]
             ]))),
@@ -559,7 +563,7 @@ Future<void> composeAnnouncement()async{
  title.dispose();body.dispose();
 }
 Widget notificationsPage()=>RefreshIndicator(onRefresh:loadAlerts,child:ListView(padding:const EdgeInsets.all(15),children:[
- if(full)Padding(padding:const EdgeInsets.only(bottom:14),child:Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFFA64B35),Color(0xFF6E3327)]),borderRadius:BorderRadius.circular(20)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Icon(Icons.campaign_rounded,color:Colors.white,size:30),const SizedBox(height:10),const Text('مرکز اطلاع‌رسانی',style:TextStyle(color:Colors.white,fontSize:17,fontWeight:FontWeight.w900)),const SizedBox(height:5),const Text('ارسال پیام و اطلاعیه برای کارکنان فعال',style:TextStyle(color:Colors.white70,fontSize:11)),const SizedBox(height:13),SizedBox(width:double.infinity,child:FilledButton.icon(style:FilledButton.styleFrom(backgroundColor:Color(0xFF241F1C),foregroundColor:Color(0xFFF4EAE4)),onPressed:composeAnnouncement,icon:const Icon(Icons.send_rounded),label:const Text('ایجاد و ارسال اطلاعیه')))]))),
+ if(full)Padding(padding:const EdgeInsets.only(bottom:14),child:Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF1D4ED8),Color(0xFF172554)]),borderRadius:BorderRadius.circular(20)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Icon(Icons.campaign_rounded,color:Colors.white,size:30),const SizedBox(height:10),const Text('مرکز اطلاع‌رسانی',style:TextStyle(color:Colors.white,fontSize:17,fontWeight:FontWeight.w900)),const SizedBox(height:5),const Text('ارسال پیام و اطلاعیه برای کارکنان فعال',style:TextStyle(color:Colors.white70,fontSize:11)),const SizedBox(height:13),SizedBox(width:double.infinity,child:FilledButton.icon(style:FilledButton.styleFrom(backgroundColor:Color(0xFF241F1C),foregroundColor:Color(0xFFF4EAE4)),onPressed:composeAnnouncement,icon:const Icon(Icons.send_rounded),label:const Text('ایجاد و ارسال اطلاعیه')))]))),
  section('اعلان‌های دریافتی','پیام‌ها و رویدادهای مرتبط با حساب شما'),
  if(alerts.isEmpty)empty('اعلان جدیدی وجود ندارد.',Icons.notifications_none),
  ...alerts.map((x){final a=m(x);return Padding(padding:const EdgeInsets.only(bottom:9),child:wide(a['title']?.toString()??'اعلان',a['body']?.toString()??a['message']?.toString()??'',Icons.notifications_active,cyan,(){}));})
@@ -646,7 +650,7 @@ class EmployeeDossierScreen extends StatelessWidget{
  final Map<String,dynamic> dossier;final Future<void> Function(int) onSlip;
  const EmployeeDossierScreen({super.key,required this.dossier,required this.onSlip});
  Widget group(String title,List<Widget> children)=>Container(margin:const EdgeInsets.only(bottom:12),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(17),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[Text(title,style:const TextStyle(fontWeight:FontWeight.w900,color:navy,fontSize:13)),const Divider(),...children]));
- Widget pair(String label,dynamic value)=>Padding(padding:const EdgeInsets.symmetric(vertical:6),child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[Expanded(child:Text(label,style:const TextStyle(color:muted,fontSize:11))),const SizedBox(width:8),Expanded(child:valueText(value,style:const TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w700)))]));
+ Widget pair(String label,dynamic value)=>Padding(padding:const EdgeInsets.symmetric(vertical:6),child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[Expanded(child:Text(label,style:const TextStyle(color:muted,fontSize:11))),const SizedBox(width:8),Expanded(child:valueText(value,style:const TextStyle(color:navy,fontSize:11,fontWeight:FontWeight.w700)))]));
  @override Widget build(BuildContext c){final e=m(dossier['employee']),bank=m(dossier['bank']),pay=m(dossier['payroll']),balance=m(dossier['leave_balance']);final slips=l(dossier['payslips']);final fields=l(dossier['profile_fields']);return Scaffold(appBar:AppBar(title:const Text('پرونده پرسنلی')),body:SafeArea(top:false,child:ListView(padding:const EdgeInsets.fromLTRB(15,15,15,28),children:[Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(gradient:const LinearGradient(colors:[navy,blue]),borderRadius:BorderRadius.circular(19)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e['name']?.toString()??'کارمند',style:const TextStyle(color:Colors.white,fontWeight:FontWeight.w900,fontSize:19)),Text('کد پرسنلی: ${e['personnel_code']??'—'}',style:const TextStyle(color:Colors.white70,fontSize:11)),Text(e['post']?.toString()??'',style:const TextStyle(color:Colors.white70,fontSize:11))])),const SizedBox(height:12),group('اطلاعات هویتی',[pair('کد ملی',e['national_code']),pair('موبایل',e['phone']),pair('تاریخ شروع همکاری',e['hire_date']),pair('مدیر مستقیم',e['manager_name']),pair('وضعیت',e['inactive']==true?'غیرفعال':'فعال')]),group('اطلاعات بانکی',[pair('شماره شبا',bank['sheba']),pair('نام بانک',bank['bank_name']),pair('شماره حساب',bank['bank_account']),pair('شماره کارت',bank['bank_card'])]),group('حقوق و مزایا',[pair('حقوق فعلی',money(pay['current_salary'])),pair('عنوان شغلی',pay['current_post']),pair('افزایش ناشی از ارتقا',money(pay['promotion_increase_total']))]),if(fields.isNotEmpty)group('اطلاعات تکمیلی',fields.map((x)=>pair(m(x)['label'],m(x)['value'])).toList()),group('مانده مرخصی',[pair('سهمیه سالانه',balance['annual_quota']),pair('استحقاق تا امروز',balance['entitlement']),pair('مصرف‌شده',balance['used']),pair('در انتظار تأیید',balance['pending']),pair('مانده',balance['remaining'])]),group('فیش‌های حقوقی',slips.isEmpty?[const Text('فیشی برای این کارمند ثبت نشده است.',style:TextStyle(color:muted,fontSize:11))]:slips.map((x){final p=m(x);return ListTile(contentPadding:EdgeInsets.zero,title:Text(p['label']?.toString()??'دوره حقوقی',style:const TextStyle(fontWeight:FontWeight.w800)),subtitle:Text('ناخالص: ${money(p['gross'])}  ·  کسورات: ${money(p['deductions'])}'),trailing:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Text(money(p['net']),style:const TextStyle(fontWeight:FontWeight.w900,color:mint)),const Text('خالص پرداختی',style:TextStyle(fontSize:9,color:muted))]),onTap:()=>onSlip(int.tryParse(p['id'].toString())??0));}).toList()),group('سوابق مساعده و وام',l(dossier['advances']).map((x){final r=m(x);return pair((r['kind']=='loan'?'وام':'مساعده')+' · ${r['tracking']??''}',money(r['amount'])+' · ${r['status']??''}');}).toList()),group('سوابق مرخصی',l(dossier['leaves']).map((x){final r=m(x);return pair((r['type_label']??'مرخصی').toString()+' · ${r['tracking']??''}',(r['from_date']??'')+' تا '+(r['to_date']??'')+' · ${r['status']??r['stage']??''}');}).toList())])));}
 }
 
@@ -661,7 +665,7 @@ class DrawerMenu extends StatelessWidget {
   final groups=<String,List<Entry>>{};
   for(final e in menu){groups.putIfAbsent(e.group,()=>[]).add(e);}
   return Drawer(width:300,backgroundColor:navy,child:SafeArea(child:Column(children:[
-   Container(width:double.infinity,padding:const EdgeInsets.all(20),decoration:const BoxDecoration(gradient:LinearGradient(colors:[Color(0xFF172E52),Color(0xFF2856A4)])),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+   Container(width:double.infinity,padding:const EdgeInsets.all(20),decoration:const BoxDecoration(gradient:LinearGradient(colors:[Color(0xFF172554),Color(0xFF1D4ED8)])),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
     Row(children:[Container(width:46,height:46,decoration:BoxDecoration(color:Colors.white.withOpacity(.13),borderRadius:BorderRadius.circular(15)),child:const Icon(Icons.restaurant_menu,color:gold,size:27)),const SizedBox(width:12),const Text('ELZOCO HRM',style:TextStyle(color:Colors.white,fontWeight:FontWeight.w900,fontSize:16,letterSpacing:1))]),
     const SizedBox(height:20),Text(user['name']?.toString()??'کاربر',style:const TextStyle(color:Colors.white,fontWeight:FontWeight.w900)),Text(roleText(role),style:const TextStyle(color:Colors.white70,fontSize:10))
    ])),
@@ -702,7 +706,7 @@ class Slip extends StatelessWidget{
   final h=m(slip['header']),t=m(slip['totals']);final net=t['net']??slip['net']??0;
   if(slip['has_work']!=true)return Scaffold(appBar:AppBar(title:const Text('فیش حقوقی')),body:SafeArea(child:Center(child:Text(slip['message']?.toString()??'کارکرد ثبت نشده است.'))));
   return Scaffold(appBar:AppBar(title:const Text('فیش حقوقی')),body:SafeArea(top:false,child:ListView(padding:const EdgeInsets.fromLTRB(15,14,15,32),children:[
-   Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF10264A),Color(0xFF2859A5),Color(0xFF1E7180)]),borderRadius:BorderRadius.circular(23),boxShadow:[BoxShadow(color:navy.withOpacity(.18),blurRadius:22,offset:const Offset(0,9))]),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[Row(children:[const Icon(Icons.receipt_long_rounded,color:gold,size:25),const SizedBox(width:9),const Text('فیش حقوقی ELZOCO',style:TextStyle(color:Colors.white,fontWeight:FontWeight.w900,fontSize:17)),const Spacer(),const Icon(Icons.verified_rounded,color:Colors.white70,size:18)]),const SizedBox(height:5),Text(m(slip['period'])['label']?.toString()??'',style:const TextStyle(color:Colors.white70,fontSize:11)),const Divider(color:Colors.white24,height:22),info('نام و نام خانوادگی',h['name']??user['name']),info('کد پرسنلی',h['personnel']??user['personnel_code']),info('عنوان شغلی',h['post']??user['post']),info('روزهای کارکرد',h['days'])])),
+   Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF111827),Color(0xFF1D4ED8),Color(0xFF1E40AF)]),borderRadius:BorderRadius.circular(23),boxShadow:[BoxShadow(color:navy.withOpacity(.18),blurRadius:22,offset:const Offset(0,9))]),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[Row(children:[const Icon(Icons.receipt_long_rounded,color:gold,size:25),const SizedBox(width:9),const Text('فیش حقوقی ELZOCO',style:TextStyle(color:Colors.white,fontWeight:FontWeight.w900,fontSize:17)),const Spacer(),const Icon(Icons.verified_rounded,color:Colors.white70,size:18)]),const SizedBox(height:5),Text(m(slip['period'])['label']?.toString()??'',style:const TextStyle(color:Colors.white70,fontSize:11)),const Divider(color:Colors.white24,height:22),info('نام و نام خانوادگی',h['name']??user['name']),info('کد پرسنلی',h['personnel']??user['personnel_code']),info('عنوان شغلی',h['post']??user['post']),info('روزهای کارکرد',h['days'])])),
    const SizedBox(height:13),Container(padding:const EdgeInsets.all(19),decoration:BoxDecoration(color:navy,borderRadius:BorderRadius.circular(22),boxShadow:[BoxShadow(color:navy.withOpacity(.16),blurRadius:20,offset:const Offset(0,8))]),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('مبلغ نهایی قابل پرداخت',style:TextStyle(color:Colors.white70,fontSize:12,fontWeight:FontWeight.w700)),const SizedBox(height:8),Text(money(net),style:const TextStyle(color:gold,fontSize:25,fontWeight:FontWeight.w900)),const SizedBox(height:6),Text('خالص پرداختی پس از کسر تمام کسورات',style:TextStyle(color:Colors.white.withOpacity(.72),fontSize:10))])),
    const SizedBox(height:14),items('ریز دریافتی‌ها',l(slip['pay']),Icons.south_west_rounded,cyan),const SizedBox(height:9),total('جمع کل دریافتی‌ها',t['pay']??0,cyan),
    const SizedBox(height:14),items('ریز کسورات',l(slip['ded']),Icons.north_east_rounded,red),const SizedBox(height:9),total('جمع کل کسورات',t['ded']??0,red),

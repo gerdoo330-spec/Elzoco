@@ -16,9 +16,9 @@ Map<String,dynamic> m(dynamic x)=>x is Map?Map<String,dynamic>.from(x):<String,d
 List<dynamic> l(dynamic x)=>x is List?x:<dynamic>[];
 String fa(dynamic x){
  final raw=x is num?x:num.tryParse((x?.toString()??'').replaceAll(',','').replaceAll('٬','').replaceAll('٫','.').trim())??0;
- return raw.round().toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'),(z)=>',');
+ return '\u2066'+raw.round().toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'),(z)=>',')+'\u2069';
 }
-String money(dynamic x)=>'\u2066'+fa(x)+'\u2069 ریال';
+String money(dynamic x)=>fa(x)+' ریال';
 // مقادیر عددی و شناسه‌ها مستقل از راست‌چین بودن رابط فارسی، چپ‌به‌راست نمایش داده می‌شوند.
 Widget ltrValue(String value,{TextStyle? style,TextAlign align=TextAlign.left})=>Directionality(textDirection:TextDirection.ltr,child:Text(value,style:style,textAlign:align));
 bool _containsPersian(String value)=>RegExp(r'[\u0600-\u06FF]').hasMatch(value);

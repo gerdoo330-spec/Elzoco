@@ -7,6 +7,7 @@
 - `api/mobile.php` → `public_html/payroll/api/mobile.php`
 - `api/announcements.php` → `public_html/payroll/api/announcements.php`
 - `src/bootstrap.php` → `public_html/payroll/src/bootstrap.php`
+- `src/payroll.php` → `public_html/payroll/src/payroll.php` (اصلاح دریافت و محاسبه مبلغ نهایی فیش حقوقی)
 - `src/notify.php` → `public_html/payroll/src/notify.php`
 - `src/push.php` → `public_html/payroll/src/push.php`
 

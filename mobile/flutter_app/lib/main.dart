@@ -519,7 +519,7 @@ Widget appearanceSettings() => Container(
             child:Row(mainAxisSize:MainAxisSize.min,children:[
               Container(width:13,height:13,decoration:BoxDecoration(color:entry.value,shape:BoxShape.circle)),
               const SizedBox(width:7),
-              Text(const {'copper':'مسی','blue':'آبی','green':'سبز','silver':'نقره‌ای'}[entry.key]!,
+              Text({'copper':'مسی','blue':'آبی','green':'سبز','silver':'نقره‌ای'}[entry.key]!,
                 style:const TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w800)),
               if(appearance.palette==entry.key) ...[const SizedBox(width:5),Icon(Icons.check_circle,color:entry.value,size:14)]
             ]))),

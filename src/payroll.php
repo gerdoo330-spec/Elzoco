@@ -1092,14 +1092,30 @@ function payslip_for(int $employeeId, int $periodId): ?array
         return ['period' => ['id' => $periodId, 'label' => period_label($row)], 'has_work' => false,
             'message' => MSG_NO_WORK, 'header' => $data['header'] ?? []];
     }
+    $values = is_array($data['values'] ?? null) ? $data['values'] : [];
+    $amount = static function (string $key) use ($values): float {
+        $value = $values[$key] ?? 0;
+        if (is_string($value)) $value = str_replace([',', '٬', ' '], '', fa_digits_to_en($value));
+        return is_numeric($value) ? (float)$value : 0.0;
+    };
+    $pay = array_map(static fn($label, $code) => ['label' => $label, 'code' => $code, 'amount' => $amount($code)], array_values(SLIP_PAY), array_keys(SLIP_PAY));
+    $ded = array_map(static fn($label, $code) => ['label' => $label, 'code' => $code, 'amount' => $amount($code)], array_values(SLIP_DED), array_keys(SLIP_DED));
+    $gross = $amount('G19');
+    if (abs($gross) < 0.0001) $gross = array_sum(array_column($pay, 'amount'));
+    // M12 is a balance display only and is intentionally excluded from total deductions.
+    $deductions = $amount('M19');
+    if (abs($deductions) < 0.0001) $deductions = array_sum(array_map(static fn($item) => $item['code'] === 'M12' ? 0.0 : $item['amount'], $ded));
+    $net = $amount('E20');
+    if (abs($net) < 0.0001 && abs((float)($row['net'] ?? 0)) >= 0.0001) $net = (float)$row['net'];
+    if (abs($net) < 0.0001 && abs($gross - $deductions) >= 0.0001) $net = $gross - $deductions;
     return [
-        'period'   => ['id' => $periodId, 'label' => period_label($row)],
+        'period' => ['id' => $periodId, 'label' => period_label($row)],
         'has_work' => true,
-        'header'   => $data['header'],
-        'values'   => $data['values'],
-        'pay'      => array_map(fn($l, $c) => ['label' => $l, 'code' => $c, 'amount' => (float)$data['values'][$c]], array_values(SLIP_PAY), array_keys(SLIP_PAY)),
-        'ded'      => array_map(fn($l, $c) => ['label' => $l, 'code' => $c, 'amount' => (float)$data['values'][$c]], array_values(SLIP_DED), array_keys(SLIP_DED)),
-        'totals'   => ['pay' => (float)$data['values']['G19'], 'ded' => (float)$data['values']['M19'],
-            'net' => (float)$data['values']['E20']],
+        'header' => $data['header'] ?? [],
+        'values' => $values,
+        'pay' => $pay,
+        'ded' => $ded,
+        'totals' => ['pay' => $gross, 'ded' => $deductions, 'net' => $net],
+        'net' => $net,
     ];
 }

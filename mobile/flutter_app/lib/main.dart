@@ -26,7 +26,19 @@ const months=['فروردین','اردیبهشت','خرداد','تیر','مرد�
 class Icon3D extends StatelessWidget {
  final IconData icon; final Color color; final double size; final bool compact;
  const Icon3D(this.icon,{super.key,required this.color,this.size=42,this.compact=false});
- @override Widget build(BuildContext context){final radius=BorderRadius.circular(size*.29);return SizedBox(width:size,height:size,child:Stack(clipBehavior:Clip.none,children:[Positioned(left:2,top:4,child:Container(width:size-3,height:size-3,decoration:BoxDecoration(color:color.withOpacity(.20),borderRadius:radius,boxShadow:[BoxShadow(color:color.withOpacity(.22),blurRadius:compact?5:11,offset:Offset(0,size*.12))]))),Positioned(left:0,top:0,child:Container(width:size-3,height:size-3,decoration:BoxDecoration(gradient:LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color.lerp(color,Colors.white,.58)!,color,Color.lerp(color,Colors.black,.18)!]),borderRadius:radius,border:Border.all(color:Colors.white.withOpacity(.72),width:1.2),boxShadow:[BoxShadow(color:color.withOpacity(.22),blurRadius:compact?4:9,offset:Offset(0,size*.07))]),child:Center(child:Icon(icon,color:Colors.white,size:size*.52))))]));}
+ @override Widget build(BuildContext context){
+  final radius=BorderRadius.circular(size*.27);
+  return Container(
+   width:size,height:size,
+   decoration:BoxDecoration(
+    color:Color.lerp(color,Colors.white,.90),
+    borderRadius:radius,
+    border:Border.all(color:color.withOpacity(.10)),
+   ),
+   alignment:Alignment.center,
+   child:Icon(icon,color:color,size:size*.49),
+  );
+ }
 }
 class MobileApi{
  static String get root=>apiBase.replaceAll(RegExp(r'/+$'),'');
@@ -56,12 +68,39 @@ class _GateState extends State<Gate>{
  @override void initState(){super.initState();restore();}
  Future<void> validateAndEnter(String t)async{final d=await MobileApi.call('me',token:t);if(!mounted)return;setState((){token=t;data=d;savedToken=null;});}
  Future<void> restore()async{
-  try{final t=await vault.read(key:'access_token');final enabled=await vault.read(key:'biometric_enabled')=='true';
-   if(t!=null&&enabled){savedToken=t;final supported=await auth.isDeviceSupported();final can=await auth.canCheckBiometrics;
-    if(supported&&can){biometricReady=true;final ok=await auth.authenticate(localizedReason:'برای ورود امن به سامانه الزوکو هویت خود را تأیید کنید',options:const AuthenticationOptions(biometricOnly:true,stickyAuth:true));if(ok)await validateAndEnter(t);}
-    else{await vault.write(key:'biometric_enabled',value:'false');await validateAndEnter(t);}
-   }else if(t!=null){await validateAndEnter(t);}
-  }catch(_){await vault.delete(key:'access_token');await vault.delete(key:'biometric_enabled');savedToken=null;}
+  try{
+   final t=await vault.read(key:'access_token');
+   final enabled=await vault.read(key:'biometric_enabled')=='true';
+   if(t!=null&&enabled){
+    savedToken=t;
+    final supported=await auth.isDeviceSupported();
+    final can=await auth.canCheckBiometrics;
+    if(supported&&can){
+     biometricReady=true;
+     try{
+      final ok=await auth.authenticate(
+       localizedReason:'برای ورود امن به سامانه الزوکو هویت خود را تأیید کنید',
+       options:const AuthenticationOptions(biometricOnly:true,stickyAuth:true),
+      );
+      if(ok)await validateAndEnter(t);
+      // لغو یا ناموفق بودن احراز هویت نباید توکن معتبر را حذف کند.
+     }catch(_){
+      // کاربر می‌تواند از صفحه ورود دوباره اثر انگشت را امتحان کند.
+     }
+    }else{
+     await vault.write(key:'biometric_enabled',value:'false');
+     biometricReady=false;
+     await validateAndEnter(t);
+    }
+   }else if(t!=null){
+    await validateAndEnter(t);
+   }
+  }catch(_){
+   await vault.delete(key:'access_token');
+   await vault.delete(key:'biometric_enabled');
+   savedToken=null;
+   biometricReady=false;
+  }
   if(mounted)setState(()=>busy=false);
  }
  Future<void> biometricLogin()async{final t=savedToken;if(t==null)return;try{final ok=await auth.authenticate(localizedReason:'برای ورود به سامانه الزوکو اثر انگشت یا روش زیستی گوشی را تأیید کنید',options:const AuthenticationOptions(biometricOnly:true,stickyAuth:true));if(ok)await validateAndEnter(t);}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('ورود زیستی انجام نشد: $e')));}}

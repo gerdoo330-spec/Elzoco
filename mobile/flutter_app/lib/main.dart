@@ -223,7 +223,7 @@ class BiometricGate extends StatelessWidget {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient:LinearGradient(begin:Alignment.topCenter,end:Alignment.bottomCenter,
-          colors:[Color(0xFF100D0B),Color(0xFF211710),Color(0xFF100D0B)])),
+          colors:[Color(0xFF111827),Color(0xFF1F2937),Color(0xFF111827)])),
         child: SafeArea(child: Center(child: SingleChildScrollView(padding:const EdgeInsets.all(26),
           child: ConstrainedBox(constraints:const BoxConstraints(maxWidth:430),child:Column(
             crossAxisAlignment:CrossAxisAlignment.center,children:[
@@ -722,7 +722,7 @@ class Slip extends StatelessWidget{
    const SizedBox(height:13),Container(padding:const EdgeInsets.all(19),decoration:BoxDecoration(color:navy,borderRadius:BorderRadius.circular(22),boxShadow:[BoxShadow(color:navy.withOpacity(.16),blurRadius:20,offset:const Offset(0,8))]),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('مبلغ نهایی قابل پرداخت',style:TextStyle(color:Colors.white70,fontSize:12,fontWeight:FontWeight.w700)),const SizedBox(height:8),Text(money(net),style:const TextStyle(color:gold,fontSize:25,fontWeight:FontWeight.w900)),const SizedBox(height:6),Text('خالص پرداختی پس از کسر تمام کسورات',style:TextStyle(color:Colors.white.withOpacity(.72),fontSize:10))])),
    const SizedBox(height:14),items('ریز دریافتی‌ها',l(slip['pay']),Icons.south_west_rounded,cyan),const SizedBox(height:9),total('جمع کل دریافتی‌ها',t['pay']??0,cyan),
    const SizedBox(height:14),items('ریز کسورات',l(slip['ded']),Icons.north_east_rounded,red),const SizedBox(height:9),total('جمع کل کسورات',t['ded']??0,red),
-   const SizedBox(height:13),Container(padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:const Color(0xFFFFF5E8),borderRadius:BorderRadius.circular(15),border:Border.all(color:const Color(0xFFF4D7B2))),child:const Row(children:[Icon(Icons.info_outline_rounded,color:blue,size:18),SizedBox(width:8),Expanded(child:Text('مبالغ این فیش بر اساس اطلاعات ثبت‌شده برای همین دوره نمایش داده می‌شود.',style:TextStyle(color:ink,fontSize:10,height:1.5)))]))
+   const SizedBox(height:13),Container(padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:const Color(0xFFEFF6FF),borderRadius:BorderRadius.circular(15),border:Border.all(color:const Color(0xFFBFDBFE))),child:const Row(children:[Icon(Icons.info_outline_rounded,color:blue,size:18),SizedBox(width:8),Expanded(child:Text('مبالغ این فیش بر اساس اطلاعات ثبت‌شده برای همین دوره نمایش داده می‌شود.',style:TextStyle(color:ink,fontSize:10,height:1.5)))]))
   ])));
  }
 }

@@ -6,6 +6,7 @@ on:
       - feature/employee-notification-history-2026-11-09
       - fix/mobile-core-hr-workflows-2026-11-10
       - redesign/mobile-premium-biometric-2026-11-10
+      - redesign/visual-identity-v2
     paths:
       - 'mobile/flutter_app/**'
       - 'api/**'

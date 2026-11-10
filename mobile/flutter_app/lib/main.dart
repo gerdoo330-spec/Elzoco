@@ -78,11 +78,12 @@ class AppAppearance extends ChangeNotifier {
   Color get accent => palettes[palette] ?? palettes['midnight']!;
   Future<void> load() async {
     palette = await vault.read(key: 'ui_palette') ?? 'midnight';
-    // Migrate the former default palette so existing installations adopt Midnight Blue.
-    if (palette == 'copper' || !palettes.containsKey(palette)) {
-      palette = 'midnight';
-      await vault.write(key: 'ui_palette', value: palette);
-    }
+    // Migrate the former default once, while preserving future user palette choices.
+    final migrated = await vault.read(key: 'ui_midnight_migrated') == 'true';
+    if (!migrated && palette == 'copper') palette = 'midnight';
+    if (!palettes.containsKey(palette)) palette = 'midnight';
+    await vault.write(key: 'ui_palette', value: palette);
+    await vault.write(key: 'ui_midnight_migrated', value: 'true');
     mode = (await vault.read(key: 'ui_theme_mode')) == 'light' ? ThemeMode.light : ThemeMode.dark;
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

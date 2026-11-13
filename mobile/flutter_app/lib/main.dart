@@ -10,7 +10,7 @@ import 'services/push_service.dart';
 
 const apiBase=String.fromEnvironment('API_BASE_URL',defaultValue:'https://hrsarv.ir/payroll');
 const vault=FlutterSecureStorage();
-const ink=Color(0xFFF8FAFC),navy=Color(0xFF111827),blue=Color(0xFF3B82F6),cyan=Color(0xFF60A5FA),mint=Color(0xFF22C55E),gold=Color(0xFFF59E0B),bg=Color(0xFF111827),surface=Color(0xFF1F2937),muted=Color(0xFF9CA3AF),line=Color(0xFF374151),red=Color(0xFFEF4444);
+const ink=Color(0xFFF5F7FB),navy=Color(0xFF0B1220),blue=Color(0xFF4F8DFF),cyan=Color(0xFF77B7F7),mint=Color(0xFF35C99A),gold=Color(0xFFFF9B45),bg=Color(0xFF0B1220),surface=Color(0xFF121D2E),muted=Color(0xFF9AA9BC),line=Color(0xFF26364B),red=Color(0xFFFF6474);
 void main(){WidgetsFlutterBinding.ensureInitialized();SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarColor:Colors.transparent,statusBarIconBrightness:Brightness.light,systemNavigationBarColor:bg,systemNavigationBarIconBrightness:Brightness.light));runApp(const ElzocoApp());}
 Map<String,dynamic> m(dynamic x)=>x is Map?Map<String,dynamic>.from(x):<String,dynamic>{};
 List<dynamic> l(dynamic x)=>x is List?x:<dynamic>[];
@@ -68,7 +68,7 @@ class MobileApi{
 }
 class AppAppearance extends ChangeNotifier {
   static const palettes = <String, Color>{
-    'midnight': Color(0xFF3B82F6),
+    'midnight': Color(0xFF4F8DFF),
     'copper': Color(0xFFE8873A),
     'green': Color(0xFF28A879),
     'silver': Color(0xFF9AA8B8),
@@ -117,14 +117,14 @@ ThemeData buildTheme(Brightness brightness) {
   final dark = brightness == Brightness.dark;
   final accent = appearance.accent;
   final scheme = ColorScheme.fromSeed(seedColor: accent, brightness: brightness,
-    surface: dark ? const Color(0xFF1F2937) : const Color(0xFFFFFFFF));
+    surface: dark ? const Color(0xFF121D2E) : const Color(0xFFFFFFFF));
   return ThemeData(
     useMaterial3: true, brightness: brightness, colorScheme: scheme,
-    scaffoldBackgroundColor: dark ? const Color(0xFF111827) : const Color(0xFFF3F4F6),
-    appBarTheme: AppBarTheme(backgroundColor: dark ? const Color(0xFF111827) : const Color(0xFFF3F4F6),
+    scaffoldBackgroundColor: dark ? const Color(0xFF0B1220) : const Color(0xFFF4F6FA),
+    appBarTheme: AppBarTheme(backgroundColor: dark ? const Color(0xFF0B1220) : const Color(0xFFF4F6FA),
       foregroundColor: dark ? ink : const Color(0xFF20242A), elevation: 0, scrolledUnderElevation: 0),
     inputDecorationTheme: InputDecorationTheme(
-      filled: true, fillColor: dark ? const Color(0xFF1F2937) : Colors.white,
+      filled: true, fillColor: dark ? const Color(0xFF121D2E) : Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: BorderSide(color: dark ? line : const Color(0xFFD1D5DB))),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: BorderSide(color: dark ? line : const Color(0xFFDCE2E9))),
@@ -251,7 +251,7 @@ class BiometricGate extends StatelessWidget {
                 style:const TextStyle(color:muted,fontSize:12)),
               const SizedBox(height:12),
               Container(padding:const EdgeInsets.symmetric(horizontal:13,vertical:8),
-                decoration:BoxDecoration(color:blue.withOpacity(.12),borderRadius:BorderRadius.circular(30),border:Border.all(color:blue.withOpacity(.28))),
+                decoration:BoxDecoration(color:gold.withOpacity(.12),borderRadius:BorderRadius.circular(30),border:Border.all(color:gold.withOpacity(.28))),
                 child:const Row(mainAxisSize:MainAxisSize.min,children:[Icon(Icons.verified_user_outlined,color:mint,size:16),SizedBox(width:7),
                   Text('حساب شما روی این دستگاه امن است',style:TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w700))])),
               const SizedBox(height:30),
@@ -334,16 +334,16 @@ void toast(String s,[bool bad=false]){if(mounted)ScaffoldMessenger.of(context).s
 Future<void> logout()async{await PushService.unregister(apiBase:apiBase,accessToken:widget.token);try{await api('logout',method:'POST');}catch(_){}await vault.deleteAll();widget.onLogout();}
 @override Widget build(BuildContext c){String title='داشبورد';for(final e in menu){if(e.id==page)title=e.label;}return Scaffold(drawer:DrawerMenu(user:user,role:role,menu:menu,current:page,onSelect:go,onLogout:logout),appBar:AppBar(title:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,style:const TextStyle(fontSize:16,fontWeight:FontWeight.w900,color:ink)),Text(user['name']?.toString()??'همکار الزوکو',style:const TextStyle(fontSize:10,color:muted))]),actions:[IconButton(onPressed:refresh,icon:const Icon(Icons.refresh_rounded)),const SizedBox(width:6)]),body:SafeArea(top:false,child:loading?const Center(child:CircularProgressIndicator()):AnimatedSwitcher(duration:const Duration(milliseconds:300),transitionBuilder:(child,a)=>FadeTransition(opacity:a,child:SlideTransition(position:Tween(begin:const Offset(0,.025),end:Offset.zero).animate(a),child:child)),child:KeyedSubtree(key:ValueKey(page),child:body()))),bottomNavigationBar:SafeArea(top:false,child:Padding(padding:const EdgeInsets.fromLTRB(10,3,10,7),child:ClipRRect(borderRadius:BorderRadius.circular(22),child:NavigationBar(
  selectedIndex:(employee?['dashboard','requests','slips','notifications']:['dashboard','employees','leaves','notifications']).indexOf(page).clamp(0,3).toInt(),
- backgroundColor:surface,elevation:0,indicatorColor:(employee?cyan:blue).withOpacity(.20),labelBehavior:NavigationDestinationLabelBehavior.alwaysShow,
+ backgroundColor:surface,elevation:0,indicatorColor:gold.withOpacity(.18),labelBehavior:NavigationDestinationLabelBehavior.alwaysShow,
  onDestinationSelected:(i){final dest=(employee?['dashboard','requests','slips','notifications']:['dashboard','employees','leaves','notifications'])[i];setState(()=>page=dest);if(dest=='notifications')loadAlerts();},
  destinations:employee?const [
-  NavigationDestination(icon:Icon3D(Icons.home_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.home_rounded,color:cyan,size:30,compact:true),label:'خانه'),
-  NavigationDestination(icon:Icon3D(Icons.assignment_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.assignment_rounded,color:cyan,size:30,compact:true),label:'درخواست‌ها'),
-  NavigationDestination(icon:Icon3D(Icons.receipt_long_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.receipt_long_rounded,color:cyan,size:30,compact:true),label:'فیش حقوقی'),
-  NavigationDestination(icon:Icon3D(Icons.notifications_none,color:blue,size:28,compact:true),selectedIcon:Icon3D(Icons.notifications_active,color:blue,size:30,compact:true),label:'اعلان‌ها'),
+  NavigationDestination(icon:Icon3D(Icons.home_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.home_rounded,color:gold,size:30,compact:true),label:'خانه'),
+  NavigationDestination(icon:Icon3D(Icons.assignment_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.assignment_rounded,color:gold,size:30,compact:true),label:'درخواست‌ها'),
+  NavigationDestination(icon:Icon3D(Icons.receipt_long_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.receipt_long_rounded,color:gold,size:30,compact:true),label:'فیش حقوقی'),
+  NavigationDestination(icon:Icon3D(Icons.notifications_none,color:blue,size:28,compact:true),selectedIcon:Icon3D(Icons.notifications_active,color:gold,size:30,compact:true),label:'اعلان‌ها'),
  ]:const [
-  NavigationDestination(icon:Icon3D(Icons.grid_view_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.grid_view_rounded,color:blue,size:30,compact:true),label:'خانه'),
-  NavigationDestination(icon:Icon3D(Icons.groups_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.groups_rounded,color:blue,size:30,compact:true),label:'کارمندان'),
+  NavigationDestination(icon:Icon3D(Icons.grid_view_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.grid_view_rounded,color:gold,size:30,compact:true),label:'خانه'),
+  NavigationDestination(icon:Icon3D(Icons.groups_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.groups_rounded,color:gold,size:30,compact:true),label:'کارمندان'),
   NavigationDestination(icon:Icon3D(Icons.event_outlined,color:cyan,size:28,compact:true),selectedIcon:Icon3D(Icons.event_available,color:blue,size:30,compact:true),label:'مرخصی'),
   NavigationDestination(icon:Icon(Icons.notifications_none),selectedIcon:Icon(Icons.notifications_active),label:'اعلان‌ها'),
  ])))),
@@ -351,7 +351,7 @@ Future<void> logout()async{await PushService.unregister(apiBase:apiBase,accessTo
 Widget body(){switch(page){case 'dashboard':return employee?employeeDashboard():dashboard();case 'employees':return employeesPage();case 'upload':return uploadPage();case 'advances':return requestsPage('finance');case 'leaves':return requestsPage('leave');case 'promotions':return requestsPage('promotion');case 'admins':return adminsPage();case 'settings':return settingsPage();case 'appearance':return appearancePage();case 'notifications':return notificationsPage();case 'requests':return employeeRequests();case 'slips':return slipsPage();default:return dashboard();}}
 Widget welcome(){
  return Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(
-  gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF1E3A8A),Color(0xFF172554),Color(0xFF111827)]),
+  gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF172B4D),Color(0xFF101B2D),Color(0xFF0B1220)]),
   borderRadius:BorderRadius.circular(25),border:Border.all(color:const Color(0xFF3B82F6).withOpacity(.45)),
   boxShadow:[BoxShadow(color:blue.withOpacity(.12),blurRadius:26,offset:const Offset(0,11))]),
   child:Stack(children:[
@@ -685,10 +685,10 @@ class DrawerMenu extends StatelessWidget {
    Expanded(child:ListView(padding:const EdgeInsets.all(12),children:[
     for(final g in groups.entries) Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
      Padding(padding:const EdgeInsets.fromLTRB(12,13,12,7),child:Text(g.key=='personnel'?'امور پرسنلی':g.key=='system'?'مدیریت سامانه':'منوی اصلی',style:const TextStyle(color:Color(0xFF91A8CA),fontSize:10,fontWeight:FontWeight.w800))),
-     for(final e in g.value) Padding(padding:const EdgeInsets.only(bottom:4),child:Material(color:e.id==current?(role=='employee'?blue.withOpacity(.13):blue.withOpacity(.23)):Colors.transparent,borderRadius:BorderRadius.circular(13),child:InkWell(onTap:()=>onSelect(e.id),borderRadius:BorderRadius.circular(13),child:Padding(padding:const EdgeInsets.symmetric(horizontal:12,vertical:10),child:Row(children:[
-      Icon3D(e.icon,color:e.id==current?blue:cyan,size:38,compact:true),
-      const SizedBox(width:12),Expanded(child:Text(e.label,style:TextStyle(color:e.id==current?Colors.white:const Color(0xFFC5D2E5),fontWeight:e.id==current?FontWeight.w900:FontWeight.w600,fontSize:12))),
-      if(e.id==current)const Icon(Icons.circle,size:7,color:gold)
+     for(final e in g.value) Padding(padding:const EdgeInsets.only(bottom:4),child:Material(color:e.id==current?gold.withOpacity(.14):Colors.transparent,borderRadius:BorderRadius.circular(13),child:InkWell(onTap:()=>onSelect(e.id),borderRadius:BorderRadius.circular(13),child:Padding(padding:const EdgeInsets.symmetric(horizontal:12,vertical:10),child:Row(children:[
+      Icon3D(e.icon,color:e.id==current?gold:cyan,size:38,compact:true),
+      const SizedBox(width:12),Expanded(child:Text(e.label,style:TextStyle(color:e.id==current?gold:const Color(0xFFD0D9E6),fontWeight:e.id==current?FontWeight.w900:FontWeight.w600,fontSize:12))),
+      if(e.id==current)Container(width:5,height:26,decoration:BoxDecoration(color:gold,borderRadius:BorderRadius.circular(8)))
      ])))))
     ])
    ])),

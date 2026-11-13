@@ -49,11 +49,13 @@ jobs:
         run: flutter build ios --release --no-codesign --dart-define=API_BASE_URL=https://hrsarv.ir/payroll
 
       - name: Package unsigned iOS app
-        run: ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app ../../dist/elzoco-hrm-ios-unsigned.zip
+        run: |
+          mkdir -p ../../dist
+          ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app ../../dist/elzoco-hrm-ios-unsigned.zip
 
       - uses: actions/upload-artifact@v4
         with:
           name: elzoco-hrm-ios-unsigned
-          path: mobile/dist/elzoco-hrm-ios-unsigned.zip
+          path: dist/elzoco-hrm-ios-unsigned.zip
           if-no-files-found: error
           retention-days: 90

@@ -1,0 +1,24 @@
+# Runtime / secrets
+/config.php
+/.env
+/.env.*
+/storage/*
+!/storage/.htaccess
+!/storage/.gitkeep
+/uploads/
+/cache/
+/tmp/
+
+# Local and private backups / personnel source data
+*.sql.gz
+*.dump
+*.bak
+*.xlsx
+*.xls
+*.csv
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

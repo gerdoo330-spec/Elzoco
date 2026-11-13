@@ -4,7 +4,12 @@ require dirname(__DIR__).'/src/bootstrap.php';
 header('Content-Type: application/json; charset=utf-8'); header('Cache-Control: no-store');
 $method=$_SERVER['REQUEST_METHOD']??'GET'; $in=request_data(); $action=(string)($in['action']??$_GET['action']??'');
 function mobile_user():?array{
- $h=(string)($_SERVER['HTTP_AUTHORIZATION']??''); if(!preg_match('/^Bearer\s+([a-f0-9]{64})$/i',trim($h),$m))return null;
+ $h=(string)($_SERVER['HTTP_AUTHORIZATION']??$_SERVER['REDIRECT_HTTP_AUTHORIZATION']??'');
+ // بعضی هاست‌های اشتراکی Apache/CGI هدر Authorization را در REDIRECT_HTTP_AUTHORIZATION یا getallheaders نگه می‌دارند.
+ if($h===''&&function_exists('getallheaders')){
+  foreach((array)getallheaders() as $key=>$value){if(strcasecmp((string)$key,'Authorization')===0){$h=(string)$value;break;}}
+ }
+ if(!preg_match('/^Bearer\s+([a-f0-9]{64})$/i',trim($h),$m))return null;
  $t=one('SELECT user_type,user_id FROM mobile_tokens WHERE token_hash=? AND revoked_at IS NULL AND expires_at>NOW() LIMIT 1',[hash('sha256',$m[1])]); if(!$t)return null;
  if($t['user_type']==='employee'){$u=one('SELECT id,name,personnel_code,post,inactive,in_latest FROM employees WHERE id=?',[(int)$t['user_id']]);if(!$u||!(int)$u['in_latest']||(int)$u['inactive'])return null;return ['type'=>'employee','id'=>(int)$u['id'],'name'=>$u['name'],'personnel_code'=>$u['personnel_code'],'post'=>$u['post']];}
  $u=one('SELECT id,name,username,role,personnel_code,active FROM admins WHERE id=?',[(int)$t['user_id']]);if(!$u||!(int)$u['active'])return null;return ['type'=>'admin','id'=>(int)$u['id'],'name'=>$u['name'],'username'=>$u['username'],'role'=>$u['role'],'personnel_code'=>(string)$u['personnel_code']];

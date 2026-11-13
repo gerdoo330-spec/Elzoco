@@ -5,7 +5,8 @@ start_session_secure();
 $admin = require_admin_page();
 
 $id = (int)($_GET['id'] ?? 0);
-$r = one('SELECT r.*, e.post FROM advance_requests r LEFT JOIN employees e ON e.id = r.employee_id WHERE r.id = ?', [$id]);
+fin_schedule_ensure(); // ستون sheba_owner
+$r = one('SELECT r.*, e.post, e.sheba AS emp_sheba, e.sheba_owner AS emp_sheba_owner FROM advance_requests r LEFT JOIN employees e ON e.id = r.employee_id WHERE r.id = ?', [$id]);
 if (!$r || !approval_can_see($admin, (string)$r['stage'], (string)$r['direct_pc'])) {
     http_response_code(404);
     exit('درخواست مساعده پیدا نشد.');
@@ -101,7 +102,7 @@ header('Content-Type: text/html; charset=utf-8');
   <table>
     <colgroup><col class="k"><col class="v"><col class="k"><col class="v"></colgroup>
     <tr><th>مبلغ درخواستی (ریال)</th><td class="n"><?= $num($r['amount']) ?></td><th>مبلغ تأییدی (ریال)</th><td class="n"><?= $approved ?></td></tr>
-    <tr><th>شماره شبا</th><td colspan="3" class="ltr"><?= e($r['sheba']) ?></td></tr>
+    <tr><th>شماره شبا</th><td colspan="3"><span class="ltr"><?= e($r['sheba']) ?></span><?php $own = advance_sheba_owner($r, ['sheba' => $r['emp_sheba'] ?? '', 'sheba_owner' => $r['emp_sheba_owner'] ?? '']); if ($own !== ''): ?><br><?= e($own) ?><?php endif; ?></td></tr>
     <tr><th>تاریخ ثبت درخواست</th><td><?= $jalaliFromDb($r['created_at']) ?></td><th>وضعیت</th><td><?= e($r['status']) ?></td></tr>
   </table>
 

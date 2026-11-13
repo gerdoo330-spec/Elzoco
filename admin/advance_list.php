@@ -127,10 +127,10 @@ header('Content-Type: text/html; charset=utf-8');
         <td class="c"><?= $i + 1 ?></td>
         <td class="ltr"><?= e($r['tracking']) ?></td>
         <td class="c"><?= e($r['jdate']) ?></td>
-        <td><?= e($r['name']) ?></td>
+        <td><?= e($r['name']) ?><?php if (!empty($r['post'])): ?><br><small><?= e($r['post']) ?></small><?php endif; ?></td>
         <td class="ltr"><?= e($r['national_code']) ?></td>
         <td class="ltr"><?= e($r['personnel_code']) ?></td>
-        <td class="ltr" style="font-size:7.5pt"><?= e($r['sheba']) ?></td>
+        <td style="font-size:7.5pt"><span class="ltr"><?= e($r['sheba']) ?></span><?php if (!empty($r['sheba_owner'])): ?><br><?= e($r['sheba_owner']) ?><?php endif; ?></td>
         <td class="n"><?= $num($r['amount']) ?></td>
         <td class="n"><?= $num($r['approved_amount']) ?></td>
         <td class="c"><?= e($r['status']) ?></td>

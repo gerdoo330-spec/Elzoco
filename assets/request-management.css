@@ -7,6 +7,10 @@
 .request-filter-grid input:focus,.request-filter-grid select:focus{border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.13)}
 .request-filter-grid .request-search{grid-column:span 1}
 .request-filter-grid .btn{min-height:42px;white-space:nowrap}
+/* چک‌باکس «فقط بدون کارمند متصل»: بدون ارث‌بری استایل ورودی‌های متنی */
+.request-filter-grid .request-toggle{display:flex;align-items:center;gap:8px;min-height:42px;padding:0 2px;font-size:.84rem;font-weight:700;color:#45556d;cursor:pointer;min-width:0;align-self:end}
+.request-filter-grid .request-toggle input{width:18px;height:18px;min-height:0;flex:0 0 18px;margin:0;padding:0;border:0;box-shadow:none;accent-color:#f97316;cursor:pointer}
+.request-filter-grid .request-toggle span{line-height:1.5}
 .request-export-row{margin-top:13px;padding-top:12px;border-top:1px solid #edf1f6;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .request-export-hint{font-size:.78rem;color:#718096}
 .request-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 16px}
@@ -29,8 +33,8 @@
 .leave-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid #edf1f6;padding-top:12px}.leave-actions .row{gap:7px}.leave-actions .btn{min-height:38px}.leave-alert{display:flex;align-items:center;gap:7px;color:#b45309;font-size:.78rem;font-weight:700}.leave-empty{background:#fff;border:1px dashed #cbd5e1;border-radius:16px;padding:28px;text-align:center;color:#718096}
 .request-export-row .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px}
 @media(max-width:1100px){.request-filter-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.request-filter-grid .request-search{grid-column:span 2}}
-@media(max-width:760px){.request-toolbar{padding:13px}.request-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.request-filter-grid .request-search{grid-column:span 2}.request-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.leave-card{padding:14px}.leave-card-head{grid-template-columns:auto minmax(0,1fr) auto}.leave-card-head .leave-type{grid-column:2/4;justify-self:start}.leave-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.leave-history{grid-template-columns:1fr}.leave-actions{align-items:flex-start}.leave-actions .row{width:100%}.leave-actions .btn{flex:1}}
-@media(max-width:480px){.request-filter-grid{grid-template-columns:1fr}.request-filter-grid .request-search{grid-column:auto}.request-export-row{align-items:flex-start}.request-export-row>div{width:100%}.request-export-row .btn{flex:1}.request-summary-item{padding:10px}.leave-card-head{grid-template-columns:auto minmax(0,1fr)}.leave-track{grid-column:2;justify-items:start}.leave-card-head .leave-type{grid-column:1/3}.leave-facts{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.request-toolbar{padding:13px}.request-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.request-filter-grid .request-toggle{grid-column:span 2}.request-filter-grid .request-search{grid-column:span 2}.request-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.leave-card{padding:14px}.leave-card-head{grid-template-columns:auto minmax(0,1fr) auto}.leave-card-head .leave-type{grid-column:2/4;justify-self:start}.leave-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.leave-history{grid-template-columns:1fr}.leave-actions{align-items:flex-start}.leave-actions .row{width:100%}.leave-actions .btn{flex:1}}
+@media(max-width:480px){.request-filter-grid{grid-template-columns:1fr}.request-filter-grid .request-toggle{grid-column:auto;min-height:38px}.request-filter-grid .request-search{grid-column:auto}.request-export-row{align-items:flex-start}.request-export-row>div{width:100%}.request-export-row .btn{flex:1}.request-summary-item{padding:10px}.leave-card-head{grid-template-columns:auto minmax(0,1fr)}.leave-track{grid-column:2;justify-items:start}.leave-card-head .leave-type{grid-column:1/3}.leave-facts{grid-template-columns:1fr 1fr}}
 @media(prefers-reduced-motion:reduce){.request-filter-grid input,.request-filter-grid select{transition:none}}
 
 /* پنجره‌ی بازبینی مرخصی پیش از ثبت تصمیم */

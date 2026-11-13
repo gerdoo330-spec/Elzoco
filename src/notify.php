@@ -6,21 +6,14 @@ declare(strict_types=1);
  * اگر جدول notifications هنوز ساخته نشده باشد، ثبت درخواست‌ها بدون خطا ادامه پیدا می‌کند.
  */
 
-const NOTIFY_KIND_TAB = ['advance' => 'advances', 'loan' => 'advances', 'leave' => 'leaves', 'promotion' => 'promotions'];
+const NOTIFY_KIND_TAB = ['advance' => 'advances', 'loan' => 'advances', 'leave' => 'leaves', 'promotion' => 'promotions', 'penalty' => 'penalties'];
 
-function notify_add(string $recipient, string $kind, string $title, string $body = '', string $tone = 'info', bool $sendPush = true): void
+function notify_add(string $recipient, string $kind, string $title, string $body = '', string $tone = 'info'): void
 {
     try {
         q('INSERT INTO notifications (recipient, kind, tone, title, body, tab, shown, created_at) VALUES (?,?,?,?,?,?,0,NOW())',
             [$recipient, $kind, $tone, mb_substr($title, 0, 190), mb_substr($body, 0, 500),
              str_starts_with($recipient, 'admin:') ? (NOTIFY_KIND_TAB[$kind] ?? '') : $kind]);
-        if ($sendPush && function_exists('push_send_recipient')) {
-            try {
-                push_send_recipient($recipient, $title, $body, $kind, $tone);
-            } catch (Throwable $pushError) {
-                error_log('[notify push] ' . $pushError->getMessage());
-            }
-        }
     } catch (Throwable $ex) {
         error_log('[notify] ' . $ex->getMessage());
     }
@@ -49,9 +42,9 @@ function notify_admin_pc(string $pc, string $kind, string $title, string $body =
     return $n;
 }
 
-function notify_emp(int $employeeId, string $kind, string $title, string $body = '', string $tone = 'info', bool $sendPush = true): void
+function notify_emp(int $employeeId, string $kind, string $title, string $body = '', string $tone = 'info'): void
 {
-    notify_add('emp:' . $employeeId, $kind, $title, $body, $tone, $sendPush);
+    notify_add('emp:' . $employeeId, $kind, $title, $body, $tone);
 }
 
 /** اعلان برای کسی که الان باید درخواست را بررسی کند: direct = مدیر مستقیم، general = مدیر ارشد (در نبودش ادمین)، admin = ادمین */
@@ -103,5 +96,6 @@ function admin_pending_counts(array $a): array
         'adv' => count(array_filter(advance_admin_list([], $a), fn($x) => $x['can_decide'])),
         'lv'  => count(array_filter(leave_manager_list($a), fn($x) => $x['can_decide'])),
         'pr'  => count(array_filter(promo_admin_list($a), fn($x) => $x['can_decide'])),
+        'pen' => penalty_pending_count($a),
     ];
 }

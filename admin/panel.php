@@ -201,10 +201,12 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
     table.t td .btn.sm{min-height:40px;padding:8px 14px}
   }
 </style>
-<link rel="stylesheet" href="../assets/admin-ui.css?v=12">
+<link rel="stylesheet" href="../assets/admin-ui.css?v=20">
 <link rel="stylesheet" href="../assets/admin-settings.css?v=3">
-<link rel="stylesheet" href="../assets/notify-ui.css?v=1">
+<link rel="stylesheet" href="../assets/notify-ui.css?v=2">
 <link rel="stylesheet" href="../assets/experience-ui.css?v=3">
+<link rel="stylesheet" href="../assets/dashboard-ui.css?v=1">
+<link rel="stylesheet" href="../assets/brand-logo.css?v=1">
 <link rel="stylesheet" href="../assets/request-management.css?v=1">
 <link rel="stylesheet" href="../assets/employee-dossier.css?v=4">
 </head>
@@ -212,13 +214,9 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
 <div class="shell">
   <div class="scrim" onclick="toggleNav(false)"></div>
   <aside class="side" id="side">
-    <div class="side-brand"><div class="logo"><svg class="logo-svg" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lgTile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d4e89"/><stop offset="1" stop-color="#0b2343"/></linearGradient><radialGradient id="lgCoin" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff4c7"/><stop offset=".45" stop-color="#ffd166"/><stop offset=".8" stop-color="#e8a317"/><stop offset="1" stop-color="#b87b0a"/></radialGradient></defs><rect x="2" y="2" width="60" height="60" rx="16" fill="url(#lgTile)"/><rect x="2.6" y="2.6" width="58.8" height="58.8" rx="15.4" fill="none" stroke="#ffffff" stroke-opacity=".18"/><ellipse cx="32" cy="52" rx="19" ry="4" fill="#000" opacity=".35"/><path d="M14 46 v5 a18 7 0 0 0 36 0 v-5 z" fill="#8a5a07"/><ellipse cx="32" cy="46" rx="18" ry="7" fill="url(#lgCoin)"/><ellipse cx="32" cy="46" rx="13.5" ry="4.8" fill="none" stroke="#b87b0a" stroke-width="1" opacity=".55"/><path d="M14 40 v5 a18 7 0 0 0 36 0 v-5 z" fill="#8a5a07"/><ellipse cx="32" cy="40" rx="18" ry="7" fill="url(#lgCoin)"/><ellipse cx="32" cy="40" rx="13.5" ry="4.8" fill="none" stroke="#b87b0a" stroke-width="1" opacity=".55"/><path d="M14 34 v5 a18 7 0 0 0 36 0 v-5 z" fill="#8a5a07"/><ellipse cx="32" cy="34" rx="18" ry="7" fill="url(#lgCoin)"/><ellipse cx="32" cy="34" rx="13.5" ry="4.8" fill="none" stroke="#b87b0a" stroke-width="1" opacity=".55"/><path d="M20 31 q4 -5 10 -5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".75"/></svg></div><div><b>مدیریت حقوق</b><small>پنل مدیریت الزوکو</small></div></div>
+    <div class="side-brand"><img class="brand-logo" src="../assets/logo-login.png" alt="EL ZOCO"><div><b>مدیریت حقوق</b><small>پنل مدیریت الزوکو</small></div></div>
     <div class="side-label">منو</div>
     <nav id="menu">
-      <button type="button" onclick="location.href='announcements.php'">
-        <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11v2a2 2 0 0 0 2 2h2l8 5V4l-8 5H6a2 2 0 0 0-2 2z"/><path d="M18 9a5 5 0 0 1 0 6M20 6a9 9 0 0 1 0 12"/></svg></span>
-        <span class="lbl">اطلاعیه‌ها و اعلان‌ها</span>
-      </button>
       <button data-s="dashboard" class="on">
         <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span>
         <span class="lbl">داشبورد</span>
@@ -253,6 +251,10 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
               <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></span>
               <span class="lbl">مرخصی‌ها</span><span class="cnt" id="cLv" style="display:none"></span>
             </button>
+            <button type="button" data-s="penalties">
+              <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/></svg></span>
+              <span class="lbl">جریمه‌ها</span><span class="cnt" id="cPen" style="display:none"></span>
+            </button>
           </div>
         </div>
       </div>
@@ -275,7 +277,7 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
   <header class="m-top">
     <button class="burger" type="button" aria-label="باز کردن منو" onclick="toggleNav(true)"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
     <div class="ttl"><b>مدیریت حقوق</b><small><?= e($admin['name']) ?> · <?= e($roleLabel) ?></small></div>
-    <div class="coin"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="16" fill="#0f2d55"/><ellipse cx="32" cy="46" rx="18" ry="7" fill="#ffd166"/><ellipse cx="32" cy="40" rx="18" ry="7" fill="#ffd166"/><ellipse cx="32" cy="34" rx="18" ry="7" fill="#ffd166"/></svg></div>
+    <div class="coin"><img class="brand-logo" src="../assets/logo-login.png" alt="EL ZOCO"></div>
   </header>
     <section class="sec on" id="s-dashboard"><div class="head"><div><h1>داشبورد</h1><div class="muted">وضعیت کلی کارکنان و آخرین بارگذاری</div></div></div><div id="dash"></div></section>
 
@@ -309,7 +311,7 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
     <?php endif; ?>
 
     <section class="sec" id="s-employees">
-      <div class="head"><div><h1>کارمندان</h1><div class="muted">فهرست بر اساس آخرین فایل بارگذاری‌شده و پرونده‌های ثبت‌شده دستی</div></div><?php if ($isAdmin): ?><button class="btn" type="button" onclick="openEmployeeCreate()">＋ افزودن کارمند</button><?php endif; ?></div>
+      <div class="head"><div><h1>کارمندان</h1><div class="muted">فهرست بر اساس آخرین فایل بارگذاری‌شده</div></div></div>
       <div class="card flush">
         <div style="padding:16px 18px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line)">
           <input id="eq" placeholder="جستجو: نام، کد پرسنلی یا کد ملی" style="flex:1;min-width:220px">
@@ -336,6 +338,7 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
         <div class="request-filter-grid">
           <label class="request-search">جستجوی نام، کد یا پیگیری<input id="advQ" placeholder="مثلاً نام کارمند یا کد پیگیری"></label>
           <label>نوع درخواست<select id="advKind" onchange="loadAdvances()"><option value="">مساعده و وام</option><option value="advance">فقط مساعده</option><option value="loan">فقط وام</option></select></label>
+          <label class="request-toggle"><input type="checkbox" id="advOrphan" onchange="loadAdvances()"><span>فقط بدون کارمند متصل</span></label>
           <label>وضعیت مالی<select id="advStatus" onchange="loadAdvances()"><option value="">همه‌ی وضعیت‌ها</option><option>در انتظار بررسی</option><option>تایید شده</option><option>رد شده</option></select></label>
           <label>از تاریخ<input id="advFrom" class="ltr" data-jdate placeholder="1405/07/01"></label>
           <label>تا تاریخ<input id="advTo" class="ltr" data-jdate placeholder="1405/07/30"></label>
@@ -376,6 +379,19 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
       </div>
       <div class="request-summary" id="lvSummary"></div>
       <div class="leave-request-list" id="ltable"></div>
+    </section>
+
+    <section class="sec" id="s-penalties">
+      <div class="head request-page-head"><div><h1>جریمه‌های پرسنل</h1><div class="muted">ثبت جریمه برای زیرمجموعه؛ گردش تأیید مشابه مساعده و کسر از فیش ماه بعد پس از تأیید نهایی</div></div>
+        <button class="btn" type="button" onclick="openPenaltyForm()">ثبت جریمه جدید</button></div>
+      <div class="request-toolbar card">
+        <div class="request-filter-grid">
+          <label class="request-search">جستجوی نام، کد یا پیگیری<input id="penQ" placeholder="نام کارمند، کد پرسنلی یا کد پیگیری"></label>
+          <label>مرحله<select id="penStage" onchange="loadPenalties()"><option value="">همه‌ی مراحل قابل مشاهده</option><option value="direct">نزد مدیر مستقیم</option><option value="general">نزد مدیر ارشد</option><option value="admin">نزد منابع انسانی</option><option value="final">تأیید نهایی</option><option value="rejected">رد یا لغو شده</option></select></label>
+          <button class="btn sm" type="button" onclick="loadPenalties()">اعمال فیلتر</button>
+        </div>
+      </div>
+      <div class="card flush"><div style="overflow:auto"><table class="t" id="pentable"></table></div></div>
     </section>
 
     <?php if ($isAdmin): ?>
@@ -504,6 +520,22 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
       </div>
 
       <div class="settings-subhead settings-subhead-spaced">
+        <div><span class="settings-eyebrow">کسر از فیش</span><h2>روش کسر مساعده و وام</h2><p>مشخص کنید مساعده و اقساط وام از فایل اکسل خوانده شود یا سامانه خودکار از فیش کسر کند.</p></div>
+      </div>
+      <div class="settings-panel settings-promo-panel">
+        <p class="settings-panel-intro">مساعده معمولاً یک‌جا از فیش ماه بعد کسر می‌شود. وام در چند قسط ماهانه کسر می‌شود و تعداد اقساط هنگام تأیید تعیین می‌شود. تغییر روش از بارگذاری بعدی فایل اکسل اثر می‌گذارد.</p>
+        <form class="stack" id="requestSourceForm" onsubmit="saveRequestSources(event)">
+          <div class="settings-promo-options">
+            <label class="promo-choice"><input type="radio" name="advance_src" value="excel"><span class="promo-choice-copy"><b>مساعده: از فایل اکسل</b><small>کسر از ستون مساعده‌ی فایل اکسل</small></span></label>
+            <label class="promo-choice"><input type="radio" name="advance_src" value="system"><span class="promo-choice-copy"><b>مساعده: خودکار از سامانه</b><small>کل مبلغ در فیش ماه بعد از تأیید کسر می‌شود</small></span></label>
+            <label class="promo-choice"><input type="radio" name="loan_src" value="excel"><span class="promo-choice-copy"><b>وام: از فایل اکسل</b><small>کسر اقساط از ستون وام فایل اکسل</small></span></label>
+            <label class="promo-choice"><input type="radio" name="loan_src" value="system"><span class="promo-choice-copy"><b>وام: خودکار از سامانه</b><small>اقساط ماهانه طبق تعداد تعیین‌شده در تأیید کسر می‌شود</small></span></label>
+          </div>
+          <div class="settings-save-row"><span class="hint">روش انتخاب‌شده برای بارگذاری‌های بعدی استفاده می‌شود.</span><button class="btn" type="submit">ذخیره‌ی روش</button></div>
+        </form>
+      </div>
+
+      <div class="settings-subhead settings-subhead-spaced">
         <div><span class="settings-eyebrow">گردش کار و سطح مسئولیت</span><h2>روش تأیید درخواست‌های پرسنل</h2><p>مسیر تأیید هر نوع درخواست را جداگانه فعال یا غیرفعال کنید.</p></div>
         <span class="settings-subhead-icon approval-icon"><svg viewBox="0 0 24 24"><path d="M8 5h12M8 12h12M8 19h12M3 5h.01M3 12h.01M3 19h.01"/></svg></span>
       </div>
@@ -513,6 +545,37 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
         <form class="stack" id="approvalFlowForm" onsubmit="saveApprovalFlows(event)">
           <div id="approvalFlows" class="settings-approval-grid"></div>
           <div class="settings-save-row"><span class="hint">مسیر ثبت‌شده برای درخواست‌های قبلی تغییر نمی‌کند.</span><button class="btn" type="submit">ذخیره‌ی مسیر تأیید</button></div>
+        </form>
+      </div>
+      <div class="settings-subhead settings-subhead-spaced">
+        <div><span class="settings-eyebrow">جریمه‌های پرسنل</span><h2>انواع جریمه و روش کسر</h2><p>نوع جریمه و مبلغ جدا تعریف می‌شوند. هنگام ثبت، مدیر نوع جریمه و مبلغ را جداگانه انتخاب می‌کند. تغییر در این فهرست‌ها روی جریمه‌های قبلی اثری ندارد.</p></div>
+      </div>
+      <div class="settings-panel">
+        <div id="penTypes"></div>
+        <form class="stack settings-account-form" id="penTypeForm" onsubmit="savePenaltyType(event)">
+          <input type="hidden" name="pt_id" value="0">
+          <div class="settings-form-grid">
+            <label>عنوان نوع جریمه<input name="title" required placeholder="مثلاً عدم انجام مسئولیت"></label>
+          </div>
+          <div class="row settings-form-actions"><button class="btn" type="submit">ذخیره‌ی نوع جریمه</button><button class="btn ghost" type="button" onclick="resetPenaltyTypeForm()">نوع جدید</button></div>
+        </form>
+        <div class="settings-form-divider"></div>
+        <div id="penAmounts"></div>
+        <form class="stack settings-account-form" id="penAmountForm" onsubmit="savePenaltyAmount(event)">
+          <input type="hidden" name="pa_id" value="0">
+          <div class="settings-form-grid">
+            <label>مبلغ جریمه (ریال)<input name="amount" class="ltr" inputmode="numeric" required autocomplete="off" oninput="this.value=groupDigits(this.value)"></label>
+          </div>
+          <div class="row settings-form-actions"><button class="btn" type="submit">ذخیره‌ی مبلغ</button><button class="btn ghost" type="button" onclick="resetPenaltyAmountForm()">مبلغ جدید</button></div>
+        </form>
+        <div class="settings-form-divider"></div>
+        <form class="stack" id="penSourceForm" onsubmit="savePenaltySource(event)">
+          <p class="settings-panel-intro">روش کسر جریمه از فیش. در حالت «خودکار»، جریمه‌های تأییدنهایی‌شده در فیش ماه بعد کسر می‌شود و ستون جریمه‌ی فایل اکسل برای این کسر استفاده نمی‌شود.</p>
+          <div class="settings-promo-options">
+            <label class="promo-choice"><input type="radio" name="penalty_src" value="system"><span class="promo-choice-copy"><b>خودکار از سامانه</b><small>جریمه‌های ثبت‌شده در سامانه از فیش کسر می‌شوند</small></span></label>
+            <label class="promo-choice"><input type="radio" name="penalty_src" value="excel"><span class="promo-choice-copy"><b>فقط از فایل اکسل</b><small>ستون جریمه‌ی فایل اکسل ماهانه مبنا باشد</small></span></label>
+          </div>
+          <div class="settings-save-row"><span class="hint">از بارگذاری بعدی فایل اکسل اعمال می‌شود.</span><button class="btn" type="submit">ذخیره‌ی روش کسر</button></div>
         </form>
       </div>
     </section>
@@ -525,12 +588,12 @@ $roleLabel = ['admin' => 'ادمین', 'senior' => 'مدیر ارشد', 'manager
 <script>window.API_BASE = '../'; window.IS_ADMIN = <?= $isAdmin ? 'true' : 'false' ?>;</script>
 <script src="../assets/app.js"></script>
 <script src="../assets/jdate.js"></script>
-<script src="../assets/admin.js?v=18"></script>
+<script src="../assets/admin.js?v=17"></script>
 <script src="../assets/promotions-cards.js?v=4"></script>
 <script src="../assets/admin-ui.js?v=2"></script>
 <script src="../assets/admins-ui.js?v=1"></script>
 <script>window.NOTIFY_SCOPE = 'admin'; window.NOTIFY_ADMIN_ID = <?= (int)$admin['id'] ?>;</script>
-<script src="../assets/notify.js?v=2"></script>
+<script src="../assets/notify.js?v=4"></script>
 <script>
   /* هدر جدول‌ها را به سلول‌ها منتقل می‌کند تا در موبایل به شکل کارت با برچسب نمایش داده شوند */
   (function(){

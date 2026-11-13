@@ -43,6 +43,7 @@ try {
                 'advance' => advance_overview($emp),
                 'loan' => advance_overview($emp, 'loan'),
                 'promotion' => promo_overview($emp),
+                'penalties' => penalty_list_for_employee((int)$emp['id']),
                 'leave' => ['types' => array_map(fn($k, $t) => ['key' => $k, 'label' => $t['label'], 'unit' => $t['unit']],
                     array_keys(LEAVE_TYPES), LEAVE_TYPES), 'requests' => leave_list_for((int)$emp['id']),
                     'balance' => leave_annual_balance($emp),
@@ -88,18 +89,6 @@ try {
         case 'notif_poll': {
             $emp = require_emp_json();
             json_out(['ok' => true, 'items' => notify_poll('emp:' . $emp['id'])]);
-        }
-
-        case 'notif_history': {
-            $emp = require_emp_json();
-            $items = all(
-                'SELECT id,kind,tone,title,body,tab,shown,created_at
-                 FROM notifications
-                 WHERE recipient = ? AND created_at >= (NOW() - INTERVAL 30 DAY)
-                 ORDER BY id DESC LIMIT 100',
-                ['emp:' . $emp['id']]
-            );
-            json_out(['ok' => true, 'items' => $items]);
         }
 
         case 'notif_ack': {

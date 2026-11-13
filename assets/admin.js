@@ -31,7 +31,7 @@
     document.querySelectorAll('#menu button[data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === name));
     const personnelGroup = document.getElementById('personnelGroup');
     if (personnelGroup) {
-      const childActive = ['advances', 'promotions', 'leaves'].includes(name);
+      const childActive = ['advances', 'promotions', 'leaves', 'penalties'].includes(name);
       personnelGroup.classList.toggle('expanded', childActive);
       const groupToggle = personnelGroup.querySelector('[data-submenu]');
       const submenu = personnelGroup.querySelector('.side-submenu');
@@ -49,56 +49,213 @@
     if (name === 'advances') loadAdvances();
     if (name === 'promotions') loadPromotions();
     if (name === 'leaves') loadLeaves();
+    if (name === 'penalties') loadPenalties();
     if (name === 'admins') { loadAdmins(); loadWindows(); }
   };
 
   /* ---------- داشبورد ---------- */
+  /* ---------- داشبورد: «میز امروز» ----------
+   * دفتر کل (صف تصمیم‌ها) به‌صورت کارت، فیش آخرین بارگذاری، کارت‌های وضعیت و نوار بازه‌های ماه جاری.
+   * حرکت فقط در ورود اولیه‌ی داشبورد و در تغییر واقعی داده‌ها اجرا می‌شود؛ تازه‌سازی‌های بعدی بی‌سروصدا عدد را به‌روز می‌کنند. */
+  const dzKey = (j) => j[0] * 1000 + j[1] * 40 + j[2];
+  const dzDayLabel = () => {
+    try { return new Intl.DateTimeFormat('fa-IR-u-ca-persian', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()); }
+    catch (e) { return ''; }
+  };
+  const dzPct = (n, total) => (total ? Math.min(100, (n / total) * 100) : 0).toFixed(2) + '%';
+  const dzNum = (key, n) => `<b data-key="${key}" data-count="${Number(n) || 0}">${fnum(Number(n) || 0)}</b>`;
+  const dzReduce = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* عدد از from به to می‌شمارد؛ با حرکت کم یا بدون تغییر، فوراً مقدار نهایی نوشته می‌شود */
+  function dzTween(el, from, to, dur) {
+    if (from === to || dzReduce()) { el.textContent = fnum(to); return; }
+    const t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / dur);
+      const e = 1 - Math.pow(1 - k, 3);
+      el.textContent = fnum(Math.round(from + (to - from) * e));
+      if (k < 1) requestAnimationFrame(step);
+    };
+    el.textContent = fnum(from);
+    requestAnimationFrame(step);
+  }
+
+  function dzCountUp(root, first) {
+    const prev = window._dzPrev || {};
+    const next = {};
+    root.querySelectorAll('[data-key]').forEach((el) => {
+      const key = el.dataset.key, to = Number(el.dataset.count) || 0;
+      next[key] = to;
+      const from = first ? 0 : (key in prev ? prev[key] : to);
+      dzTween(el, from, to, first ? 900 : 600);
+    });
+    window._dzPrev = next;
+  }
+
+  function dzLedger(p) {
+    const rows = [
+      { key: 'adv', label: 'مساعده و وام', n: p.adv, go: 'advances' },
+      { key: 'lv', label: 'مرخصی', n: p.lv, go: 'leaves' },
+      { key: 'pr', label: 'ارتقای شغلی', n: p.pr, go: 'promotions' },
+      { key: 'pen', label: 'جریمه', n: p.pen, go: 'penalties' },
+    ];
+    const total = rows.reduce((s, x) => s + (Number(x.n) || 0), 0);
+    const html = rows.map((x, i) => {
+      const n = Number(x.n) || 0;
+      return `<button type="button" class="dz-row${n ? ' has-items' : ' is-zero'}" style="--w:${dzPct(n, total)};--i:${i}" onclick="showSection('${x.go}')">
+        <span class="dz-row-main">
+          <span class="dz-row-label">${n ? '<span class="dz-live" aria-hidden="true"></span>' : ''}${esc(x.label)}</span>
+          <span class="dz-leader" aria-hidden="true"></span>
+          ${dzNum(x.key, n).replace('<b ', '<b class="dz-row-count" ')}
+        </span>
+        <span class="dz-bar" aria-hidden="true"><i></i></span>
+        <span class="dz-go">باز کردن این صف</span>
+      </button>`;
+    }).join('');
+    return { total, html };
+  }
+
+  function dzReceipt(period) {
+    if (!period) return '<p class="dz-rcpt-empty">هنوز فایلی بارگذاری نشده است.</p>';
+    const rep = period.report;
+    if (!rep) return '<p class="dz-rcpt-empty">گزارش سراسری فقط برای مدیران با دسترسی کامل نمایش داده می‌شود.</p>';
+    const issues = [
+      ['کد ملی نامعتبر', (rep.national_invalid || []).length],
+      ['بدون کارکرد این ماه', (rep.missing_work || []).length],
+      ['اطلاعات پرسنلی ناقص', (rep.personnel_incomplete || []).length],
+      ['حساب تکراری', (rep.duplicates || []).length],
+      ['نام نامطابق', (rep.name_mismatch || []).length],
+      ['کد ملی ۰۰۰۰ بدون موبایل', (rep.zero_national_no_phone || []).length],
+    ];
+    const issueSum = issues.reduce((s, x) => s + x[1], 0);
+    const lines = [
+      ['کارکنان جدید', rep.new || 0, false, 'rc_new'],
+      ['به‌روزرسانی‌شده', rep.updated || 0, false, 'rc_upd'],
+      ['حذف‌شده از فایل', rep.missing_from_file || 0, false, 'rc_gone'],
+      ...issues.map(([l, n], i) => [l, n, n > 0, 'rc_i' + i]),
+    ].map(([l, n, bad, key], i) => `<div class="dz-rcpt-line${bad ? ' is-issue' : ''}" style="--i:${i}"><span>${esc(l)}</span><span class="dz-leader" aria-hidden="true"></span>${dzNum(key, n)}</div>`).join('');
+    return `${lines}
+      <div class="dz-rcpt-sum${issueSum ? '' : ' is-clean'}"><span>موارد نیازمند بررسی</span>${dzNum('rc_sum', issueSum)}</div>
+      <p class="dz-rcpt-foot">${esc(period.file || '')} · ${esc(period.uploaded_at || '')}</p>`;
+  }
+
+  /** یک ردیف نوار ماه: بازه‌ی ثبت یا مشاهده‌ی فیش روی روزهای ماه جاری */
+  function dzWindowRow(label, w, today, days, i) {
+    const head = `<span class="dz-wlabel">${esc(label)}</span>`;
+    if (!w || !w.start || !w.end) {
+      return `<div class="dz-gantt-row" style="--i:${i}">${head}<span class="dz-gantt-note">تعیین نشده؛ همیشه باز</span><span></span></div>`;
+    }
+    const s = window.JDate.parse(w.start), e = window.JDate.parse(w.end);
+    const monthFirst = dzKey([today[0], today[1], 1]);
+    const monthLast = dzKey([today[0], today[1], days]);
+    const state = w.open ? '<span class="dz-wstate is-open">باز</span>' : '<span class="dz-wstate is-closed">بسته</span>';
+    const info = `<small>${esc(w.start)} تا ${esc(w.end)}</small>`;
+    if (!s || !e || dzKey(e) < monthFirst || dzKey(s) > monthLast) {
+      return `<div class="dz-gantt-row" style="--i:${i}"><span class="dz-wlabel">${esc(label)}${info}</span><span class="dz-gantt-note">خارج از این ماه</span>${state}</div>`;
+    }
+    const sDay = dzKey(s) < monthFirst ? 1 : s[2];
+    const eDay = dzKey(e) > monthLast ? days : e[2];
+    const a = ((sDay - 1) / days) * 100;
+    const b = ((days - eDay) / days) * 100;
+    const t = ((today[2] - 0.5) / days) * 100;
+    return `<div class="dz-gantt-row" style="--i:${i}">
+      <span class="dz-wlabel">${esc(label)}${info}</span>
+      <div class="dz-track" style="--days:${days}">
+        <span class="dz-span${w.open ? '' : ' is-closed'}" style="--a:${a.toFixed(2)}%;--b:${b.toFixed(2)}%"></span>
+        <span class="dz-today" style="--t:${t.toFixed(2)}%" data-day="${fnum(today[2])}"></span>
+      </div>${state}</div>`;
+  }
+
+  function dzWindows(w) {
+    if (!window.JDate) return '';
+    const today = window.JDate.toJ(new Date());
+    const days = window.JDate.daysInMonth(today[0], today[1]);
+    return dzWindowRow('ثبت مساعده', w.advance, today, days, 0)
+      + dzWindowRow('ثبت وام', w.loan, today, days, 1)
+      + dzWindowRow('مشاهده‌ی فیش', w.payslip, today, days, 2);
+  }
+
+  function dzDetails(rep) {
+    if (!rep) return '';
+    const list = (arr, fmt) => (arr && arr.length) ? `<ul>${arr.map(fmt).join('')}</ul>` : '<p>موردی برای گزارش نیست.</p>';
+    const sections = [
+      ['کارکنان بدون کارکرد ماه', rep.missing_work, n => `<li>${esc(n)}</li>`],
+      ['نام‌های نامطابق یا دارای فاصله', rep.name_mismatch, x => `<li>${esc(x.name)} — ${esc(x.reason)}</li>`],
+      ['حساب‌های تکراری', rep.duplicates, d => `<li>${esc(d.name)} — ردیف‌ها: ${esc(d.rows.join('، '))} — انتخاب‌شده: ردیف ${esc(d.chosen_row)} (${esc(d.status)})</li>`],
+      ['اطلاعات پرسنلی ناقص', rep.personnel_incomplete, x => `<li>${esc(x.name)} — ردیف ${esc(x.row)}</li>`],
+      ['کد ملی نامعتبر', rep.national_invalid, x => `<li>${esc(x.name)} — مقدار: ${esc(x.raw || '—')}</li>`],
+      ['کد ملی ۰۰۰۰ بدون موبایل', rep.zero_national_no_phone, n => `<li>${esc(n)}</li>`],
+    ];
+    return `<div class="dz-report-grid">${sections.map(([title, arr, fmt], i) => `
+      <details class="dz-details" style="--i:${i}"${(arr || []).length && title.includes('ناقص') ? ' open' : ''}>
+        <summary><span>${esc(title)}</span>${dzNum('d' + i, (arr || []).length)}</summary>
+        ${list(arr, fmt)}
+      </details>`).join('')}</div>`;
+  }
+
   window.loadDashboard = async function () {
     const r = await api('admin', 'dashboard');
     if (!r.ok) return toast(r.message, 'bad');
-    const c = r.counts, p = r.pending;
-    document.getElementById('cAdv').style.display = p.adv ? '' : 'none';
-    document.getElementById('cAdv').textContent = p.adv;
-    document.getElementById('cLv').style.display = p.lv ? '' : 'none';
-    document.getElementById('cLv').textContent = p.lv;
-    document.getElementById('cPr').style.display = p.pr ? '' : 'none';
-    document.getElementById('cPr').textContent = p.pr;
+    const c = r.counts, p = r.pending, w = r.windows;
+    const badge = (id, n) => { const el = document.getElementById(id); el.style.display = n ? '' : 'none'; el.textContent = n; };
+    badge('cAdv', p.adv); badge('cLv', p.lv); badge('cPr', p.pr); badge('cPen', p.pen);
+
+    const ledger = dzLedger(p);
     const rep = r.latest_period && r.latest_period.report;
-    const list = (arr, fmt) => (arr && arr.length)
-      ? `<ul class="list-report">${arr.map(fmt).join('')}</ul>` : '<div class="hint">مورد قابل گزارشی نیست ✓</div>';
-    document.getElementById('dash').innerHTML = `
-      <div class="grid g4" style="margin-bottom:18px">
-        <div class="card stat"><div class="ic">👥</div><div class="v">${fnum(c.total)}</div><div class="l">کل کارکنان ثبت‌شده</div></div>
-        <div class="card stat"><div class="ic" style="background:#e8f7ee;color:#15803d">✓</div><div class="v">${fnum(c.active)}</div><div class="l">فعال</div></div>
-        <div class="card stat"><div class="ic" style="background:#fdeaea;color:#b91c1c">✕</div><div class="v">${fnum(c.inactive)}</div><div class="l">غیرفعال یا خارج از فایل</div></div>
-        <div class="card stat"><div class="ic" style="background:#fff6e0;color:#b45309">!</div><div class="v">${fnum(c.incomplete)}</div><div class="l">اطلاعات پرسنلی ناقص</div></div>
-      </div>
-      <div class="grid g2" style="align-items:start">
-        <div class="card"><h2>آخرین بارگذاری</h2>
-          ${r.latest_period ? `<div class="stat"><span class="v" style="font-size:1.15rem">${esc(r.latest_period.label)}</span>
-            <span class="muted">فایل: ${esc(r.latest_period.file)} — ${esc(r.latest_period.uploaded_at)}</span></div>
-            ${rep ? `<div class="grid g2" style="margin-top:14px;gap:10px">
-              <div class="row"><span class="badge b-info">جدید: ${fnum(rep.new)}</span><span class="badge b-gray">به‌روز: ${fnum(rep.updated)}</span></div>
-              <div class="row"><span class="badge b-bad">از فایل حذف شده: ${fnum(rep.missing_from_file)}</span><span class="badge b-warn">کد ملی نامعتبر: ${fnum((rep.national_invalid||[]).length)}</span></div>
-            </div>` : '<div class="hint" style="margin-top:12px">آمار و گزارش سراسری بارگذاری فقط برای مدیران دارای دسترسی کامل نمایش داده می‌شود.</div>'}` : '<div class="empty">هنوز فایلی بارگذاری نشده است.</div>'}
-        </div>
-        <div class="card"><h2>بازه‌های فعال</h2>
-          <div class="stat" style="gap:10px">
-            <div>ثبت مساعده: ${r.windows.advance.start ? `<b class="ltr">${esc(r.windows.advance.start)} تا ${esc(r.windows.advance.end)}</b> ${r.windows.advance.open ? '<span class="badge b-ok">باز</span>' : '<span class="badge b-bad">بسته</span>'}` : '<span class="badge b-bad">تعیین نشده</span>'}</div>
-            <div>ثبت وام: ${r.windows.loan.start ? `<b class="ltr">${esc(r.windows.loan.start)} تا ${esc(r.windows.loan.end)}</b> ${r.windows.loan.open ? '<span class="badge b-ok">باز</span>' : '<span class="badge b-bad">بسته</span>'}` : '<span class="badge b-bad">تعیین نشده</span>'}</div>
-            <div>مشاهده فیش: ${r.windows.payslip.start ? `<b class="ltr">${esc(r.windows.payslip.start)} تا ${esc(r.windows.payslip.end)}</b>` : '<span class="badge b-ok">همیشه باز</span>'}</div>
+    const period = r.latest_period;
+    const active = Number(c.active) || 0, total = Number(c.total) || 0;
+    const headline = ledger.total ? `${fnum(ledger.total)} درخواست منتظر تصمیم شماست` : 'صف تصمیم شما خالی است';
+    const first = !window._dzRendered;
+    window._dzRendered = true;
+
+    const root = document.getElementById('dash');
+    root.innerHTML = `
+      <div class="dz${first ? '' : ' is-steady'}">
+        <header class="dz-head">
+          <div>
+            <p class="dz-date">${esc(dzDayLabel())}</p>
+            <h2 class="dz-title">${headline}</h2>
+            <p class="dz-sub">فقط درخواست‌هایی شمرده می‌شوند که در مرحله‌ی تصمیم شما هستند.</p>
           </div>
+        </header>
+
+        <div class="dz-main">
+          <section aria-label="صف تصمیم‌ها">
+            <div class="dz-ledger-head"><span>نوع درخواست</span><span>در انتظار</span></div>
+            <div class="dz-ledger">${ledger.html}</div>
+            <div class="dz-total"><span>جمع</span><span class="dz-leader" aria-hidden="true"></span>${dzNum('total', ledger.total)}</div>
+          </section>
+
+          <aside aria-label="آخرین بارگذاری اکسل">
+            <div class="dz-receipt">
+              <div class="dz-rcpt-head"><b>آخرین بارگذاری اکسل</b><span>${period ? esc(period.label) : '—'}</span></div>
+              <div style="margin-top:6px">${dzReceipt(period)}</div>
+            </div>
+          </aside>
         </div>
-      </div>
-      ${rep ? `<div class="grid g2" style="margin-top:18px;align-items:start">
-        <div class="card"><h2>کارکنان بدون کارکرد ماه (${fnum((rep.missing_work||[]).length)})</h2>${list(rep.missing_work, n => `<li>${esc(n)}</li>`)}</div>
-        <div class="card"><h2>نام‌های نامطابق یا دارای فاصله (${fnum((rep.name_mismatch||[]).length)})</h2>${list(rep.name_mismatch, x => `<li>${esc(x.name)} — <span class="muted">${esc(x.reason)}</span></li>`)}</div>
-        <div class="card"><h2>حساب‌های تکراری (${fnum((rep.duplicates||[]).length)})</h2>${list(rep.duplicates, d => `<li>${esc(d.name)} — ردیف‌ها: ${esc(d.rows.join('، '))} — انتخاب‌شده: ردیف ${esc(d.chosen_row)} (${esc(d.status)})</li>`)}</div>
-        <div class="card"><h2>اطلاعات پرسنلی ناقص (${fnum((rep.personnel_incomplete||[]).length)})</h2>${list(rep.personnel_incomplete, x => `<li>${esc(x.name)} — ردیف ${esc(x.row)}</li>`)}</div>
-        <div class="card"><h2>کد ملی نامعتبر (${fnum((rep.national_invalid||[]).length)})</h2>${list(rep.national_invalid, x => `<li>${esc(x.name)} — مقدار: ${esc(x.raw || '—')}</li>`)}</div>
-        <div class="card"><h2>کد ملی ۰۰۰۰ بدون موبایل (${fnum((rep.zero_national_no_phone||[]).length)})</h2>${list(rep.zero_national_no_phone, n => `<li>${esc(n)}</li>`)}</div>
-      </div>` : ''}`;
+
+        <div class="dz-strip" role="list">
+          <div class="dz-stat" role="listitem" style="--i:0">${dzNum('c_total', total)}<span>کل کارکنان ثبت‌شده</span></div>
+          <div class="dz-stat" role="listitem" style="--i:1">${dzNum('c_active', active)}<span>فعال</span>
+            <div class="dz-share" aria-hidden="true"><i style="--share:${dzPct(active, total)}"></i></div></div>
+          <div class="dz-stat" role="listitem" style="--i:2">${dzNum('c_inactive', c.inactive)}<span>غیرفعال یا خارج از فایل</span></div>
+          <div class="dz-stat${Number(c.incomplete) ? ' is-warn' : ''}" role="listitem" style="--i:3">${dzNum('c_incomplete', c.incomplete)}<span>اطلاعات پرسنلی ناقص</span></div>
+        </div>
+
+        <h2 class="dz-section-title">بازه‌های ماه جاری</h2>
+        <p class="dz-section-sub">نوار هر بازه روی روزهای این ماه نشان داده می‌شود. خط قرمز امروز است.</p>
+        <div class="dz-gantt">${dzWindows(w)}</div>
+
+        ${rep ? `<h2 class="dz-section-title">جزئیات گزارش بارگذاری</h2>${dzDetails(rep)}` : ''}
+      </div>`;
+    dzCountUp(root, first);
   };
+
+  /* داشبورد زنده: هر ۴۵ ثانیه اگر داشبورد باز است، داده‌ها تازه می‌شوند */
+  setInterval(() => {
+    const on = document.querySelector('#menu button.on');
+    if (on && on.dataset.s === 'dashboard' && !document.hidden) loadDashboard();
+  }, 45000);
 
   /* ---------- آپلود (فقط مدیران با دسترسی کامل) ---------- */
   const dz = document.getElementById('dz');
@@ -151,104 +308,6 @@
   }
 
   /* ---------- کارمندان ---------- */
-  /* ---------- ثبت دستی کارمند با قرارداد یکسان با اکسل ---------- */
-  window.openEmployeeCreate = async function () {
-    openModal(`
-      <div class="employee-create-modal" dir="rtl">
-        <header class="ec-head">
-          <div class="ec-head-copy">
-            <span class="ec-eyebrow">مدیریت منابع انسانی <i></i> پرونده پرسنلی</span>
-            <h2>ثبت کارمند جدید</h2>
-            <p>اطلاعات را یک‌بار وارد کنید؛ پرونده با ساختار فعلی اکسل و فیش حقوقی هماهنگ می‌ماند.</p>
-          </div>
-          <div class="ec-head-icon" aria-hidden="true">＋</div>
-        </header>
-
-        <form id="employeeCreateForm" class="ec-form" autocomplete="off">
-          <section class="ec-card">
-            <div class="ec-section-head"><span class="ec-step">۰۱</span><div><h3>اطلاعات هویتی</h3><p>مشخصات اصلی برای تشکیل پرونده کارمند</p></div></div>
-            <div class="ec-grid">
-              <label class="ec-field ec-span-2"><span>نام و نام خانوادگی <b>*</b></span><input name="name" required maxlength="190" placeholder="نام کامل کارمند"></label>
-              <label class="ec-field"><span>کد ملی <b>*</b></span><input name="national_code" required inputmode="numeric" maxlength="10" placeholder="۱۰ رقم"></label>
-              <label class="ec-field"><span>شماره موبایل</span><input name="phone" inputmode="tel" placeholder="09xxxxxxxxx"></label>
-              <label class="ec-field"><span>تاریخ شروع همکاری <b>*</b></span><input name="hire_date" required placeholder="۱۴۰۵/۰۵/۲۷"></label>
-              <label class="ec-field"><span>سه رقم انتهایی کد پرسنلی <b>*</b></span><input name="personnel_suffix" required inputmode="numeric" maxlength="3" placeholder="مثلاً 348"></label>
-            </div>
-            <div class="ec-code-preview">
-              <div><span class="ec-code-label">کد پرسنلی نهایی</span><small>به‌صورت خودکار از تاریخ شروع همکاری و سه رقم انتهایی ساخته می‌شود.</small></div>
-              <input id="employeeCreateCode" readonly placeholder="پس از تکمیل تاریخ و پسوند" aria-label="کد پرسنلی نهایی">
-            </div>
-          </section>
-
-          <section class="ec-card">
-            <div class="ec-section-head"><span class="ec-step">۰۲</span><div><h3>جایگاه سازمانی</h3><p>محل فعالیت و ساختار گزارش‌دهی کارمند</p></div></div>
-            <div class="ec-grid">
-              <label class="ec-field"><span>شعبه <b>*</b></span><input name="branch" required placeholder="مثلاً الزوکو"></label>
-              <label class="ec-field"><span>سکشن / واحد کاری <b>*</b></span><input name="section" required placeholder="مثلاً سالن"></label>
-              <label class="ec-field"><span>عنوان شغلی / پست سازمانی</span><input name="post" placeholder="مثلاً سرپرست سالن"></label>
-              <label class="ec-field"><span>مدیر / سرپرست مستقیم</span><select name="manager_pc" id="employeeManagerSelect"><option value="">بدون مدیر مستقیم</option><option value="" disabled>در حال دریافت فهرست مدیران…</option></select></label>
-            </div>
-          </section>
-
-          <section class="ec-card">
-            <div class="ec-section-head"><span class="ec-step">۰۳</span><div><h3>حقوق و اطلاعات بانکی</h3><p>مبالغ را مطابق واحد و ساختار فایل اکسل وارد کنید؛ تکمیل این بخش اختیاری است.</p></div></div>
-            <div class="ec-grid">
-              <label class="ec-field"><span>حقوق کل ثبت‌شده در پرونده</span><input name="salary" inputmode="numeric" placeholder="مبلغ کل"></label>
-              <label class="ec-field"><span>شماره شبا</span><input name="sheba" dir="ltr" placeholder="IRxxxxxxxxxxxxxxxxxxxxxxxx"></label>
-            </div>
-            <div class="ec-payroll-title">اجزای حقوق مؤثر در محاسبه فیش</div>
-            <div class="ec-payroll-grid">
-              <label class="ec-pay-field"><span>مزد ثابت ماهانه</span><small>مبنای محاسبه مزد ثابت در فیش</small><input name="base_S" inputmode="numeric" placeholder="مبلغ"></label>
-              <label class="ec-pay-field"><span>حق سنوات و یک‌دوم پاداش پایان سال</span><small>مبلغ ثبت‌شده در جزء سنوات</small><input name="base_T" inputmode="numeric" placeholder="مبلغ"></label>
-              <label class="ec-pay-field"><span>حق مسکن و بن کارگری</span><small>در فیش در یک ردیف محاسبه می‌شود</small><input name="base_U" inputmode="numeric" placeholder="مبلغ"></label>
-              <label class="ec-pay-field"><span>حق تأهل و اولاد</span><small>مجموع مبلغ این ردیف</small><input name="base_V" inputmode="numeric" placeholder="مبلغ"></label>
-              <label class="ec-pay-field"><span>اضافه‌کار، شب‌کاری و تعطیل‌کاری – بخش اول</span><small>به‌همراه بخش دوم در یک ردیف فیش جمع می‌شود</small><input name="base_W" inputmode="numeric" placeholder="مبلغ بخش اول"></label>
-              <label class="ec-pay-field"><span>اضافه‌کار، شب‌کاری و تعطیل‌کاری – بخش دوم</span><small>مقدار ستون AD اکسل؛ با بخش اول جمع می‌شود</small><input name="base_AD" inputmode="numeric" placeholder="مبلغ بخش دوم"></label>
-            </div>
-            <div class="ec-payroll-foot"><span>ⓘ</span><p>نام‌ها بر اساس عنوان ردیف‌های فیش حقوقی تنظیم شده‌اند. دو جزء اضافه‌کار در محاسبه فیش با هم جمع می‌شوند. فیلد خالی به‌معنای صفر قطعی نیست و در همگام‌سازی بعدی اکسل قابل تکمیل خواهد بود.</p></div>
-          </section>
-
-          <footer class="ec-footer">
-            <div class="ec-required-note"><b>*</b> فیلدهای ضروری باید تکمیل شوند.</div>
-            <div class="ec-actions"><button class="btn ghost" type="button" onclick="closeModal()">انصراف</button><button class="btn ec-submit" type="submit" id="employeeCreateSubmit"><span>✓</span> ثبت کارمند</button></div>
-          </footer>
-        </form>
-      </div>`);
-    const form=document.getElementById('employeeCreateForm');
-    const updateCode=()=>{
-      const fd=new FormData(form), raw=String(fd.get('hire_date')||'').replace(/[\/\-.]/g,'').replace(/[۰-۹]/g,ch=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(ch)).replace(/[٠-٩]/g,ch=>'٠١٢٣٤٥٦٧٨٩'.indexOf(ch));
-      const suffix=String(fd.get('personnel_suffix')||'').replace(/[۰-۹]/g,ch=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(ch)).replace(/[٠-٩]/g,ch=>'٠١٢٣٤٥٦٧٨٩'.indexOf(ch)).replace(/\D/g,'').padStart(3,'0').slice(-3);
-      const out=document.getElementById('employeeCreateCode');
-      if(raw.length===8 && suffix.length===3){
-        const year=Number(raw.slice(0,4)), code=(year>=1400&&year<=1499?String(year-1400).padStart(2,'0')+raw.slice(4):raw);
-        out.value=code+suffix;
-      } else out.value='';
-    };
-    const managerSelect=document.getElementById('employeeManagerSelect');
-    if(managerSelect){
-      const managerResult=await api('admin','employee_supervisors');
-      if(managerResult.ok){
-        managerSelect.innerHTML='<option value="">بدون مدیر مستقیم</option>'+managerResult.supervisors.map(person=>{
-          const label=[person.name,person.role_label||person.post,person.personnel_code].filter(Boolean).join(' · ');
-          return '<option value="'+String(person.personnel_code).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+label.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</option>';
-        }).join('');
-        if(!managerResult.supervisors.length) managerSelect.innerHTML='<option value="">مدیر یا سرپرست فعالی یافت نشد</option>';
-      } else {
-        managerSelect.innerHTML='<option value="">بارگذاری فهرست ناموفق بود</option>';
-        toast(managerResult.message||'فهرست مدیران دریافت نشد.','bad');
-      }
-    }
-    form.addEventListener('input',updateCode);
-    form.addEventListener('submit',async ev=>{
-      ev.preventDefault();
-      const btn=document.getElementById('employeeCreateSubmit');btn.disabled=true;btn.innerHTML='<span>…</span> در حال ثبت';
-      const data=Object.fromEntries(new FormData(form).entries());
-      const r=await api('admin','employee_create',data);
-      if(!r.ok){toast(r.message||'ثبت کارمند انجام نشد.','bad');btn.disabled=false;btn.innerHTML='<span>✓</span> ثبت کارمند';return;}
-      closeModal();toast(r.message+' کد پرسنلی: '+r.personnel_code,'ok');loadEmployees();if(typeof loadDashboard==='function')loadDashboard();
-    });
-  };
-
   window.loadEmployees = async function () {
     const sectionSelect = document.getElementById('esSection');
     const selectedSection = sectionSelect ? sectionSelect.value : '';
@@ -294,6 +353,7 @@
   window._spCb = null;
   window.pickEmployee = function (cb, opts = {}) {
     window._spCb = cb;
+    window._spFilter = opts.filter || 'active';
     openModal(`<h2>${esc(opts.title || 'انتخاب کارمند')}</h2>
       <input id="spq" placeholder="جستجوی نام یا کد پرسنلی" autocomplete="off">
       <div id="spRes" style="margin-top:12px;max-height:50vh;overflow:auto"></div>
@@ -305,7 +365,7 @@
     spSearch('');
   };
   window.spSearch = async function (q) {
-    const r = await api('admin', 'employees', { q, filter: 'active' });
+    const r = await api('admin', 'employees', { q, filter: window._spFilter || 'active' });
     const box = document.getElementById('spRes');
     if (!box) return;
     if (!r.ok) { box.innerHTML = `<div class="alert">${esc(r.message)}</div>`; return; }
@@ -663,8 +723,16 @@
     if (r.approval_flows && IS_ADMIN) {
       window.renderApprovalFlows(r.approval_flows);
     }
+    if (r.penalty_settings && IS_ADMIN) {
+      window.renderPenaltySettings(r.penalty_settings);
+    }
     if (r.promo_mode && IS_ADMIN) {
       document.querySelectorAll('#promoModeForm input[name=mode]').forEach(i => { i.checked = i.value === r.promo_mode; });
+    }
+    if (r.request_sources && IS_ADMIN) {
+      ['advance', 'loan'].forEach(k => {
+        document.querySelectorAll(`#requestSourceForm input[name=${k}_src]`).forEach(i => { i.checked = i.value === r.request_sources[k]; });
+      });
     }
     if (r.rules && IS_ADMIN) {
       const f = document.getElementById('rulesForm');
@@ -692,6 +760,13 @@
     document.getElementById('rulesHint').textContent = r.ok ? 'ذخیره شد؛ از این لحظه برای همه‌ی کارکنان اعمال می‌شود.' : '';
     if (r.ok) loadWindows();
   };
+  window.saveRequestSources = async function (ev) {
+    ev.preventDefault();
+    const a = ev.target.querySelector('input[name=advance_src]:checked');
+    const l = ev.target.querySelector('input[name=loan_src]:checked');
+    const r = await api('admin', 'request_source_save', { advance: a ? a.value : '', loan: l ? l.value : '' });
+    toast(r.message, r.ok ? 'ok' : 'bad');
+  };
   window.savePromoMode = async function (ev) {
     ev.preventDefault();
     const sel = ev.target.querySelector('input[name=mode]:checked');
@@ -703,6 +778,7 @@
     advance: { label: 'مساعده', icon: 'هـ' },
     loan: { label: 'وام', icon: 'و' },
     promotion: { label: 'ارتقای شغلی', icon: 'ا' },
+    penalty: { label: 'جریمه', icon: 'ج' },
   };
   const FLOW_LEVELS = [
     { key: 'direct', label: 'سوپروایزر / سرپرست مستقیم', short: 'سرپرست مستقیم' },
@@ -785,21 +861,59 @@
     const pending = !!x.can_decide;
     const finalRej = x.stage === 'admin' && x.to_admin_decision === 'reject';
     const approvedByGeneral = x.stage === 'admin' && x.to_admin_decision === 'approve';
+    const relink = (window.IS_ADMIN && x.orphan) ? `<button class="btn sm" onclick="relinkAdvance(${x.id})">اتصال به کارمند</button>` : '';
     const btns = approvedByGeneral
       ? `<button class="btn sm" onclick="decideAdvance(${x.id})">ثبت نهایی</button>`
       : finalRej
       ? `<button class="btn sm danger" onclick="rejectAdvance(${x.id})">ثبت رد نهایی</button>`
       : `<button class="btn sm" onclick="decideAdvance(${x.id})">${x.stage === 'admin' ? 'ثبت نهایی' : 'تأیید'}</button><button class="btn sm danger" onclick="rejectAdvance(${x.id})">رد</button>`;
-    return `<div class="row">${pending ? btns : ''}` +
+    return `<div class="row">${relink}${pending ? btns : ''}` +
       `<a class="btn sm ghost" target="_blank" href="request_report.php?type=advance&mode=form&id=${x.id}">فرم چاپی درخواست</a>` +
+      (window.IS_ADMIN && x.stage === 'final' && x.status === 'تایید شده' ? `<button class="btn sm ghost" onclick="editAdvance(${x.id})">ویرایش</button>` : '') +
       (window.IS_ADMIN ? `<button class="btn sm danger" onclick="deleteAdvance(${x.id})">حذف</button>` : '') + `</div>`;
   };
-  window.deleteAdvance = async function (id) {
+  window.relinkAdvance = function (id) {
     const x = (window._adv || []).find(v => v.id === id) || {};
-    if (!confirm(`درخواست ${x.tracking || ''} ${x.name ? '(' + x.name + ')' : ''} برای همیشه حذف شود؟`)) return;
-    const r = await api('admin', 'advance_delete', { id });
+    pickEmployee(async (e) => {
+      if (!e) return;
+      const r = await api('admin', 'advance_relink', { id, employee_id: e.id });
+      toast(r.message || (r.ok ? 'متصل شد' : 'خطا'), r.ok ? 'ok' : 'bad');
+      if (r.ok) loadAdvances();
+    }, { title: `اتصال «${x.name || 'درخواست'}» به کارمند`, filter: 'all' });
+  };
+  window.deleteRequest = async function (type, id) {
+    const list = type === 'advance' ? (window._adv || []) : type === 'leave' ? (window._leaves || []) : (window._pro || []);
+    const x = list.find(v => Number(v.id) === Number(id)) || {};
+    if (!confirm(`درخواست ${x.tracking || ''} ${x.name ? '(' + x.name + ')' : ''} برای همیشه حذف شود؟\nاین درخواست از پرونده‌ی پرسنلی کارمند هم پاک می‌شود.`)) return;
+    const r = await api('admin', 'request_delete', { type, id });
     toast(r.message || (r.ok ? 'حذف شد' : 'خطا'), r.ok ? 'ok' : 'bad');
-    if (r.ok) loadAdvances();
+    if (!r.ok) return;
+    if (type === 'advance') loadAdvances();
+    else if (type === 'leave') loadLeaves();
+    else loadPromotions();
+  };
+  window.deleteAdvance = function (id) { return deleteRequest('advance', id); };
+  window.editAdvance = function (id) {
+    const x = (window._adv || []).find(v => Number(v.id) === Number(id)) || {};
+    const isLoan = x.kind === 'loan';
+    openModal(`<h2>ویرایش ${isLoan ? 'وام' : 'مساعده'}</h2>
+      <p class="muted">${esc(x.name || '')} — <span class="ltr">${esc(x.tracking || '')}</span></p>
+      <p class="hint">تا وقتی قسطی از فیش کسر نشده، مبلغ تأییدی و تعداد اقساط قابل تغییرند.</p>
+      <form class="stack" onsubmit="submitEditAdvance(event, ${id})">
+        <label>مبلغ تأییدی (ریال، حداکثر ${groupDigits(String(x.amount || 0))})<input name="approved" class="ltr" inputmode="numeric" autocomplete="off" oninput="this.value=groupDigits(this.value)" value="${groupDigits(String(x.approved_amount || x.amount || 0))}"></label>
+        ${isLoan ? `<label>تعداد اقساط (۱ تا ۶۰)<input name="installments" class="ltr" inputmode="numeric" value="${x.installments || 1}"></label>` : ''}
+        <label>یادداشت (اختیاری)<input name="note"></label>
+        <div class="row"><button class="btn" type="submit">ذخیره‌ی تغییرات</button><button class="btn ghost" type="button" onclick="closeModal()">انصراف</button></div>
+      </form>`);
+  };
+  window.submitEditAdvance = async function (ev, id) {
+    ev.preventDefault();
+    const f = ev.target;
+    const data = { id, approved: toEnDigits(f.approved.value).replace(/\D/g, ''), note: f.note.value };
+    if (f.installments) data.installments = toEnDigits(f.installments.value).replace(/\D/g, '');
+    const r = await api('admin', 'advance_edit', data);
+    toast(r.message || (r.ok ? 'ذخیره شد' : 'خطا'), r.ok ? 'ok' : 'bad');
+    if (r.ok) { closeModal(); loadAdvances(); }
   };
   const requestReportQuery = (values, reportType) => {
     const p = new URLSearchParams();
@@ -825,6 +939,7 @@
       status: document.getElementById('advStatus').value,
       kind: document.getElementById('advKind').value,
       q: document.getElementById('advQ')?.value || '',
+      orphan: document.getElementById('advOrphan')?.checked ? '1' : '',
       from: document.getElementById('advFrom')?.value || '',
       to: document.getElementById('advTo')?.value || ''
     };
@@ -834,12 +949,22 @@
     updateRequestReportLinks('adv', 'advance', filter);
     document.getElementById('atable').innerHTML = `<tr><th>کد</th><th>نوع</th><th>تاریخ</th><th>نام</th><th>کد پرسنلی</th><th>شبا</th><th>درخواستی</th><th>تأییدی</th><th>وضعیت</th><th>عملیات</th></tr>` +
       (r.requests.length ? r.requests.map(x => `<tr>
-        <td class="ltr">${esc(x.tracking)}</td><td><span class="badge ${x.kind === 'loan' ? 'b-info' : 'b-gray'}">${x.kind === 'loan' ? 'وام' : 'مساعده'}</span></td><td>${esc(x.jdate)}</td><td>${esc(x.name)}</td>
-        <td class="ltr">${esc(x.personnel_code)}</td><td class="ltr" style="font-size:.8rem">${esc(x.sheba)}</td>
+        <td class="ltr">${esc(x.tracking)}</td><td><span class="badge ${x.kind === 'loan' ? 'b-info' : 'b-gray'}">${x.kind === 'loan' ? 'وام' : 'مساعده'}</span></td><td>${esc(x.jdate)}</td><td>${esc(x.name)}${x.post ? `<div class="hint">${esc(x.post)}</div>` : ''}</td>
+        <td class="ltr">${esc(x.personnel_code)}${x.orphan ? '<div class="hint"><span class="badge b-bad">بدون کارمند متصل</span></div>' : ''}</td><td style="font-size:.8rem"><div class="ltr">${esc(x.sheba)}</div>${x.sheba_owner ? `<div class="hint">${esc(x.sheba_owner)}</div>` : ''}</td>
         <td class="ltr">${money(x.amount)}</td><td class="ltr">${x.approved_amount ? money(x.approved_amount) : '—'}</td>
         <td><span class="badge ${x.stage === 'final' ? 'b-ok' : (adv[x.status] || 'b-gray')}">${x.stage === 'final' ? 'تأیید نهایی' : esc(x.status)}</span>${x.stage === 'final' && x.to_admin_decision === 'notified' ? '<div class="hint">منابع انسانی مطلع شد · در پرونده پرسنلی ثبت شد</div>' : ''}${x.status === 'در انتظار بررسی' ? `<div class="hint">مرحله: ${stage[x.stage] || ''}</div>` : ''}${x.note ? `<div class="hint">${esc(x.note)}</div>` : ''}</td>
         <td>${advActions(x)}</td></tr>`).join('')
         : '<tr><td colspan="10" class="empty">درخواستی با این فیلترها پیدا نشد.</td></tr>');
+  };
+  /* قالب‌بندی مبلغ: ارقام فارسی/عربی به لاتین تبدیل و هر سه رقم با ویرگول جدا می‌شود */
+  window.toEnDigits = function (s) {
+    return String(s ?? '')
+      .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+      .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+  };
+  window.groupDigits = function (s) {
+    const d = toEnDigits(s).replace(/\D/g, '');
+    return d.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
   window.decideAdvance = function (id) {
     const x = (window._adv || []).find(v => v.id === id) || { amount: 0, name: '', stage: '' };
@@ -847,7 +972,9 @@
     const hasAmount = x.stage === 'general' || (x.stage === 'admin' && x.to_admin_decision === 'approve');
     const shownAmount = x.stage === 'admin' && x.approved_amount ? x.approved_amount : amount;
     const amountField = hasAmount
-      ? `<label>مبلغ تأییدی (ریال، حداکثر همان مبلغ درخواستی)<input name="approved" class="ltr" value="${shownAmount}"></label>` : '';
+      ? `<label>مبلغ تأییدی (ریال، حداکثر ${groupDigits(String(amount))})<input name="approved" class="ltr" inputmode="numeric" autocomplete="off" oninput="this.value=groupDigits(this.value)" value="${groupDigits(String(shownAmount))}"></label>`
+        + (x.kind === 'loan' ? `<label>تعداد اقساط (کسر ماهانه از فیش، ۱ تا ۶۰)<input name="installments" class="ltr" inputmode="numeric" value="${x.installments && x.installments > 1 ? x.installments : 12}"></label>` : '')
+      : '';
     const hint = x.stage === 'admin' ? 'ثبت نهایی منابع انسانی؛ پس از تأیید، به کارمند اعلام می‌شود.'
       : x.stage === 'general' ? 'با تأیید شما درخواست نهایی می‌شود؛ منابع انسانی مطلع و نتیجه در پرونده پرسنلی ثبت خواهد شد.'
       : 'پس از تأیید شما، درخواست برای مدیر ارشد ارسال می‌شود.';
@@ -863,7 +990,16 @@
     ev.preventDefault();
     const f = ev.target;
     const data = { id, decision: 'approve', note: f.note.value };
-    if (f.approved) data.approved = f.approved.value.replace(/[,\s]/g, '');
+    if (f.approved) {
+      const v = toEnDigits(f.approved.value).replace(/\D/g, '');
+      if (!v || Number(v) <= 0) return toast('مبلغ تأییدی را وارد کنید.', 'bad');
+      data.approved = v;
+    }
+    if (f.installments) {
+      const n = toEnDigits(f.installments.value).replace(/\D/g, '');
+      if (!n || Number(n) < 1 || Number(n) > 60) return toast('تعداد اقساط باید بین ۱ و ۶۰ باشد.', 'bad');
+      data.installments = n;
+    }
     const r = await api('admin', 'advance_decide', data);
     toast(r.ok ? 'تأیید شد' : r.message, r.ok ? 'ok' : 'bad');
     if (r.ok) { closeModal(); loadAdvances(); }
@@ -923,7 +1059,7 @@
         ${leaveHistoryItem('وضعیت منابع انسانی', x.to_admin_decision === 'approve' ? 'تأیید نهایی ثبت شد' : (x.to_admin_decision === 'reject' ? 'رد برای ثبت نهایی' : (x.to_admin_decision === 'notified' ? 'از تأیید نهایی مطلع شد' : '')), x.to_admin_decision ? '' : 'pending')}
       </div>
       ${x.reject_reason ? `<div class="leave-reason" style="background:#fff5f5;border-color:#fecaca"><small style="color:#b91c1c">دلیل رد ثبت‌شده</small><p>${esc(x.reject_reason)}</p></div>` : ''}
-      <footer class="leave-actions"><div class="row">${actions}</div><div class="row"><a class="btn sm ghost" target="_blank" href="request_report.php?type=leave&mode=form&id=${x.id}">فرم چاپی درخواست</a></div></footer>
+      <footer class="leave-actions"><div class="row">${actions}${window.IS_ADMIN ? `<button class="btn sm danger" onclick="deleteRequest('leave', ${x.id})">حذف درخواست</button>` : ''}</div><div class="row"><a class="btn sm ghost" target="_blank" href="request_report.php?type=leave&mode=form&id=${x.id}">فرم چاپی درخواست</a></div></footer>
     </article>`;
   };
   window.loadLeaves = async function () {
@@ -1141,9 +1277,11 @@
   window.onNotified = function () {
     const on = document.querySelector('#menu button.on');
     const name = on && on.dataset.s;
+    if (name === 'dashboard') { loadDashboard(); return; }
     if (name === 'promotions') loadPromotions();
     else if (name === 'advances') loadAdvances();
     else if (name === 'leaves') loadLeaves();
+    else if (name === 'penalties') loadPenalties();
   };
 
   /* ---------- مدیران و تنظیمات ---------- */
@@ -1205,4 +1343,205 @@
       if (field) field.addEventListener('keydown', (e) => { if (e.key === 'Enter') fn(); });
     });
   });
+})();
+
+/* ---------- جریمه‌های پرسنل ---------- */
+(function () {
+  const penStage = { direct: 'نزد مدیر مستقیم', general: 'نزد مدیر ارشد', admin: 'نزد منابع انسانی', final: 'تأیید نهایی', rejected: 'رد یا لغو شده' };
+  const penCls = { direct: 'b-warn', general: 'b-info', admin: 'b-gray', final: 'b-ok', rejected: 'b-bad' };
+  let penTypes = [];
+  let penAmounts = [];
+
+  const pad = (n) => String(n).padStart(2, '0');
+  /* امروز به شمسی از همان تقویم پروژه (JDate) با نمایش نام روز و تاریخ کامل */
+  function todayJalali() {
+    const now = new Date();
+    let y, m, d;
+    if (window.JDate) { [y, m, d] = window.JDate.toJ(now); }
+    const key = (y && m && d) ? `${y}/${pad(m)}/${pad(d)}` : '';
+    let label = key;
+    try {
+      label = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(now);
+    } catch (e) { /* مرورگر بدون تقویم فارسی: همان کلید عددی نمایش داده می‌شود */ }
+    return { key, label };
+  }
+
+  function penStatus(x) {
+    if (x.stage === 'rejected' && x.to_admin_decision === 'cancelled') return 'لغو شده';
+    if (x.stage === 'admin' && x.to_admin_decision === 'reject') return 'رد شده؛ منتظر ثبت نهایی';
+    if (x.stage === 'admin' && x.to_admin_decision === 'approve') return 'تأیید شده؛ منتظر ثبت نهایی';
+    return penStage[x.stage] || x.stage;
+  }
+
+  function penRow(x) {
+    const deduct = x.stage !== 'final' ? ''
+      : (x.deducted_period_id ? '<div class="hint">از فیش کسر شده</div>' : `<div class="hint">کسر از فیش ${esc(x.deduct_label)}</div>`);
+    const btns = [
+      x.can_decide ? `<button class="btn sm" onclick="penDecide(${x.id},'approve')">${x.stage === 'admin' ? 'ثبت نهایی' : 'تأیید'}</button><button class="btn sm danger" onclick="penDecide(${x.id},'reject')">رد</button>` : '',
+      x.can_cancel ? `<button class="btn sm danger" onclick="penCancel(${x.id})">لغو</button>` : '',
+    ].join('');
+    return `<tr>
+      <td class="ltr">${esc(x.tracking)}</td>
+      <td>${esc(x.name)}<div class="hint ltr">${esc(x.personnel_code)}</div></td>
+      <td>${esc(x.type_title)}<div class="hint">${esc(x.note)}</div></td>
+      <td class="ltr">${money(x.amount)}</td>
+      <td class="ltr">${esc(x.jdate)}</td>
+      <td>${esc(x.created_by)}</td>
+      <td><span class="badge ${penCls[x.stage] || 'b-gray'}">${esc(penStatus(x))}</span>${deduct}</td>
+      <td><div class="row">${btns || '<span class="hint">—</span>'}</div></td>
+    </tr>`;
+  }
+
+  window.loadPenalties = async function () {
+    const filter = { stage: document.getElementById('penStage').value, q: document.getElementById('penQ').value || '' };
+    const r = await api('admin', 'penalties', { filter });
+    if (!r.ok) return toast(r.message, 'bad');
+    penTypes = r.types || [];
+    penAmounts = r.amounts || [];
+    document.getElementById('pentable').innerHTML =
+      `<tr><th>کد</th><th>کارمند</th><th>نوع و توضیح</th><th>مبلغ (ریال)</th><th>تاریخ جریمه</th><th>ثبت‌کننده</th><th>وضعیت</th><th>عملیات</th></tr>` +
+      (r.requests.length ? r.requests.map(penRow).join('')
+        : '<tr><td colspan="8" class="empty">جریمه‌ای با این فیلترها پیدا نشد.</td></tr>');
+  };
+
+  window.openPenaltyForm = async function () {
+    if (!penTypes.length || !penAmounts.length) await loadPenalties();
+    if (!penTypes.length) return toast('ابتدا از «مدیران و تنظیمات» یک نوع جریمه تعریف کنید.', 'bad');
+    if (!penAmounts.length) return toast('ابتدا از «مدیران و تنظیمات» یک مبلغ برای جریمه تعریف کنید.', 'bad');
+    pickEmployee(emp => { if (emp) showPenaltyForm(emp); }, { title: 'انتخاب کارمند برای ثبت جریمه', filter: 'all' });
+  };
+
+  function showPenaltyForm(emp) {
+    const today = todayJalali();
+    openModal(`<h2>ثبت جریمه</h2>
+      <p class="muted">${esc(emp.name)} — <span class="ltr">${esc(emp.personnel_code || '')}</span></p>
+      <form class="stack" onsubmit="submitPenalty(event, ${Number(emp.id)})">
+        <label>نوع جریمه<select name="type_id" required>${penTypes.map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('')}</select></label>
+        <label>مبلغ جریمه<select name="amount_id" required>${penAmounts.map(a => `<option value="${a.id}">${money(a.amount)} ریال</option>`).join('')}</select></label>
+        <label>تاریخ جریمه<input name="jdate" class="ltr" data-jdate required readonly value="${esc(today.key)}" placeholder="1405/07/20"></label>
+        <div class="hint">امروز: <b>${esc(today.label)}</b> · تاریخ را از تقویم انتخاب کنید؛ تاریخ بعد از امروز مجاز نیست.</div>
+        <label>توضیح جریمه<textarea name="note" rows="3" maxlength="500" required placeholder="شرح دلیل جریمه"></textarea></label>
+        <div class="row"><button class="btn" type="submit">ثبت جریمه</button><button class="btn ghost" type="button" onclick="closeModal()">انصراف</button></div>
+      </form>`);
+  }
+
+  window.submitPenalty = async function (ev, empId) {
+    ev.preventDefault();
+    const f = ev.target;
+    const note = f.note.value.trim();
+    if (!note) return toast('توضیح جریمه را بنویسید.', 'bad');
+    if (!f.jdate.value) return toast('تاریخ جریمه را از تقویم انتخاب کنید.', 'bad');
+    const r = await api('admin', 'penalty_create', {
+      employee_id: empId,
+      type_id: Number(f.type_id.value),
+      amount_id: Number(f.amount_id.value),
+      jdate: f.jdate.value,
+      note,
+    });
+    toast(r.message || (r.ok ? 'ثبت شد' : 'خطا'), r.ok ? 'ok' : 'bad');
+    if (r.ok) { closeModal(); loadPenalties(); }
+  };
+
+  window.penDecide = async function (id, decision) {
+    let note = '';
+    if (decision === 'reject') {
+      note = prompt('دلیل رد جریمه را بنویسید:');
+      if (note === null) return;
+      if (!note.trim()) return toast('برای رد جریمه، دلیل را بنویسید.', 'bad');
+    } else if (!confirm('این جریمه تأیید شود؟')) {
+      return;
+    }
+    const r = await api('admin', 'penalty_decide', { id, decision, note });
+    toast(r.message || (r.ok ? 'ثبت شد' : 'خطا'), r.ok ? 'ok' : 'bad');
+    if (r.ok) loadPenalties();
+  };
+
+  window.penCancel = async function (id) {
+    const note = prompt('دلیل لغو جریمه را بنویسید (پس از لغو از فیش کسر نمی‌شود):');
+    if (note === null) return;
+    if (!note.trim()) return toast('دلیل لغو را بنویسید.', 'bad');
+    const r = await api('admin', 'penalty_cancel', { id, note });
+    toast(r.message || (r.ok ? 'لغو شد' : 'خطا'), r.ok ? 'ok' : 'bad');
+    if (r.ok) loadPenalties();
+  };
+
+  /* ----- تنظیمات: نوع جریمه، مبلغ‌ها و روش کسر ----- */
+  const toggleBtn = (fn, id, active) => `<button class="btn sm ghost" type="button" onclick="${fn}(${id})">${active ? 'غیرفعال کردن' : 'فعال کردن'}</button>`;
+
+  window.renderPenaltySettings = function (s) {
+    window._penTypesAdmin = s.types || [];
+    window._penAmountsAdmin = s.amounts || [];
+    document.getElementById('penTypes').innerHTML = (s.types && s.types.length)
+      ? `<div style="overflow:auto"><table class="t"><tr><th>نوع جریمه</th><th>وضعیت</th><th>عملیات</th></tr>` +
+        s.types.map(t => `<tr><td>${esc(t.title)}</td>
+          <td><span class="badge ${t.active ? 'b-ok' : 'b-gray'}">${t.active ? 'فعال' : 'غیرفعال'}</span></td>
+          <td><div class="row"><button class="btn sm ghost" type="button" onclick="editPenaltyType(${t.id})">ویرایش</button>${toggleBtn('togglePenaltyType', t.id, t.active)}</div></td></tr>`).join('') + '</table></div>'
+      : '<div class="empty">هنوز نوع جریمه‌ای تعریف نشده است.</div>';
+    document.getElementById('penAmounts').innerHTML = (s.amounts && s.amounts.length)
+      ? `<div style="overflow:auto"><table class="t"><tr><th>مبلغ (ریال)</th><th>وضعیت</th><th>عملیات</th></tr>` +
+        s.amounts.map(a => `<tr><td class="ltr">${money(a.amount)}</td>
+          <td><span class="badge ${a.active ? 'b-ok' : 'b-gray'}">${a.active ? 'فعال' : 'غیرفعال'}</span></td>
+          <td><div class="row"><button class="btn sm ghost" type="button" onclick="editPenaltyAmount(${a.id})">ویرایش</button>${toggleBtn('togglePenaltyAmount', a.id, a.active)}</div></td></tr>`).join('') + '</table></div>'
+      : '<div class="empty">هنوز مبلغی برای جریمه تعریف نشده است.</div>';
+    document.querySelectorAll('#penSourceForm input[name=penalty_src]').forEach(i => { i.checked = i.value === s.source; });
+  };
+
+  window.editPenaltyType = function (id) {
+    const t = (window._penTypesAdmin || []).find(x => Number(x.id) === Number(id));
+    if (!t) return;
+    const f = document.getElementById('penTypeForm');
+    f.pt_id.value = t.id;
+    f.title.value = t.title;
+    f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+  window.resetPenaltyTypeForm = function () {
+    const f = document.getElementById('penTypeForm');
+    f.reset();
+    f.pt_id.value = '0';
+  };
+  window.savePenaltyType = async function (ev) {
+    ev.preventDefault();
+    const f = ev.target;
+    const r = await api('admin', 'penalty_type_save', { id: f.pt_id.value, title: f.title.value });
+    toast(r.message || (r.ok ? 'ذخیره شد' : 'خطا'), r.ok ? 'ok' : 'bad');
+    if (r.ok) { resetPenaltyTypeForm(); loadWindows(); }
+  };
+  window.togglePenaltyType = async function (id) {
+    const r = await api('admin', 'penalty_type_toggle', { id });
+    toast(r.message || (r.ok ? 'انجام شد' : 'خطا'), r.ok ? 'ok' : 'bad');
+    if (r.ok) loadWindows();
+  };
+
+  window.editPenaltyAmount = function (id) {
+    const a = (window._penAmountsAdmin || []).find(x => Number(x.id) === Number(id));
+    if (!a) return;
+    const f = document.getElementById('penAmountForm');
+    f.pa_id.value = a.id;
+    f.amount.value = groupDigits(String(a.amount));
+    f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+  window.resetPenaltyAmountForm = function () {
+    const f = document.getElementById('penAmountForm');
+    f.reset();
+    f.pa_id.value = '0';
+  };
+  window.savePenaltyAmount = async function (ev) {
+    ev.preventDefault();
+    const f = ev.target;
+    const r = await api('admin', 'penalty_amount_save', { id: f.pa_id.value, amount: toEnDigits(f.amount.value).replace(/\D/g, '') });
+    toast(r.message || (r.ok ? 'ذخیره شد' : 'خطا'), r.ok ? 'ok' : 'bad');
+    if (r.ok) { resetPenaltyAmountForm(); loadWindows(); }
+  };
+  window.togglePenaltyAmount = async function (id) {
+    const r = await api('admin', 'penalty_amount_toggle', { id });
+    toast(r.message || (r.ok ? 'انجام شد' : 'خطا'), r.ok ? 'ok' : 'bad');
+    if (r.ok) loadWindows();
+  };
+
+  window.savePenaltySource = async function (ev) {
+    ev.preventDefault();
+    const sel = ev.target.querySelector('input[name=penalty_src]:checked');
+    const r = await api('admin', 'penalty_source_save', { source: sel ? sel.value : '' });
+    toast(r.message || (r.ok ? 'ذخیره شد' : 'خطا'), r.ok ? 'ok' : 'bad');
+  };
 })();

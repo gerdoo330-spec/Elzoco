@@ -205,6 +205,8 @@ function base_record(array $cells, int $row, array $profileHeaderMap = []): arra
         'post_present' => $present(14) && trim((string)$g(14)) !== '',
         'sheba' => ident($g(35)),
         'sheba_present' => $present(35) && ident($g(35)) !== '',
+        'sheba_owner' => preg_replace('/\s+/u', ' ', trim((string)$g(36))),   // AK  نام صاحب حساب
+        'sheba_owner_present' => $present(36) && trim((string)$g(36)) !== '',
         'salary' => (int)round($salary),
         'salary_present' => $salaryPresent,
         'color' => $nameFill,
@@ -733,6 +735,7 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
     // جداول جانبی پیش از تراکنش ساخته می‌شوند؛ CREATE TABLE در MySQL می‌تواند تراکنش را commit کند.
     employee_profiles_ensure();
     employee_history_ensure();
+    fin_schedule_ensure();
 
     // ۴) ذخیره در یک تراکنش؛ هیچ رکورد کارمند یا دوره‌ی قبلی حذف نمی‌شود.
     $pdo = db();
@@ -832,6 +835,7 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
                     $rec['hire_date'] = (string)$existing['hire_date'];
                 }
                 if (!$rec['sheba_present']) $rec['sheba'] = (string)$existing['sheba'];
+                if (!$rec['sheba_owner_present']) $rec['sheba_owner'] = (string)($existing['sheba_owner'] ?? '');
             }
 
             // مبالغ پایه‌ی حقوق و اجزای فرمول فیش نیز به‌صورت ادغامی حفظ می‌شوند.
@@ -892,10 +896,10 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
                 }
                 // کلید پرونده‌ی قبلی حفظ می‌شود تا تمام درخواست‌ها و فیش‌های قدیمی به همین کارمند متصل بمانند.
                 q('UPDATE employees SET personnel_code = ?, personnel_ok = ?, national_code = ?, name = ?, name_key = ?,
-                     phone = ?, post = ?, start_code = ?, hire_date = ?, sheba = ?, salary = ?, color = ?, inactive = ?,
+                     phone = ?, post = ?, start_code = ?, hire_date = ?, sheba = ?, sheba_owner = ?, salary = ?, color = ?, inactive = ?,
                      in_latest = 1, updated_at = NOW() WHERE id = ?', [
                     $rec['personnel'], $rec['personnel_ok'] ? 1 : 0, $rec['national'], $rec['name'], $rec['name_key'],
-                    $rec['phone'], $rec['post'], $rec['start_code'], $rec['hire_date'], $rec['sheba'], $rec['salary'],
+                    $rec['phone'], $rec['post'], $rec['start_code'], $rec['hire_date'], $rec['sheba'], $rec['sheba_owner'], $rec['salary'],
                     $rec['color'], $rec['inactive'] ? 1 : 0, $empId,
                 ]);
                 $report['updated']++;
@@ -913,10 +917,10 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
                     throw new RuntimeException('کلید داخلی پرونده «' . $rec['name'] . '» قبلاً استفاده شده اما پرونده متناظر فعال پیدا نشد؛ برای جلوگیری از ادغام ناخواسته، بارگذاری متوقف شد.');
                 }
                 q('INSERT INTO employees (emp_key, personnel_code, personnel_ok, national_code, name, name_key, phone, post,
-                     start_code, hire_date, sheba, salary, color, inactive, in_latest, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,NOW())', [
+                     start_code, hire_date, sheba, sheba_owner, salary, color, inactive, in_latest, updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,NOW())', [
                     $key, $rec['personnel'], $rec['personnel_ok'] ? 1 : 0, $rec['national'], $rec['name'], $rec['name_key'],
-                    $rec['phone'], $rec['post'], $rec['start_code'], $rec['hire_date'], $rec['sheba'], $rec['salary'],
+                    $rec['phone'], $rec['post'], $rec['start_code'], $rec['hire_date'], $rec['sheba'], $rec['sheba_owner'], $rec['salary'],
                     $rec['color'], $rec['inactive'] ? 1 : 0,
                 ]);
                 $empId = (int)db()->lastInsertId();
@@ -940,6 +944,12 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
             if ($w && array_key_exists('sheba', $oldProfile['manual']['core'] ?? [])) {
                 $w['sheba'] = (string)$oldProfile['manual']['core']['sheba'];
             }
+            // کسر مساعده/وام از سامانه (اگر منبع 'system' باشد) جای ستون‌های اکسل را می‌گیرد
+            $hasWork = $w !== null;
+            $fin = fin_deductions_for_period($empId, $periodId, $year * 12 + $month);
+            if ($fin !== null) {
+                $w = array_merge($w ?? [], $fin);
+            }
             $v = compute_slip($rec['base'], $w);
             $header = [
                 'name' => $rec['name'], 'national' => $rec['national'], 'personnel' => $rec['personnel'],
@@ -959,7 +969,7 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
                 'inactive' => (bool)$rec['inactive'],
                 '_payslip' => [
                     'period_id' => $periodId, 'year' => $year, 'month' => $month,
-                    'has_work' => $w !== null, 'net' => round($v['E20']), 'data' => $data,
+                    'has_work' => $hasWork, 'net' => round($v['E20']), 'data' => $data,
                 ],
             ];
             employee_profile_merge_import($empId, $rec['extra'], $profileBase, $periodId, $fileName, $by, $employeeSnapshot);
@@ -969,9 +979,12 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
                VALUES (?,?,?,?,?,?)
                ON DUPLICATE KEY UPDATE personnel_code = VALUES(personnel_code),
                  has_work = VALUES(has_work), net = VALUES(net), data = VALUES(data)',
-                [$periodId, $empId, $rec['personnel'], $w !== null ? 1 : 0, round($v['E20']),
+                [$periodId, $empId, $rec['personnel'], $hasWork ? 1 : 0, round($v['E20']),
                  json_encode($data, JSON_UNESCAPED_UNICODE)]);
         }
+        // درخواست‌های مساعده/مرخصی/ارتقا هرگز توسط بارگذاری حذف نمی‌شوند؛
+        // فقط اگر به شناسه‌ی کارمندی که دیگر وجود ندارد اشاره کنند، به کارمند فعلی وصل می‌شوند.
+        $report['requests_relinked'] = request_relink_orphans();
         $report['missing_from_file'] = (int)one('SELECT COUNT(*) AS c FROM employees WHERE in_latest = 0')['c'];
         q('UPDATE periods SET report = ? WHERE id = ?', [json_encode($report, JSON_UNESCAPED_UNICODE), $periodId]);
         $pdo->commit();
@@ -979,24 +992,36 @@ function payroll_import(string $path, int $year, int $month, string $fileName, s
         $pdo->rollBack();
         throw $ex;
     }
-    // پس از ثبت موفق دوره، برای کارکنانی که فیش این دوره را دارند اعلان انتشار ثبت می‌شود.
-    // برای جلوگیری از پیام تکراری در بارگذاری مجدد همان دوره، عنوان/دوره قبلاً بررسی می‌شود.
-    try {
-        $noticeTitle = 'فیش حقوقی دوره ' . $year . '/' . str_pad((string)$month, 2, '0', STR_PAD_LEFT) . ' منتشر شد';
-        $published = all('SELECT employee_id FROM payslips WHERE period_id = ? AND has_work = 1', [$periodId]);
-        foreach ($published as $slipRow) {
-            $recipient = 'emp:' . (int)$slipRow['employee_id'];
-            $exists = one('SELECT id FROM notifications WHERE recipient = ? AND kind = ? AND title = ? LIMIT 1',
-                [$recipient, 'payslip', $noticeTitle]);
-            if (!$exists) {
-                notify_emp((int)$slipRow['employee_id'], 'payslip', $noticeTitle,
-                    'فیش حقوقی شما در سامانه ثبت شده است. برای مشاهده وارد بخش فیش حقوقی شوید.', 'ok');
+    return $report + ['period_id' => $periodId];
+}
+
+/**
+ * اتصال مجدد درخواست‌های یتیم (employee_id که در جدول employees وجود ندارد).
+ * کلید اصلی اتصال کد ملی است؛ اگر نبود، کد پرسنلی. هیچ ردیفی حذف نمی‌شود.
+ */
+function request_relink_orphans(): array
+{
+    $result = [];
+    foreach (['advance_requests', 'leave_requests', 'promotion_requests'] as $table) {
+        $orphans = all("SELECT id, national_code, personnel_code FROM $table WHERE employee_id NOT IN (SELECT id FROM employees)");
+        $relinked = 0;
+        foreach ($orphans as $o) {
+            $target = null;
+            $nc = digits((string)($o['national_code'] ?? ''));
+            if ($nc !== '' && $nc !== ZERO_NATIONAL) {
+                $target = one('SELECT id FROM employees WHERE national_code = ? ORDER BY in_latest DESC, inactive ASC, id DESC LIMIT 1', [$nc]);
+            }
+            if (!$target && trim((string)($o['personnel_code'] ?? '')) !== '') {
+                $target = one('SELECT id FROM employees WHERE personnel_code = ? ORDER BY in_latest DESC, id DESC LIMIT 1', [(string)$o['personnel_code']]);
+            }
+            if ($target) {
+                q("UPDATE $table SET employee_id = ? WHERE id = ?", [(int)$target['id'], (int)$o['id']]);
+                $relinked++;
             }
         }
-    } catch (Throwable $noticeError) {
-        error_log('[payslip notification] ' . $noticeError->getMessage());
+        $result[$table] = ['orphans' => count($orphans), 'relinked' => $relinked];
     }
-    return $report + ['period_id' => $periodId];
+    return $result;
 }
 
 /* ---------- ورود و خواندن فیش ---------- */
@@ -1092,30 +1117,14 @@ function payslip_for(int $employeeId, int $periodId): ?array
         return ['period' => ['id' => $periodId, 'label' => period_label($row)], 'has_work' => false,
             'message' => MSG_NO_WORK, 'header' => $data['header'] ?? []];
     }
-    $values = is_array($data['values'] ?? null) ? $data['values'] : [];
-    $amount = static function (string $key) use ($values): float {
-        $value = $values[$key] ?? 0;
-        if (is_string($value)) $value = str_replace([',', '٬', ' '], '', fa_digits_to_en($value));
-        return is_numeric($value) ? (float)$value : 0.0;
-    };
-    $pay = array_map(static fn($label, $code) => ['label' => $label, 'code' => $code, 'amount' => $amount($code)], array_values(SLIP_PAY), array_keys(SLIP_PAY));
-    $ded = array_map(static fn($label, $code) => ['label' => $label, 'code' => $code, 'amount' => $amount($code)], array_values(SLIP_DED), array_keys(SLIP_DED));
-    $gross = $amount('G19');
-    if (abs($gross) < 0.0001) $gross = array_sum(array_column($pay, 'amount'));
-    // M12 is a balance display only and is intentionally excluded from total deductions.
-    $deductions = $amount('M19');
-    if (abs($deductions) < 0.0001) $deductions = array_sum(array_map(static fn($item) => $item['code'] === 'M12' ? 0.0 : $item['amount'], $ded));
-    $net = $amount('E20');
-    if (abs($net) < 0.0001 && abs((float)($row['net'] ?? 0)) >= 0.0001) $net = (float)$row['net'];
-    if (abs($net) < 0.0001 && abs($gross - $deductions) >= 0.0001) $net = $gross - $deductions;
     return [
-        'period' => ['id' => $periodId, 'label' => period_label($row)],
+        'period'   => ['id' => $periodId, 'label' => period_label($row)],
         'has_work' => true,
-        'header' => $data['header'] ?? [],
-        'values' => $values,
-        'pay' => $pay,
-        'ded' => $ded,
-        'totals' => ['pay' => $gross, 'ded' => $deductions, 'net' => $net],
-        'net' => $net,
+        'header'   => $data['header'],
+        'values'   => $data['values'],
+        'pay'      => array_map(fn($l, $c) => ['label' => $l, 'code' => $c, 'amount' => (float)$data['values'][$c]], array_values(SLIP_PAY), array_keys(SLIP_PAY)),
+        'ded'      => array_map(fn($l, $c) => ['label' => $l, 'code' => $c, 'amount' => (float)$data['values'][$c]], array_values(SLIP_DED), array_keys(SLIP_DED)),
+        'totals'   => ['pay' => (float)$data['values']['G19'], 'ded' => (float)$data['values']['M19'],
+            'net' => (float)$data['values']['E20']],
     ];
 }

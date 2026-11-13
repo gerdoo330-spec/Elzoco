@@ -66,3 +66,6 @@
 @media (prefers-reduced-motion:reduce){
   .np-card,.np-card.out,.np-ic svg,.np-ic::after,.np-bar{animation:none!important}
 }
+
+/* یادآوری درخواست‌ها: نارنجی همرنگ سایدبار */
+.np-card.k-reminder{--c1:#f97316;--c2:#ea580c;--c-soft:#fff7ed;--c-ink:#9a3412}

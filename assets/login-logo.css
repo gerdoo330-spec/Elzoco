@@ -1,0 +1,40 @@
+/* =====================================================================
+   صفحه‌ی ورود کارکنان: لوگوی الزوکو به‌جای سکه، با همان انیمیشن‌ها و
+   رفتار CSS سکه‌ی قبلی (ورود از بالا، شناوری، هاله‌ی طلایی، کج‌شدن با ماوس)
+   در نسخه‌ی دسکتاپ و موبایل
+   ===================================================================== */
+
+/* ساختار مشترک: ورود سکه‌مانند + هاله‌ی طلایی پشت لوگو */
+.login-page .lg-stage{position:relative;isolation:isolate;display:flex;justify-content:center;width:100%;margin:0 auto;
+  animation:coinDrop 1.15s cubic-bezier(.2,.8,.3,1) .15s both}
+.login-page .lg-stage::after{content:"";position:absolute;inset:-26px -34px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(232,163,23,.38),rgba(232,163,23,0));
+  z-index:-1;pointer-events:none;animation:glowPulse 3.4s ease-in-out 1.3s infinite}
+.login-page .lg-stage .tilt{position:relative;display:flex;justify-content:center;width:100%;max-width:100%;min-width:0}
+
+/* خود تصویر لوگو: سفید روی پس‌زمینه‌ی سرمه‌ای، شناور مثل سکه */
+.login-page .login-logo,.login-logo{display:block;flex:0 1 auto;height:auto;max-width:100%;min-width:0;margin:0 auto;pointer-events:none;user-select:none;-webkit-user-drag:none;
+  filter:brightness(0) invert(1) drop-shadow(0 10px 16px rgba(0,0,0,.4));
+  animation:lg-float 5.5s ease-in-out 1.4s infinite}
+@keyframes lg-float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(2deg)}}
+
+/* پنل کناری (دسکتاپ) */
+.login-page .auth-aside{align-items:center;text-align:center}
+.login-page .auth-aside .lg-aside{margin:0 0 28px}
+.login-page .auth-aside .login-logo{width:min(260px,100%)}
+
+/* سربرگ کارت (موبایل) */
+.login-page .auth-head .lg-head{margin:0 auto 14px}
+.login-page .auth-head .login-logo{width:min(200px,72vw)}
+
+@media (max-width:899px){
+  /* عنوان «ورود کارکنان» مثل نسخه‌ی دسکتاپ در موبایل هم نمایش داده شود */
+  .login-page .desk-title{display:block;margin:0 0 18px;text-align:center;font-size:1.35rem;color:var(--navy)}
+}
+
+/* لوگو در سربرگ پنل پرسنل (به‌جای سکه) */
+.employee-app .brand .brand-logo{display:block;flex:0 0 auto;width:auto;height:auto;max-width:150px;max-height:28px;
+  filter:brightness(0) invert(1) drop-shadow(0 4px 8px rgba(0,0,0,.3));pointer-events:none;user-select:none;-webkit-user-drag:none}
+@media (max-width:560px){
+  .employee-app .brand .brand-logo{max-width:118px;max-height:22px}
+}

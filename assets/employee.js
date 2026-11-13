@@ -4,7 +4,7 @@
   const advLabel = { 'در انتظار بررسی': 'b-warn', 'تایید شده': 'b-ok', 'رد شده': 'b-bad' };
   const promoLabel = { direct: 'نزد مدیر مستقیم', general: 'نزد مدیر ارشد', admin: 'نزد منابع انسانی', evaluated: 'در حال تصمیم‌گیری مدیر', final: 'تأیید نهایی مدیر ارشد', rejected: 'رد شده' };
   const promoCls = { direct: 'b-warn', general: 'b-info', admin: 'b-gray', evaluated: 'b-info', final: 'b-ok', rejected: 'b-bad' };
-  const PAGES = ['payslip', 'advance', 'loan', 'leave', 'promotion'];
+  const PAGES = ['payslip', 'advance', 'loan', 'leave', 'promotion', 'penalties'];
   const REQ_PAGES = ['advance', 'loan', 'leave', 'promotion'];
   /* مساعده و وام: یک قالب، دو مقصد */
   const FIN = {
@@ -70,6 +70,7 @@
       () => renderFin(r.loan, 'loan'),
       () => renderPromotion(r.promotion),
       () => renderLeave(r.leave),
+      () => renderPenalties(r.penalties),
     ];
     steps.forEach(fn => { try { fn(); } catch (err) { console.error(err); } });
     switchTab(pageFromHash());
@@ -316,6 +317,17 @@
     if (r.requests) renderLeaveList(r.requests);
     if (r.balance) renderLeaveBalance(r.balance);
   };
+
+  /* ---------- جریمه‌های من (فقط جریمه‌های تأییدنهایی‌شده) ---------- */
+  function renderPenalties(rows) {
+    document.getElementById('penBody').innerHTML = rows && rows.length
+      ? `<div class="card" style="overflow:auto"><table class="t"><tr><th>کد پیگیری</th><th>نوع جریمه</th><th>تاریخ</th><th>مبلغ (ریال)</th><th>وضعیت کسر</th><th>توضیح</th></tr>
+        ${rows.map(r => `<tr><td class="ltr">${esc(r.tracking)}</td><td>${esc(r.type_title)}</td><td class="ltr">${esc(r.jdate)}</td>
+        <td class="ltr">${money(r.amount)}</td>
+        <td>${r.deducted ? '<span class="badge b-ok">کسر شده</span>' : `<span class="badge b-warn">کسر از فیش ${esc(r.deduct_label)}</span>`}</td>
+        <td>${esc(r.note || '—')}</td></tr>`).join('')}</table></div>`
+      : '<div class="empty">تاکنون جریمه‌ای برای شما ثبت نشده است.</div>';
+  }
 
   window.logout = async function () {
     await api('employee', 'logout');

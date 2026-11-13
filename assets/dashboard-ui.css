@@ -1,0 +1,211 @@
+/* داشبورد مدیریت — «میز امروز»
+   صف تصمیم‌ها به‌صورت کارت‌های دفتر کل، فیش چاپی آخرین بارگذاری، کارت‌های وضعیت و نوار بازه‌های ماه.
+   حرکت‌ها دو دسته‌اند: یک توالی ورود هنگام نخستین نمایش (کلاس‌های غیر is-steady) و واکنش به کار کاربر.
+   تازه‌سازی‌های بعدی فقط عدد را به‌روز می‌کنند و دوباره انیمیشن ورود اجرا نمی‌کنند. */
+
+.dz {
+  --paper: #E8ECE7;
+  --sheet: #FBFCFA;
+  --ink: #101A17;
+  --rule: #B9C6BE;
+  --accent: #0A5C4B;
+  --alert: #B4441C;
+  --muted: #56655E;
+  --lift: 0 1px 0 rgba(16, 26, 23, .04), 0 8px 18px -14px rgba(16, 26, 23, .45);
+  --lift-hover: 0 2px 0 rgba(16, 26, 23, .04), 0 18px 30px -18px rgba(16, 26, 23, .5);
+  --ease: cubic-bezier(.2, .8, .25, 1);
+  color: var(--ink);
+  line-height: 1.6;
+}
+.dz *, .dz *::before, .dz *::after { box-sizing: border-box; }
+.dz :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+/* ---------- سربرگ ---------- */
+.dz-head {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+  padding: 4px 2px 22px; border-bottom: 1px solid var(--rule);
+}
+.dz-date { margin: 0 0 6px; color: var(--muted); font-size: 14px; font-weight: 600; }
+.dz-title {
+  margin: 0; font-size: clamp(28px, 4vw, 46px); font-weight: 800; line-height: 1.12; letter-spacing: -.015em;
+  font-variant-numeric: tabular-nums;
+}
+.dz-sub { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
+
+/* ---------- ستون اصلی ---------- */
+.dz-main { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 36px; margin-top: 30px; align-items: start; }
+@media (max-width: 900px) { .dz-main { grid-template-columns: 1fr; gap: 28px; } }
+
+/* ---------- صف تصمیم‌ها: هر صف یک کارت ---------- */
+.dz-ledger-head {
+  display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: var(--muted);
+  padding: 0 2px 10px;
+}
+.dz-ledger { display: grid; gap: 10px; }
+.dz-row {
+  display: block; width: 100%; padding: 18px 20px 16px; background: var(--sheet); border: 1px solid transparent;
+  border-radius: 14px; box-shadow: var(--lift); font: inherit; color: inherit; text-align: start; cursor: pointer;
+  transition: transform .28s var(--ease), box-shadow .28s var(--ease), border-color .28s var(--ease);
+}
+.dz-row:hover, .dz-row:focus-visible { transform: translateY(-2px); box-shadow: var(--lift-hover); border-color: var(--rule); }
+.dz-row:active { transform: translateY(0); box-shadow: var(--lift); }
+.dz-row-main { display: grid; grid-template-columns: auto minmax(16px, 1fr) auto; align-items: baseline; gap: 12px; }
+.dz-row-label { font-size: 18px; font-weight: 700; display: inline-flex; align-items: center; }
+.dz-leader { border-bottom: 1px dotted var(--ink); opacity: .3; transform: translateY(-5px); }
+.dz-row-count { font-size: 36px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; min-width: 2ch; text-align: end; }
+.dz-row.is-zero { box-shadow: none; background: transparent; }
+.dz-row.is-zero .dz-row-count { color: var(--rule); }
+.dz-row.is-zero .dz-row-label { color: var(--muted); font-weight: 600; }
+.dz-row.is-zero:hover { transform: none; border-color: transparent; }
+
+.dz-bar { display: block; height: 3px; margin-top: 14px; background: var(--paper); border-radius: 2px; overflow: hidden; }
+.dz-bar i { display: block; height: 100%; width: var(--w, 0%); background: var(--accent); border-radius: 2px; }
+
+.dz-live {
+  position: relative; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); margin-inline-end: 9px; flex: none;
+}
+.dz-live::after {
+  content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--accent);
+  opacity: 0; animation: dz-ping 3s var(--ease) infinite;
+}
+
+/* سرنخ «باز کردن» فقط وقتی کارت فعال شده ظاهر می‌شود */
+.dz-go {
+  display: block; max-height: 0; overflow: hidden; opacity: 0; font-size: 13px; font-weight: 700; color: var(--accent);
+  transition: max-height .3s var(--ease), opacity .25s var(--ease), margin-top .3s var(--ease);
+}
+.dz-row:hover .dz-go, .dz-row:focus-visible .dz-go { max-height: 24px; opacity: 1; margin-top: 10px; }
+
+.dz-total {
+  display: grid; grid-template-columns: auto minmax(16px, 1fr) auto; align-items: baseline; gap: 12px;
+  padding: 16px 4px 0; font-weight: 800;
+}
+.dz-total b { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* ---------- فیش آخرین بارگذاری ---------- */
+.dz-receipt {
+  position: relative; background: var(--sheet); padding: 26px 24px 40px; border-radius: 4px;
+  box-shadow: 0 1px 0 var(--rule), 0 22px 34px -26px rgba(16, 26, 23, .45);
+}
+.dz-receipt::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -9px; height: 9px;
+  background:
+    linear-gradient(-45deg, var(--sheet) 25%, transparent 25%) -6px 0 / 12px 12px,
+    linear-gradient(45deg, var(--sheet) 25%, transparent 25%) -6px 0 / 12px 12px;
+}
+.dz-rcpt-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  padding-bottom: 12px; border-bottom: 1px dashed var(--rule);
+}
+.dz-rcpt-head b { font-size: 17px; font-weight: 800; }
+.dz-rcpt-head span { color: var(--muted); font-size: 14px; font-weight: 600; }
+.dz-rcpt-line { display: grid; grid-template-columns: auto minmax(12px, 1fr) auto; gap: 10px; align-items: baseline; padding: 9px 0; font-size: 15px; }
+.dz-rcpt-line .dz-leader { opacity: .25; }
+.dz-rcpt-line b { font-variant-numeric: tabular-nums; font-weight: 700; }
+.dz-rcpt-line.is-issue b { color: var(--alert); }
+.dz-rcpt-sum {
+  margin-top: 6px; padding-top: 12px; border-top: 2px solid var(--ink);
+  display: flex; justify-content: space-between; align-items: baseline; font-weight: 800; font-size: 16px;
+}
+.dz-rcpt-sum b { font-size: 28px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.dz-rcpt-sum.is-clean b { color: var(--accent); }
+.dz-rcpt-foot { margin: 14px 0 0; color: var(--muted); font-size: 13px; }
+.dz-rcpt-empty { margin: 0; color: var(--muted); font-size: 15px; }
+
+/* ---------- کارت‌های وضعیت کارکنان ---------- */
+.dz-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 30px; }
+.dz-stat {
+  background: var(--sheet); border-radius: 14px; padding: 18px 18px 16px; box-shadow: var(--lift);
+  transition: transform .28s var(--ease), box-shadow .28s var(--ease);
+}
+.dz-stat:hover { transform: translateY(-2px); box-shadow: var(--lift-hover); }
+.dz-stat.is-warn { border-inline-start: 3px solid var(--alert); }
+.dz-stat b { display: block; font-size: 42px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
+.dz-stat.is-warn b { color: var(--alert); }
+.dz-stat > span { display: block; margin-top: 10px; color: var(--muted); font-size: 14px; font-weight: 600; }
+.dz-share { height: 3px; margin-top: 12px; background: var(--paper); border-radius: 2px; overflow: hidden; }
+.dz-share i { display: block; height: 100%; width: var(--share, 0%); background: var(--accent); }
+@media (max-width: 640px) { .dz-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- بازه‌های ماه جاری ---------- */
+.dz-section-title { margin: 42px 0 6px; font-size: 19px; font-weight: 800; }
+.dz-section-sub { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+.dz-gantt { background: var(--sheet); border-radius: 14px; padding: 6px 20px; box-shadow: var(--lift); }
+.dz-gantt-row {
+  display: grid; grid-template-columns: minmax(150px, 220px) minmax(0, 1fr) auto; gap: 18px; align-items: center;
+  padding: 14px 0; border-bottom: 1px dotted var(--rule);
+}
+.dz-gantt-row:last-child { border-bottom: 0; }
+.dz-wlabel { font-weight: 700; font-size: 15px; }
+.dz-wlabel small { display: block; color: var(--muted); font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; }
+.dz-gantt-note { color: var(--muted); font-size: 14px; }
+.dz-wstate { font-size: 13px; font-weight: 700; white-space: nowrap; }
+.dz-wstate.is-open { color: var(--accent); }
+.dz-wstate.is-closed { color: var(--muted); }
+.dz-track {
+  position: relative; height: 28px; border-radius: 6px; overflow: visible;
+  background-color: var(--paper);
+  background-image: repeating-linear-gradient(to left, var(--rule) 0 1px, transparent 1px calc(100% / var(--days, 30)));
+}
+.dz-span {
+  position: absolute; top: 5px; bottom: 5px; border-radius: 4px; background: var(--accent);
+  inset-inline-start: var(--a, 0%); inset-inline-end: var(--b, 0%); transform-origin: right center;
+}
+.dz-span.is-closed { background: var(--rule); }
+.dz-today { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--alert); inset-inline-start: var(--t, 0%); }
+.dz-today::after {
+  content: attr(data-day); position: absolute; top: -20px; transform: translateX(50%);
+  font-size: 12px; font-weight: 800; color: var(--alert); font-variant-numeric: tabular-nums;
+}
+
+/* ---------- جزئیات گزارش: کارت‌های بازشو ---------- */
+.dz-report-grid { display: grid; gap: 12px; align-items: start; }
+@media (min-width: 900px) { .dz-report-grid { grid-template-columns: 1fr 1fr; } }
+.dz-details {
+  background: var(--sheet); border-radius: 14px; padding: 0 20px; box-shadow: var(--lift);
+  transition: box-shadow .28s var(--ease), transform .28s var(--ease);
+}
+.dz-details:hover { transform: translateY(-1px); box-shadow: var(--lift-hover); }
+.dz-details[open] { box-shadow: var(--lift-hover); }
+.dz-details summary {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 0;
+  font-weight: 700; cursor: pointer; list-style: none;
+}
+.dz-details summary::-webkit-details-marker { display: none; }
+.dz-details summary b { font-variant-numeric: tabular-nums; font-weight: 800; }
+.dz-details summary::after { content: "+"; font-size: 20px; font-weight: 300; line-height: 1; color: var(--muted); transition: transform .25s var(--ease); }
+.dz-details[open] summary::after { content: "−"; }
+.dz-details ul { margin: 0 0 16px; padding: 0; list-style: none; color: var(--muted); font-size: 14px; }
+.dz-details li { padding: 7px 0; border-top: 1px dotted var(--rule); }
+.dz-details p { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+
+/* ---------- توالی ورود (فقط نخستین نمایش) ---------- */
+.dz:not(.is-steady) .dz-receipt { animation: dz-print .7s var(--ease) both; }
+.dz:not(.is-steady) .dz-row { animation: dz-rise .6s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
+.dz:not(.is-steady) .dz-bar i { animation: dz-fill 1s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 420ms); }
+.dz:not(.is-steady) .dz-stat { animation: dz-rise .6s var(--ease) both; animation-delay: calc(var(--i, 0) * 80ms + 200ms); }
+.dz:not(.is-steady) .dz-rcpt-line { animation: dz-rise .5s var(--ease) both; animation-delay: calc(var(--i, 0) * 45ms + 520ms); }
+.dz:not(.is-steady) .dz-gantt-row { animation: dz-rise .6s var(--ease) both; animation-delay: calc(var(--i, 0) * 120ms + 460ms); }
+.dz:not(.is-steady) .dz-span { animation: dz-draw .9s var(--ease) both; animation-delay: calc(var(--i, 0) * 120ms + 640ms); }
+.dz:not(.is-steady) .dz-today { animation: dz-appear .4s var(--ease) both 1.4s; }
+.dz:not(.is-steady) .dz-details { animation: dz-rise .6s var(--ease) both; animation-delay: calc(var(--i, 0) * 80ms + 300ms); }
+
+@keyframes dz-print { from { transform: translateY(-16px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes dz-rise { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes dz-fill { from { width: 0; } to { width: var(--w, 0%); } }
+@keyframes dz-draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes dz-appear { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dz-ping { 0% { transform: scale(.7); opacity: .55; } 70%, 100% { transform: scale(1.9); opacity: 0; } }
+
+/* حرکت کم: همه‌ی انیمیشن‌ها و گذارها حذف می‌شوند؛ اعداد و وضعیت‌ها همان‌طور می‌مانند */
+@media (prefers-reduced-motion: reduce) {
+  .dz *, .dz *::before, .dz *::after { animation: none !important; transition: none !important; }
+}
+
+@media (max-width: 640px) {
+  .dz-gantt-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 10px; }
+  .dz-gantt-row > .dz-wstate { grid-row: 1; grid-column: 2; }
+  .dz-gantt-row > .dz-track { grid-row: 2; grid-column: 1 / -1; }
+  .dz-gantt-row > .dz-gantt-note { grid-row: 1; grid-column: 2; }
+}

@@ -59,7 +59,7 @@ try {
                 'periods' => $fullAccess ? array_map(fn($p) => ['id' => (int)$p['id'], 'label' => period_label($p),
                     'uploaded_at' => $p['uploaded_at']], all('SELECT * FROM periods ORDER BY year DESC, month DESC LIMIT 24')) : [],
                 'windows' => ['advance' => advance_window('advance'), 'loan' => advance_window('loan'), 'payslip' => payslip_window()],
-                'rules' => fin_rules(), 'promo_mode' => $fullAccess ? promo_apply_mode() : null, 'approval_flows' => $fullAccess ? approval_flows() : []]);
+                'rules' => fin_rules(), 'promo_mode' => $fullAccess ? promo_apply_mode() : null, 'request_sources' => $fullAccess ? fin_sources() : null, 'approval_flows' => $fullAccess ? approval_flows() : [], 'penalty_settings' => $fullAccess ? penalty_settings() : null]);
         }
 
         case 'promo_mode_save': {
@@ -171,31 +171,6 @@ try {
             json_out(['ok' => true, 'dossier' => $dossier]);
         }
 
-        case 'employee_supervisors': {
-            require_admin_json('admin');
-            // مدیران و سرپرستان فعال بر اساس عنوان شغلی یا نقش مدیریتی ثبت‌شده در پنل
-            $rows = all("SELECT DISTINCT e.personnel_code, e.name, e.post,
-                    CASE
-                      WHEN a.role = 'admin' THEN 'مدیر سامانه'
-                      WHEN a.role = 'senior' THEN 'مدیر ارشد'
-                      WHEN a.role = 'manager' THEN 'مدیر'
-                      ELSE e.post
-                    END AS role_label
-                FROM employees e
-                LEFT JOIN admins a ON a.personnel_code = e.personnel_code AND a.active = 1
-                WHERE e.in_latest = 1 AND e.inactive = 0 AND e.personnel_code <> ''
-                  AND (e.post LIKE '%مدیر%' OR e.post LIKE '%سرپرست%'
-                       OR a.role IN ('manager','senior','admin'))
-                ORDER BY e.name");
-            json_out(['ok' => true, 'supervisors' => $rows]);
-        }
-
-        case 'employee_create': {
-            $a = require_admin_json('admin');
-            $created = employee_create_manual($in, (string)$a['name']);
-            json_out(['ok' => true] + $created);
-        }
-
         case 'employee_profile_save': {
             $a = require_admin_json('admin'); // اطلاعات هویتی، بانکی و حقوقی فقط با دسترسی کامل قابل ویرایش است.
             $id = (int)($in['employee_id'] ?? 0);
@@ -284,19 +259,47 @@ try {
 
         case 'advance_decide': {
             $a = require_admin_json();
-            $approved = isset($in['approved']) && $in['approved'] !== '' ? (int)digits((string)$in['approved']) : null;
+            // مبلغ خالی = null (استفاده از مبلغ درخواستی)؛ مقدار وارد‌شده هرگز بی‌صدا جایگزین نمی‌شود.
+            $approved = isset($in['approved']) && trim((string)$in['approved']) !== '' ? (int)digits((string)$in['approved']) : null;
+            $installments = isset($in['installments']) && trim((string)$in['installments']) !== '' ? (int)digits((string)$in['installments']) : null;
             json_out(advance_decide($a, (int)$in['id'], (string)$in['decision'], $approved,
-                (string)($in['note'] ?? ''), $a['name']));
+                (string)($in['note'] ?? ''), $a['name'], $installments));
         }
 
         case 'advance_delete': {
             require_admin_json('admin');
+            json_out(request_admin_delete('advance', (int)($in['id'] ?? 0)));
+        }
+
+        case 'advance_edit': {
+            require_admin_json('admin');
+            json_out(request_edit_advance((int)($in['id'] ?? 0), $in));
+        }
+
+        case 'request_source_save': {
+            require_admin_json('admin');
+            json_out(fin_source_save($in));
+        }
+
+        case 'request_delete': {
+            require_admin_json('admin');
+            json_out(request_admin_delete((string)($in['type'] ?? ''), (int)($in['id'] ?? 0)));
+        }
+
+        case 'advance_relink': {
+            require_admin_json('admin');
             $id = (int)($in['id'] ?? 0);
+            $empId = (int)($in['employee_id'] ?? 0);
             if (!one('SELECT id FROM advance_requests WHERE id = ?', [$id])) {
                 json_out(['ok' => false, 'message' => 'درخواست پیدا نشد.']);
             }
-            q('DELETE FROM advance_requests WHERE id = ?', [$id]);
-            json_out(['ok' => true, 'message' => 'درخواست مساعده حذف شد.']);
+            $emp = one('SELECT id, name FROM employees WHERE id = ?', [$empId]);
+            if (!$emp) {
+                json_out(['ok' => false, 'message' => 'کارمند انتخاب‌شده پیدا نشد.']);
+            }
+            // فقط اتصال کارمند تغییر می‌کند؛ کد ملی/پرسنلی و سایر مشخصات ثبت‌شده‌ی درخواست دست‌نخورده می‌مانند.
+            q('UPDATE advance_requests SET employee_id = ? WHERE id = ?', [$empId, $id]);
+            json_out(['ok' => true, 'message' => 'درخواست به «' . $emp['name'] . '» متصل شد.']);
         }
 
         case 'rules_save': {
@@ -384,6 +387,53 @@ try {
             }
             q('UPDATE admins SET active = 1 - active WHERE id = ?', [$id]);
             json_out(['ok' => true, 'message' => 'وضعیت حساب تغییر کرد.']);
+        }
+
+        case 'penalties': {
+            $a = require_admin_json();
+            json_out(['ok' => true, 'requests' => penalty_admin_list($a, (array)($in['filter'] ?? [])),
+                'types' => penalty_types_all(true), 'amounts' => penalty_amounts_all(true)]);
+        }
+
+        case 'penalty_create': {
+            $a = require_admin_json();
+            json_out(penalty_create($a, $in));
+        }
+
+        case 'penalty_decide': {
+            $a = require_admin_json();
+            json_out(penalty_decide($a, (int)($in['id'] ?? 0), (string)($in['decision'] ?? ''),
+                (string)($in['note'] ?? ''), $a['name']));
+        }
+
+        case 'penalty_cancel': {
+            $a = require_admin_json('admin');
+            json_out(penalty_cancel($a, (int)($in['id'] ?? 0), (string)($in['note'] ?? '')));
+        }
+
+        case 'penalty_type_save': {
+            require_admin_json('admin');
+            json_out(penalty_type_save($in));
+        }
+
+        case 'penalty_amount_save': {
+            require_admin_json('admin');
+            json_out(penalty_amount_save($in));
+        }
+
+        case 'penalty_amount_toggle': {
+            require_admin_json('admin');
+            json_out(penalty_amount_toggle((int)($in['id'] ?? 0)));
+        }
+
+        case 'penalty_type_toggle': {
+            require_admin_json('admin');
+            json_out(penalty_type_toggle((int)($in['id'] ?? 0)));
+        }
+
+        case 'penalty_source_save': {
+            require_admin_json('admin');
+            json_out(penalty_source_save($in));
         }
 
         default:

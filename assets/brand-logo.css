@@ -1,0 +1,20 @@
+/* =====================================================================
+   لوگوی الزوکو به‌جای آیکون سکه در بخش مدیریت (ورود مدیران، پنل مدیریت)
+   نسخه‌ی روشن: زمینه‌ی سفید  |  نسخه‌ی تیره: زمینه‌ی سرمه‌ای
+   ===================================================================== */
+.brand-logo{display:block;height:auto;width:auto;max-width:100%;pointer-events:none;user-select:none;-webkit-user-drag:none}
+
+/* ورود مدیران: کارت سفید */
+body.lg .lg-brand .lg-coin{width:auto;height:auto;margin-bottom:14px;animation:lg-bob 4.2s ease-in-out infinite;filter:none}
+body.lg .lg-brand .lg-coin img{width:min(250px,78vw);max-width:none;filter:brightness(0) drop-shadow(0 10px 14px rgba(11,35,67,.3))}
+
+/* نوار بالای موبایل پنل: زمینه‌ی سفید */
+.m-top .coin{width:auto;height:auto;flex:0 0 auto;display:flex;align-items:center}
+.m-top .coin img{width:112px;height:auto;max-width:none;filter:brightness(0)}
+
+/* منوی کناری پنل: زمینه‌ی تیره */
+.side-brand .brand-logo{width:auto;height:auto;max-width:168px;filter:brightness(0) invert(1) drop-shadow(0 4px 8px rgba(0,0,0,.3))}
+
+/* در منوی کناری، لوگو بالای متن قرار می‌گیرد تا در عرض باریک منو کوچک نشود */
+.side-brand{flex-direction:column;align-items:flex-start;gap:12px}
+.side-brand .brand-logo{flex:0 0 auto;width:auto;height:auto;max-width:170px}

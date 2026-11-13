@@ -16,45 +16,41 @@ $appName = cfg('app_name');
 <title>ورود کارکنان | <?= e($appName) ?></title>
 <link rel="stylesheet" href="assets/app.css">
 <link rel="stylesheet" href="assets/experience-ui.css?v=1">
+<link rel="stylesheet" href="assets/login-logo.css?v=2">
 </head>
 <body class="login-page">
 <div class="auth-page">
   <div class="auth-wrap">
     <aside class="auth-aside">
-      <div class="aside-logo"><div class="tilt"><svg class="logo-svg" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lgTileAside" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d4e89"/><stop offset="1" stop-color="#0b2343"/></linearGradient><radialGradient id="lgCoinAside" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff4c7"/><stop offset=".45" stop-color="#ffd166"/><stop offset=".8" stop-color="#e8a317"/><stop offset="1" stop-color="#b87b0a"/></radialGradient></defs><rect x="2" y="2" width="60" height="60" rx="16" fill="url(#lgTileAside)"/><rect x="2.6" y="2.6" width="58.8" height="58.8" rx="15.4" fill="none" stroke="#ffffff" stroke-opacity=".18"/><ellipse cx="32" cy="52" rx="19" ry="4" fill="#000" opacity=".35"/><path d="M14 46 v5 a18 7 0 0 0 36 0 v-5 z" fill="#8a5a07"/><ellipse cx="32" cy="46" rx="18" ry="7" fill="url(#lgCoinAside)"/><ellipse cx="32" cy="46" rx="13.5" ry="4.8" fill="none" stroke="#b87b0a" stroke-width="1" opacity=".55"/><path d="M14 40 v5 a18 7 0 0 0 36 0 v-5 z" fill="#8a5a07"/><ellipse cx="32" cy="40" rx="18" ry="7" fill="url(#lgCoinAside)"/><ellipse cx="32" cy="40" rx="13.5" ry="4.8" fill="none" stroke="#b87b0a" stroke-width="1" opacity=".55"/><path d="M14 34 v5 a18 7 0 0 0 36 0 v-5 z" fill="#8a5a07"/><ellipse cx="32" cy="34" rx="18" ry="7" fill="url(#lgCoinAside)"/><ellipse cx="32" cy="34" rx="13.5" ry="4.8" fill="none" stroke="#b87b0a" stroke-width="1" opacity=".55"/><path d="M20 31 q4 -5 10 -5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".75"/></svg></div></div>
+      <div class="lg-stage lg-aside"><div class="tilt"><img class="login-logo" src="assets/logo-login.png" alt="EL ZOCO"></div></div>
       <h2><?= e($appName) ?></h2>
-      <p>سامانه‌ی خدمات کارکنان؛ همه‌ی اطلاعات حقوقی خود را در یک جا ببینید.</p>
-      <ul class="aside-list">
-        <li>مشاهده‌ی فیش حقوقی ماهانه</li>
-        <li>ثبت و پیگیری درخواست مساعده</li>
-        <li>ثبت و پیگیری درخواست مرخصی</li>
-      </ul>
+     
+     
     </aside>
     <div class="auth-box">
     <div class="auth-head">
-      <div class="logo"><svg class="logo-svg" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lgTile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d4e89"/><stop offset="1" stop-color="#0b2343"/></linearGradient><radialGradient id="lgCoin" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff4c7"/><stop offset=".45" stop-color="#ffd166"/><stop offset=".8" stop-color="#e8a317"/><stop offset="1" stop-color="#b87b0a"/></radialGradient></defs><rect x="2" y="2" width="60" height="60" rx="16" fill="url(#lgTile)"/><rect x="2.6" y="2.6" width="58.8" height="58.8" rx="15.4" fill="none" stroke="#ffffff" stroke-opacity=".18"/><ellipse cx="32" cy="52" rx="19" ry="4" fill="#000" opacity=".35"/><path d="M14 46 v5 a18 7 0 0 0 36 0 v-5 z" fill="#8a5a07"/><ellipse cx="32" cy="46" rx="18" ry="7" fill="url(#lgCoin)"/><ellipse cx="32" cy="46" rx="13.5" ry="4.8" fill="none" stroke="#b87b0a" stroke-width="1" opacity=".55"/><path d="M14 40 v5 a18 7 0 0 0 36 0 v-5 z" fill="#8a5a07"/><ellipse cx="32" cy="40" rx="18" ry="7" fill="url(#lgCoin)"/><ellipse cx="32" cy="40" rx="13.5" ry="4.8" fill="none" stroke="#b87b0a" stroke-width="1" opacity=".55"/><path d="M14 34 v5 a18 7 0 0 0 36 0 v-5 z" fill="#8a5a07"/><ellipse cx="32" cy="34" rx="18" ry="7" fill="url(#lgCoin)"/><ellipse cx="32" cy="34" rx="13.5" ry="4.8" fill="none" stroke="#b87b0a" stroke-width="1" opacity=".55"/><path d="M20 31 q4 -5 10 -5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".75"/></svg></div>
+      <div class="lg-stage lg-head"><div class="tilt"><img class="login-logo" src="assets/logo-login.png" alt="EL ZOCO"></div></div>
       <h1><?= e($appName) ?></h1>
-      <p>برای مشاهده‌ی فیش حقوقی، مساعده و مرخصی وارد شوید</p>
     </div>
     <div class="auth-body">
       <h2 class="desk-title">ورود کارکنان</h2>
       <div id="msg"></div>
       <form class="stack" id="loginForm">
         <label class="f3d">
-          <span class="f3d-title"><span class="f3d-ic">۱</span>کد ملی</span>
+          <span class="f3d-title">کد ملی</span>
           <span class="otp" data-cells="10">
             <input name="national" inputmode="numeric" maxlength="10" autocomplete="off" aria-label="کد ملی" required>
           </span>
           <span class="hint">اگر کد ملی ندارید، عدد <b class="ltr">0000000000</b> را وارد کنید.</span>
         </label>
         <label class="f3d">
-          <span class="f3d-title"><span class="f3d-ic">۲</span>کد پرسنلی</span>
+          <span class="f3d-title">کد پرسنلی</span>
           <span class="otp" data-cells="9" data-grow="1" data-max="11">
             <input name="personnel" inputmode="numeric" maxlength="11" autocomplete="off" aria-label="کد پرسنلی" required>
           </span>
         </label>
         <label class="f3d" id="phoneLabel" style="display:none">
-          <span class="f3d-title"><span class="f3d-ic">۳</span>شماره موبایل ثبت‌شده</span>
+          <span class="f3d-title">شماره موبایل ثبت‌شده</span>
           <span class="otp" data-cells="11">
             <input name="phone" inputmode="tel" maxlength="11" autocomplete="tel" aria-label="شماره موبایل">
           </span>
@@ -69,17 +65,21 @@ $appName = cfg('app_name');
 <script src="assets/app.js"></script>
 <script>
 (function () {
-  /* کج‌شدن آیکون سکه با حرکت ماوس (فقط دسکتاپ و بدون حرکت‌کاهش‌یافته) */
-  const panel = document.querySelector('.auth-aside');
-  const tilt = document.querySelector('.tilt');
-  if (!panel || !tilt || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  panel.addEventListener('mousemove', (e) => {
-    const r = panel.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-    tilt.style.transform = `rotateY(${x * 26}deg) rotateX(${-y * 20}deg)`;
+  /* کج‌شدن لوگو با حرکت ماوس (فقط ماوس و بدون حرکت‌کاهش‌یافته) — هم در پنل دسکتاپ هم در سربرگ موبایل */
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.querySelectorAll('.lg-stage').forEach((stage) => {
+    const tilt = stage.querySelector('.tilt');
+    const area = stage.closest('.auth-aside, .auth-head');
+    if (!tilt || !area) return;
+    area.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      const r = area.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      tilt.style.transform = `rotateY(${x * 26}deg) rotateX(${-y * 20}deg)`;
+    });
+    area.addEventListener('pointerleave', () => { tilt.style.transform = ''; });
   });
-  panel.addEventListener('mouseleave', () => { tilt.style.transform = ''; });
 })();
 </script>
 <script>

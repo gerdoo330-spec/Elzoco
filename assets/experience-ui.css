@@ -317,32 +317,3 @@ body.print-document{min-height:100vh;padding:24px 14px 48px;background:linear-gr
 .leave-balance-foot{font-size:.72rem;color:#8b7562;line-height:1.8}
 @media(max-width:760px){.leave-balance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.leave-balance-panel{padding:13px}}
 @media(prefers-reduced-motion:reduce){.leave-balance-panel{scroll-behavior:auto}}
-
-
-/* ELZOCO mobile-first copper / terracotta identity */
-:root{
- --ux-ink:#211b18;--ux-ink-2:#49352c;--ux-muted:#8c766b;--ux-line:#e8dcd3;
- --ux-surface:#fffaf6;--ux-canvas:#f5eee8;--ux-teal:#a64b35;--ux-teal-2:#c47a45;
- --ux-blue:#6f3a2d;--ux-radius:20px;
- --ux-shadow:0 16px 42px -30px rgba(56,31,21,.34);
- --ux-shadow-hover:0 22px 46px -30px rgba(56,31,21,.4);
-}
-:focus-visible{outline:3px solid rgba(196,122,69,.42)!important}
-::selection{background:rgba(196,122,69,.22);color:#211b18}
-.admin-app{background:#f5eee8!important}
-.admin-app .side{background:linear-gradient(180deg,#171514 0%,#211b18 62%,#33231d 100%)!important}
-.admin-app .side nav button.on{background:linear-gradient(100deg,rgba(166,75,53,.35),rgba(196,122,69,.1))!important;box-shadow:inset -4px 0 0 #c47a45,0 8px 22px -16px rgba(166,75,53,.55)!important}
-.admin-app .side nav button.on .ico{background:linear-gradient(135deg,#d18a54,#a64b35)!important;color:#fff!important}
-.admin-app .side nav button .ico{background:rgba(255,255,255,.07)}
-.admin-app .side-foot .av{background:linear-gradient(135deg,#c47a45,#a64b35)!important}
-.admin-app .main{color:#211b18}
-.admin-app .card,.admin-app .stat{background:#fffaf6;border-color:#eadbd0}
-.admin-app .stat .ic{background:#f4e2d5!important;color:#8c432f!important}
-.admin-app .btn:not(.ghost){background:linear-gradient(135deg,#c47a45,#a64b35)!important}
-.admin-app input:focus,.admin-app select:focus,.admin-app textarea:focus{border-color:#c47a45!important;box-shadow:0 0 0 4px rgba(196,122,69,.13)!important}
-.employee-app{background:linear-gradient(180deg,#f5eee8,#fbf7f3)!important}
-.employee-app .topbar{background:linear-gradient(110deg,#171514,#49352c 65%,#a64b35 130%)!important}
-@media(prefers-reduced-motion:no-preference){
- .admin-app .side nav button .ico{transition:transform .25s cubic-bezier(.2,.8,.25,1),background .25s}
- .admin-app .side nav button:hover .ico{transform:translateY(-2px) rotate(-4deg)}
-}

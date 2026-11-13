@@ -268,9 +268,37 @@ select:not(.cs-native){
   25% { transform: translateX(-2px) scale(1.05); }
   55% { transform: translateX(2px) scale(1.05); }
 }
+/* ضربان قلب: تا وقتی درخواست بخش در انتظار بررسی است، دکمه و شمارنده‌اش می‌تپد */
+.admin-app .side nav button.req-heartbeat { animation: reqGlow 1.6s ease-in-out infinite; }
+.admin-app .side nav button.req-heartbeat .cnt { animation: reqBeat 1.6s ease-in-out infinite; transform-origin: center; }
+.admin-app .side nav button.req-heartbeat .ico { animation: reqIconBeat 1.6s ease-in-out infinite; }
+@keyframes reqBeat {
+  0%, 100% { transform: scale(1); }
+  10% { transform: scale(1.28); }
+  20% { transform: scale(1); }
+  30% { transform: scale(1.18); }
+  42% { transform: scale(1); }
+}
+@keyframes reqIconBeat {
+  0%, 100% { transform: scale(1); }
+  10% { transform: scale(1.1); }
+  20% { transform: scale(1); }
+  30% { transform: scale(1.07); }
+  42% { transform: scale(1); }
+}
+@keyframes reqGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(249,115,22,0); }
+  10% { box-shadow: 0 0 0 5px rgba(249,115,22,.28); }
+  20% { box-shadow: 0 0 0 0 rgba(249,115,22,0); }
+  30% { box-shadow: 0 0 0 4px rgba(249,115,22,.2); }
+  42% { box-shadow: 0 0 0 0 rgba(249,115,22,0); }
+}
 @media (prefers-reduced-motion: reduce) {
   .admin-app .side nav button.alert-pulse::after,
-  .admin-app .side nav button.alert-pulse .ico { animation: none !important; }
+  .admin-app .side nav button.alert-pulse .ico,
+  .admin-app .side nav button.req-heartbeat,
+  .admin-app .side nav button.req-heartbeat .cnt,
+  .admin-app .side nav button.req-heartbeat .ico { animation: none !important; }
 }
 
 /* پرونده پرسنلی — تاریخچه‌ی رویدادهای نهایی */
@@ -564,114 +592,4 @@ select:not(.cs-native){
     grid-template-columns:minmax(82px,32%) minmax(0,1fr)!important;
     gap:7px!important;padding-inline:10px!important;
   }
-}
-
-
-/* فرم افزودن کارمند؛ پنل موبایل‌محور با گروه‌بندی روشن */
-.employee-create-modal{max-width:760px;margin:0 auto;color:var(--ink,#173b60)}
-.employee-create-title{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
-.employee-create-title h2{margin:0;font-size:1.3rem;font-weight:900}
-.employee-create-title p{margin:5px 0 0;color:#718096;font-size:.82rem;line-height:1.8}
-.employee-create-mark{width:44px;height:44px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(145deg,#e8f4ff,#dceafe);color:#1760a5;font-size:1.5rem;box-shadow:inset 0 1px #fff,0 8px 18px -12px #174b80}
-.employee-create-section{padding:15px;margin:12px 0;border:1px solid #e5edf7;border-radius:17px;background:linear-gradient(145deg,#fff,#f9fbff)}
-.employee-create-section>b{display:block;margin-bottom:12px;color:#173b60;font-size:.9rem}
-.employee-create-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
-.employee-create-grid label{display:flex;flex-direction:column;gap:6px;color:#64748b;font-size:.78rem;font-weight:800;min-width:0}
-.employee-create-grid input{width:100%;min-width:0;min-height:43px;padding:9px 11px;border:1px solid #dce6f2;border-radius:11px;background:#fff;color:#173b60;font:inherit;font-size:.88rem;outline:none;box-sizing:border-box}
-.employee-create-grid input:focus{border-color:#0eaa9b;box-shadow:0 0 0 3px rgba(14,170,155,.12)}
-.employee-create-grid input[readonly]{background:#f1f6fc;color:#1760a5;font-weight:900;direction:ltr;text-align:center}
-.employee-create-note{padding:12px 14px;border-radius:12px;background:#f2f7fd;color:#64748b;font-size:.77rem;line-height:1.9}
-.employee-create-actions{display:flex;gap:9px;justify-content:flex-start;margin-top:16px}
-@media(max-width:620px){
- .employee-create-modal{width:100%}
- .employee-create-title h2{font-size:1.1rem}
- .employee-create-section{padding:12px;margin:9px 0}
- .employee-create-grid{grid-template-columns:minmax(0,1fr);gap:9px}
- .employee-create-grid input{min-height:46px;font-size:16px}
- .employee-create-actions{display:grid;grid-template-columns:1fr 1fr}
- .employee-create-actions .btn{min-height:46px}
-}
-
-
-/* بازطراحی حرفه‌ای فرم ثبت کارمند */
-.employee-create-modal{width:min(100%,900px);max-width:900px;margin:0 auto;color:#142f4e}
-.employee-create-modal *{box-sizing:border-box}
-.ec-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:24px 28px 20px;background:linear-gradient(120deg,#102b4b 0%,#17466e 58%,#0b887f 150%);color:#fff;border-radius:20px 20px 0 0}
-.ec-head-copy{min-width:0}
-.ec-eyebrow{display:flex;align-items:center;gap:8px;color:#b8d5e8;font-size:11px;font-weight:800;letter-spacing:.1px}
-.ec-eyebrow i{width:4px;height:4px;border-radius:50%;background:#35d2bd}
-.ec-head h2{margin:9px 0 4px;color:#fff;font-size:22px;font-weight:900;letter-spacing:-.4px}
-.ec-head p{margin:0;color:#d0dfeb;font-size:12px;line-height:1.8}
-.ec-head-icon{width:50px;height:50px;flex:0 0 50px;display:grid;place-items:center;border:1px solid #ffffff30;border-radius:16px;background:#ffffff15;color:#fff;font-size:27px;box-shadow:inset 0 1px #ffffff25}
-.ec-form{padding:20px 24px 0;max-height:calc(100dvh - 170px);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#b6c8d8 transparent}
-.ec-card{padding:19px 20px 20px;margin:0 0 14px;border:1px solid #e4ebf3;border-radius:17px;background:#fff;box-shadow:0 5px 18px #193b5c08}
-.ec-section-head{display:flex;align-items:center;gap:12px;margin-bottom:17px}
-.ec-step{width:35px;height:35px;flex:0 0 35px;display:grid;place-items:center;border-radius:11px;background:#eaf3fb;color:#1c6592;font-size:12px;font-weight:900}
-.ec-section-head h3{margin:0;color:#183a5b;font-size:14px;font-weight:900}
-.ec-section-head p{margin:3px 0 0;color:#8493a5;font-size:11px;line-height:1.6}
-.ec-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 15px}
-.ec-span-2{grid-column:1/-1}
-.ec-field,.ec-pay-field{display:flex;flex-direction:column;min-width:0;gap:7px}
-.ec-field>span,.ec-pay-field>span{color:#425a73;font-size:12px;font-weight:800}
-.ec-field>span b,.ec-required-note b{color:#e06b55}
-.ec-field input,.ec-pay-field input{width:100%;min-width:0;height:44px;padding:0 13px;border:1px solid #dce5ef;border-radius:11px;background:#fbfdff;color:#173653;font:inherit;font-size:13px;outline:none;transition:border-color .18s,box-shadow .18s,background .18s}
-.ec-field input:focus,.ec-pay-field input:focus{border-color:#19a995;background:#fff;box-shadow:0 0 0 3px #19a99518}
-.ec-field input::placeholder,.ec-pay-field input::placeholder{color:#a7b4c3}
-.ec-code-preview{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:16px;padding:13px 15px;border:1px dashed #9bbbd1;border-radius:13px;background:linear-gradient(100deg,#f1f7fc,#f2fbf9)}
-.ec-code-preview>div{display:flex;flex-direction:column;gap:4px}
-.ec-code-label{color:#1c5e83;font-size:12px;font-weight:900}
-.ec-code-preview small{color:#75899d;font-size:10px;line-height:1.6}
-.ec-code-preview input{width:185px;height:39px;border:1px solid #c9dce8;border-radius:9px;background:#fff;color:#126c80;text-align:center;direction:ltr;font-size:15px;font-weight:900;letter-spacing:1px}
-.ec-payroll-title{margin:20px 0 11px;padding-top:16px;border-top:1px solid #edf1f5;color:#23435f;font-size:12px;font-weight:900}
-.ec-payroll-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
-.ec-pay-field{padding:12px;border:1px solid #e7edf3;border-radius:12px;background:#fbfcfe}
-.ec-pay-field>span{min-height:18px;color:#334f69;font-size:11px;line-height:1.8}
-.ec-pay-field small{min-height:16px;color:#8a9aaa;font-size:10px;line-height:1.6}
-.ec-pay-field input{height:39px;background:#fff}
-.ec-payroll-foot{display:flex;align-items:flex-start;gap:9px;margin-top:13px;padding:11px 13px;border-radius:11px;background:#f1f7fb;color:#6d8295}
-.ec-payroll-foot>span{flex:0 0 auto;color:#168a8b;font-weight:900}
-.ec-payroll-foot p{margin:0;font-size:10px;line-height:1.9}
-.ec-footer{position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 -24px;padding:14px 24px 17px;border-top:1px solid #e8eef4;background:#ffffffed;backdrop-filter:blur(12px)}
-.ec-required-note{color:#8997a5;font-size:10px}
-.ec-actions{display:flex;align-items:center;gap:9px}
-.ec-actions .btn{min-width:112px;min-height:42px;border-radius:11px;font-weight:800}
-.ec-actions .ec-submit{background:linear-gradient(135deg,#10b89f,#079b89);border:0;color:#fff;box-shadow:0 7px 16px #079b892b}
-.ec-actions .ec-submit span{margin-left:5px}
-.ec-actions .ec-submit:disabled{opacity:.65;cursor:wait}
-@media(max-width:700px){
- .employee-create-modal{width:100%}
- .ec-head{padding:19px 17px 16px;border-radius:16px 16px 0 0}
- .ec-head h2{font-size:19px}
- .ec-head p{font-size:11px}
- .ec-head-icon{width:42px;height:42px;flex-basis:42px}
- .ec-form{padding:14px 12px 0;max-height:calc(100dvh - 145px)}
- .ec-card{padding:15px 13px;margin-bottom:11px;border-radius:14px}
- .ec-grid,.ec-payroll-grid{grid-template-columns:minmax(0,1fr);gap:11px}
- .ec-span-2{grid-column:auto}
- .ec-field input,.ec-pay-field input{height:46px;font-size:16px}
- .ec-pay-field>span,.ec-pay-field small{min-height:0}
- .ec-code-preview{align-items:stretch;flex-direction:column;gap:9px}
- .ec-code-preview input{width:100%}
- .ec-footer{margin:0 -12px;padding:12px;flex-direction:column-reverse;align-items:stretch}
- .ec-actions{display:grid;grid-template-columns:1fr 1fr}
- .ec-actions .btn{width:100%;min-width:0;min-height:46px}
- .ec-required-note{text-align:center}
-}
-@media(min-width:701px){
- .modal-bg:has(.employee-create-modal) .modal{width:min(960px,calc(100vw - 40px))!important;max-width:960px!important;padding:0!important;overflow:hidden!important;border-radius:20px!important}
-}
-
-
-/* تکمیل فهرست مدیر مستقیم و تثبیت نوار عملیات فرم در قاب مودال */
-.ec-field select{width:100%;min-width:0;height:44px;padding:0 13px;border:1px solid #dce5ef;border-radius:11px;background:#fbfdff;color:#173653;font:inherit;font-size:13px;outline:none;transition:border-color .18s,box-shadow .18s}
-.ec-field select:focus{border-color:#19a995;background:#fff;box-shadow:0 0 0 3px #19a99518}
-#modalBody:has(.employee-create-modal){display:flex!important;flex-direction:column!important;width:min(960px,calc(100vw - 32px))!important;max-width:960px!important;max-height:calc(100dvh - 32px)!important;height:auto!important;padding:0!important;overflow:hidden!important;border-radius:20px!important}
-#modalBody:has(.employee-create-modal) .employee-create-modal{display:flex;flex-direction:column;min-height:0;max-height:calc(100dvh - 32px);width:100%;overflow:hidden}
-#modalBody:has(.employee-create-modal) .ec-head{flex:0 0 auto}
-#modalBody:has(.employee-create-modal) .ec-form{display:flex;flex:1 1 auto;flex-direction:column;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain}
-#modalBody:has(.employee-create-modal) .ec-footer{position:sticky;bottom:0;z-index:3;flex:0 0 auto;margin-top:14px}
-@media(max-width:700px){
- #modalBody:has(.employee-create-modal){width:calc(100vw - 16px)!important;max-height:calc(100dvh - 16px)!important;border-radius:16px!important}
- #modalBody:has(.employee-create-modal) .employee-create-modal{max-height:calc(100dvh - 16px)}
- #modalBody:has(.employee-create-modal) .ec-form{padding-bottom:0}
 }

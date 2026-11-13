@@ -74,8 +74,10 @@ if ($mode === 'form') {
         $single = one('SELECT * FROM promotion_requests WHERE id = ?', [$id]);
         if (!$single || !promo_can_see($admin, $single)) $single = null;
     } else {
-        $single = one('SELECT * FROM advance_requests WHERE id = ?', [$id]);
+        fin_schedule_ensure(); // ستون sheba_owner
+        $single = one('SELECT r.*, e.post, e.sheba AS emp_sheba, e.sheba_owner AS emp_sheba_owner FROM advance_requests r LEFT JOIN employees e ON e.id = r.employee_id WHERE r.id = ?', [$id]);
         if (!$single || !approval_can_see($admin, (string)$single['stage'], (string)$single['direct_pc'])) $single = null;
+        if ($single) $single['sheba_owner'] = advance_sheba_owner($single, ['sheba' => $single['emp_sheba'] ?? '', 'sheba_owner' => $single['emp_sheba_owner'] ?? '']);
     }
     if (!$single) {
         http_response_code(404);
@@ -112,8 +114,29 @@ if ($mode === 'excel') {
         $headers = ['ردیف', 'کد پیگیری', 'تاریخ ثبت', 'نام کارمند', 'سمت', 'کد پرسنلی', 'کد ملی', 'نوع مرخصی', 'از تاریخ', 'تا تاریخ', 'ساعت شروع', 'ساعت پایان', 'مدت', 'واحد', 'دلیل درخواست', 'مرحله فعلی', 'تصمیم مدیر مستقیم', 'تصمیم مدیر ارشد', 'وضعیت منابع انسانی', 'دلیل رد'];
         foreach ($requests as $i => $r) $rows[] = [$i + 1, $r['tracking'], $r['created_jdate'], $r['name'], $r['employee_post'] ?? '', $r['personnel_code'], $r['national_code'], $r['type_label'], $r['from_date'], $r['to_date'], $r['start_time'], $r['end_time'], (float)$r['amount'], $r['start_time'] !== '' ? 'ساعت' : 'روز', $r['reason'], report_stage_label((string)$r['stage']), leave_decision_label($r['direct_decision']), leave_decision_label($r['general_decision']), report_admin_result($r['to_admin_decision']), $r['reject_reason']];
     } elseif ($type === 'advance') {
-        $headers = ['ردیف', 'کد پیگیری', 'تاریخ ثبت', 'نوع درخواست', 'نام کارمند', 'کد پرسنلی', 'کد ملی', 'شماره شبا', 'حقوق مبنا (ریال)', 'مبلغ درخواستی (ریال)', 'مبلغ تأییدشده (ریال)', 'وضعیت', 'مرحله فعلی', 'ملاحظات', 'تصمیم‌گیرنده نهایی', 'تصمیم مدیر مستقیم', 'تصمیم مدیر ارشد', 'نتیجه منابع انسانی', 'شروع بازه', 'پایان بازه'];
-        foreach ($requests as $i => $r) $rows[] = [$i + 1, $r['tracking'], $r['jdate'], fin_key((string)$r['kind']) === 'loan' ? 'وام' : 'مساعده', $r['name'], $r['personnel_code'], $r['national_code'], $r['sheba'], (int)$r['salary'], (int)$r['amount'], $r['approved_amount'] === null ? '' : (int)$r['approved_amount'], $r['status'], report_stage_label((string)$r['stage']), $r['note'], $r['decided_by'], $r['direct_decision'], $r['general_decision'], report_admin_result($r['to_admin_decision']), $r['window_start'], $r['window_end']];
+        $headers = ['ردیف', 'کد پیگیری', 'تاریخ ثبت', 'نوع درخواست', 'نام کارمند', 'عنوان پست', 'کد پرسنلی', 'کد ملی', 'شماره شبا / نام صاحب حساب', 'حقوق مبنا (ریال)', 'مبلغ درخواستی (ریال)', 'مبلغ تأییدشده (ریال)', 'وضعیت', 'مرحله فعلی', 'ملاحظات', 'تصمیم‌گیرنده نهایی', 'تصمیم مدیر مستقیم', 'تصمیم مدیر ارشد', 'نتیجه منابع انسانی', 'شروع بازه', 'پایان بازه'];
+        foreach ($requests as $i => $r) $rows[] = [$i + 1, $r['tracking'], $r['jdate'], fin_key((string)$r['kind']) === 'loan' ? 'وام' : 'مساعده', $r['name'], (string)($r['post'] ?? ''), $r['personnel_code'], $r['national_code'], trim((string)$r['sheba'] . (trim((string)($r['sheba_owner'] ?? '')) !== '' ? "\n" . trim((string)$r['sheba_owner']) : '')), (int)$r['salary'], (int)$r['amount'], $r['approved_amount'] === null ? '' : (int)$r['approved_amount'], $r['status'], report_stage_label((string)$r['stage']), $r['note'], $r['decided_by'], $r['direct_decision'], $r['general_decision'], report_admin_result($r['to_admin_decision']), $r['window_start'], $r['window_end']];
+        // جمع مبالغ (بر اساس همان ردیف‌های فیلترشده): مبلغ درخواستی و مبلغ تأییدشده‌ی درخواست‌های تأییدنهایی‌شده
+        $sumReq = ['مساعده' => 0, 'وام' => 0];
+        $sumApp = ['مساعده' => 0, 'وام' => 0];
+        foreach ($requests as $r) {
+            $kindLabel = fin_key((string)$r['kind']) === 'loan' ? 'وام' : 'مساعده';
+            $sumReq[$kindLabel] += (int)$r['amount'];
+            if ((string)$r['stage'] === 'final' && $r['approved_amount'] !== null) {
+                $sumApp[$kindLabel] += (int)$r['approved_amount'];
+            }
+        }
+        $totalRow = static function (string $label, int $req, int $app): array {
+            $row = array_fill(0, 21, '');
+            $row[4] = $label;
+            $row[10] = $req;
+            $row[11] = $app;
+            return $row;
+        };
+        $rows[] = array_fill(0, 21, '');
+        $rows[] = $totalRow('جمع کل مساعده', $sumReq['مساعده'], $sumApp['مساعده']);
+        $rows[] = $totalRow('جمع کل وام', $sumReq['وام'], $sumApp['وام']);
+        $rows[] = $totalRow('جمع کل مساعده و وام', $sumReq['مساعده'] + $sumReq['وام'], $sumApp['مساعده'] + $sumApp['وام']);
     } else {
         $headers = ['ردیف', 'کد پیگیری', 'تاریخ ثبت', 'نام کارمند', 'کد پرسنلی', 'کد ملی', 'شغل فعلی', 'شغل درخواستی', 'شیفت فعلی', 'شیفت درخواستی', 'دلایل درخواست', 'مرحله فعلی', 'سطح بازبینی', 'تصمیم مدیر مستقیم', 'توضیح مدیر مستقیم', 'تصمیم مدیر ارشد', 'توضیح مدیر ارشد', 'نمره ارزیابی', 'مبلغ افزایش حقوق (ریال)', 'نتیجه نهایی', 'توضیح نهایی', 'وضعیت منابع انسانی'];
         foreach ($requests as $i => $r) $rows[] = [$i + 1, $r['tracking'], $r['created_jdate'], $r['name'], $r['personnel_code'], $r['national_code'], $r['post'], $r['job_requested'], $r['current_shift'], $r['shift'], $r['reason'], report_stage_label((string)$r['stage']), $r['review_level'], $r['direct_decision'], $r['direct_note'], $r['senior_decision'], $r['senior_note'], $r['eval_score'] === null ? '' : (float)$r['eval_score'], $r['raise_amount'] === null ? '' : (int)$r['raise_amount'], $r['decided_by'], $r['decision_note'], report_admin_result($r['to_admin_decision'])];
@@ -170,7 +193,7 @@ if ($mode === 'print' || $mode === 'form') {
       <?php if (!$requests): ?><tr><td colspan="12" class="empty">درخواستی برای نمایش وجود ندارد.</td></tr><?php endif; ?></tbody>
     <?php elseif ($type === 'advance'): ?>
       <thead><tr><th>ردیف</th><th>پیگیری</th><th>تاریخ</th><th>نوع</th><th>نام</th><th>کد پرسنلی</th><th>شبا</th><th>درخواستی</th><th>تأییدی</th><th>وضعیت</th><th>مرحله</th><th>امضا</th></tr></thead><tbody>
-      <?php foreach ($requests as $i => $r): ?><tr><td class="center"><?= $i + 1 ?></td><td class="ltr"><?= e($r['tracking']) ?></td><td class="center"><?= e($r['jdate']) ?></td><td class="center"><?= e(FIN_KINDS[fin_key((string)$r['kind'])]['label']) ?></td><td><?= e($r['name']) ?></td><td class="ltr"><?= e($r['personnel_code']) ?></td><td class="ltr"><?= e($r['sheba']) ?></td><td class="ltr"><?= $num($r['amount']) ?></td><td class="ltr"><?= $num($r['approved_amount']) ?></td><td class="center"><?= e($r['status']) ?></td><td class="center"><?= e(report_stage_label((string)$r['stage'])) ?></td><td></td></tr><?php endforeach; ?>
+      <?php foreach ($requests as $i => $r): ?><tr><td class="center"><?= $i + 1 ?></td><td class="ltr"><?= e($r['tracking']) ?></td><td class="center"><?= e($r['jdate']) ?></td><td class="center"><?= e(FIN_KINDS[fin_key((string)$r['kind'])]['label']) ?></td><td><?= e($r['name']) ?><?php if (!empty($r['post'])): ?><br><small><?= e($r['post']) ?></small><?php endif; ?></td><td class="ltr"><?= e($r['personnel_code']) ?></td><td><span class="ltr"><?= e($r['sheba']) ?></span><?php if (!empty($r['sheba_owner'])): ?><br><?= e($r['sheba_owner']) ?><?php endif; ?></td><td class="ltr"><?= $num($r['amount']) ?></td><td class="ltr"><?= $num($r['approved_amount']) ?></td><td class="center"><?= e($r['status']) ?></td><td class="center"><?= e(report_stage_label((string)$r['stage'])) ?></td><td></td></tr><?php endforeach; ?>
       <?php if (!$requests): ?><tr><td colspan="12" class="empty">درخواستی برای نمایش وجود ندارد.</td></tr><?php endif; ?></tbody>
     <?php else: ?>
       <thead><tr><th>ردیف</th><th>پیگیری</th><th>تاریخ ثبت</th><th>نام / کد</th><th>شغل فعلی</th><th>شغل درخواستی</th><th>شیفت درخواستی</th><th>مرحله</th><th>ارزیابی</th><th>افزایش حقوق</th><th>خلاصه دلیل</th><th>امضا</th></tr></thead><tbody>
@@ -189,7 +212,7 @@ if ($mode === 'print' || $mode === 'form') {
       <section class="form-section"><h2>دلایل و مستندات متنی کارمند</h2><table class="detail-table"><tr><td colspan="4" class="reason"><?= nl2br(e($row['reason'])) ?></td></tr></table></section>
       <section class="form-section"><h2>سوابق ارزیابی و تصمیم</h2><table class="detail-table"><tr><th>مدیر مستقیم</th><td><?= e(report_value($row['direct_by'])) ?></td><th>تصمیم</th><td><?= e(report_value($row['direct_decision'])) ?> — <?= e(report_value($row['direct_note'])) ?></td></tr><tr><th>مدیر ارشد</th><td><?= e(report_value($row['senior_by'])) ?></td><th>تصمیم</th><td><?= e(report_value($row['senior_decision'])) ?> — <?= e(report_value($row['senior_note'])) ?></td></tr><tr><th>نمره ارزیابی</th><td><?= e(report_value($row['eval_score'])) ?>/100</td><th>مبلغ افزایش حقوق</th><td><?= $num($row['raise_amount']) ?> ریال</td></tr><tr><th>نتیجه نهایی</th><td><?= e(report_value($row['decided_by'])) ?></td><th>توضیح نهایی</th><td><?= e(report_value($row['decision_note'])) ?></td></tr></table></section>
     <?php else: ?>
-      <section class="form-section"><h2>مشخصات کارمند و درخواست مالی</h2><table class="detail-table"><tr><th>نام و نام خانوادگی</th><td><?= e($row['name']) ?></td><th>کد پرسنلی</th><td class="ltr"><?= e($row['personnel_code']) ?></td></tr><tr><th>کد ملی</th><td class="ltr"><?= e($row['national_code']) ?></td><th>تاریخ ثبت</th><td><?= e($row['jdate']) ?></td></tr><tr><th>نوع درخواست</th><td><?= e(FIN_KINDS[fin_key((string)$row['kind'])]['label']) ?></td><th>کد پیگیری</th><td class="ltr"><?= e($row['tracking']) ?></td></tr><tr><th>شماره شبا</th><td class="ltr"><?= e($row['sheba']) ?></td><th>حقوق مبنا</th><td><?= $num($row['salary']) ?> ریال</td></tr><tr><th>مبلغ درخواستی</th><td><?= $num($row['amount']) ?> ریال</td><th>مبلغ تأییدشده</th><td><?= $num($row['approved_amount']) ?> ریال</td></tr><tr><th>وضعیت</th><td><?= e($row['status']) ?></td><th>مرحله</th><td><?= e($stage) ?></td></tr></table></section>
+      <section class="form-section"><h2>مشخصات کارمند و درخواست مالی</h2><table class="detail-table"><tr><th>نام و نام خانوادگی</th><td><?= e($row['name']) ?></td><th>کد پرسنلی</th><td class="ltr"><?= e($row['personnel_code']) ?></td></tr><tr><th>کد ملی</th><td class="ltr"><?= e($row['national_code']) ?></td><th>تاریخ ثبت</th><td><?= e($row['jdate']) ?></td></tr><tr><th>نوع درخواست</th><td><?= e(FIN_KINDS[fin_key((string)$row['kind'])]['label']) ?></td><th>کد پیگیری</th><td class="ltr"><?= e($row['tracking']) ?></td></tr><tr><th>شماره شبا / نام صاحب حساب</th><td><span class="ltr"><?= e($row['sheba']) ?></span><?php if (!empty($row['sheba_owner'])): ?><br><?= e($row['sheba_owner']) ?><?php endif; ?></td><th>حقوق مبنا</th><td><?= $num($row['salary']) ?> ریال</td></tr><tr><th>مبلغ درخواستی</th><td><?= $num($row['amount']) ?> ریال</td><th>مبلغ تأییدشده</th><td><?= $num($row['approved_amount']) ?> ریال</td></tr><tr><th>وضعیت</th><td><?= e($row['status']) ?></td><th>مرحله</th><td><?= e($stage) ?></td></tr></table></section>
       <section class="form-section"><h2>ملاحظات درخواست</h2><table class="detail-table"><tr><td class="reason" colspan="4"><?= nl2br(e(report_value($row['note']))) ?></td></tr></table></section><section class="form-section"><h2>سوابق بررسی و تصمیم</h2><table class="detail-table"><tr><th>تصمیم مدیر مستقیم</th><td colspan="3"><?= e(report_value($row['direct_decision'])) ?></td></tr><tr><th>تصمیم مدیر ارشد</th><td colspan="3"><?= e(report_value($row['general_decision'])) ?></td></tr><tr><th>وضعیت منابع انسانی</th><td colspan="3"><?= e(report_admin_result($row['to_admin_decision'])) ?></td></tr><tr><th>تصمیم‌گیرنده نهایی</th><td><?= e(report_value($row['decided_by'])) ?></td><th>تاریخ تصمیم</th><td><?= e(report_value($row['decided_at'])) ?></td></tr></table></section>
     <?php endif; ?>
     <div class="signatures"><div class="signature"><b>امضای مدیر مستقیم</b><span>نام، تاریخ و امضا</span></div><div class="signature"><b>امضای مدیر ارشد</b><span>نام، تاریخ و امضا</span></div><div class="signature"><b><?= (string)($row['to_admin_decision'] ?? '') === 'notified' ? 'اطلاع منابع انسانی' : 'ثبت نهایی منابع انسانی' ?></b><span>نام، تاریخ و امضا</span></div></div>

@@ -23,7 +23,8 @@
       reevaluate: `<button class="btn sm ghost" onclick="promoReeval(${x.id})">ارزیابی مجدد</button>`,
       evaluate: `<button class="btn sm" onclick="promoEvaluate(${x.id})">ثبت نمره‌ی ارزیابی</button>`
     };
-    return (x.actions || []).map(a => map[a] || '').join('');
+    const del = window.IS_ADMIN ? `<button class="btn sm danger" onclick="deleteRequest('promotion', ${x.id})">حذف درخواست</button>` : '';
+    return (x.actions || []).map(a => map[a] || '').join('') + del;
   }
 
   function card(x) {

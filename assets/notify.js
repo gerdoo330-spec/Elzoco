@@ -10,6 +10,7 @@
     loan: { cls: 'k-loan', label: 'وام', icon: SVG('<path d="M3 9.5 12 4l9 5.5"/><path d="M5 10v7M9.5 10v7M14.5 10v7M19 10v7"/><path d="M3 20h18"/>') },
     leave: { cls: 'k-leave', label: 'مرخصی', icon: SVG('<path d="M21 3 10.5 13.5"/><path d="M21 3l-6.8 18-3.7-7.5L3 9.8 21 3z"/>') },
     promotion: { cls: 'k-promotion', label: 'ارتقا گروه شغلی', icon: SVG('<path d="M3 17l6-6 4 4 7-8"/><path d="M15 7h6v6"/>') },
+    reminder: { cls: 'k-reminder', label: 'درخواست‌ها', icon: SVG('<path d=\"M6 8a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 9.5h-17C3.5 15.5 6 14 6 8z\"/><path d=\"M10 20.5a2 2 0 0 0 4 0\"/>') },
     default: { cls: 'k-default', label: '', icon: SVG('<path d="M6 8a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 9.5h-17C3.5 15.5 6 14 6 8z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>') }
   };
   const ICO_CLOSE = SVG('<path d="M6 6l12 12M18 6 6 18"/>');
@@ -135,6 +136,35 @@
     readAlertTabs().forEach(tab => markSidebarRequest(tab, false, false));
   }
 
+  /* ضربان قلب سایدبار: تا وقتی درخواستی در انتظار بررسی این مدیر است، دکمه‌ی آن بخش می‌تپد. */
+  function heartbeat(p) {
+    if (scope !== 'admin') return;
+    [['advances', 'adv'], ['leaves', 'lv'], ['promotions', 'pr']].forEach(([tab, key]) => {
+      const b = sidebarButton(tab);
+      if (b) b.classList.toggle('req-heartbeat', (p[key] || 0) > 0);
+    });
+  }
+
+  /* یادآوری هنگام ورود: در هر بارگذاری پنل (هر ورود) یک بار نشان داده می‌شود، تا وقتی درخواستی مانده باشد. */
+  let loginReminderShown = false;
+  function maybeLoginReminder(p) {
+    if (scope !== 'admin' || loginReminderShown) return;
+    loginReminderShown = true;
+    const total = (p.adv || 0) + (p.lv || 0) + (p.pr || 0);
+    if (total <= 0) return;
+    const parts = [];
+    if (p.adv) parts.push(`مساعده و وام: ${p.adv}`);
+    if (p.lv) parts.push(`مرخصی: ${p.lv}`);
+    if (p.pr) parts.push(`ارتقا: ${p.pr}`);
+    show({
+      kind: 'reminder',
+      tone: 'warn',
+      title: `${total} درخواست منتظر بررسی`,
+      body: parts.join(' · '),
+      tab: p.adv ? 'advances' : (p.lv ? 'leaves' : 'promotions'),
+    });
+  }
+
   let busy = false;
   async function poll() {
     if (busy || document.hidden) return;
@@ -142,7 +172,11 @@
     try {
       const r = await api(scope, 'notif_poll');
       if (!r || !r.ok) return;
-      if (r.pending) { bump('cAdv', r.pending.adv); bump('cLv', r.pending.lv); bump('cPr', r.pending.pr); }
+      if (r.pending) {
+        bump('cAdv', r.pending.adv); bump('cLv', r.pending.lv); bump('cPr', r.pending.pr);
+        heartbeat(r.pending);
+        maybeLoginReminder(r.pending);
+      }
       if (r.items && r.items.length) {
         if (scope === 'admin') {
           r.items.forEach(n => {

@@ -16,11 +16,12 @@ $appName = cfg('app_name');
 <link rel="stylesheet" href="assets/shift-cards.css?v=1">
 <link rel="stylesheet" href="assets/notify-ui.css?v=1">
 <link rel="stylesheet" href="assets/experience-ui.css?v=3">
+<link rel="stylesheet" href="assets/login-logo.css?v=2">
 </head>
 <body class="employee-app">
 <header class="topbar">
   <div class="in">
-    <div class="brand"><div class="logo"><svg class="logo-svg" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lgTile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d4e89"/><stop offset="1" stop-color="#0b2343"/></linearGradient><radialGradient id="lgCoin" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff4c7"/><stop offset=".45" stop-color="#ffd166"/><stop offset=".8" stop-color="#e8a317"/><stop offset="1" stop-color="#b87b0a"/></radialGradient></defs><rect x="2" y="2" width="60" height="60" rx="16" fill="url(#lgTile)"/><rect x="2.6" y="2.6" width="58.8" height="58.8" rx="15.4" fill="none" stroke="#ffffff" stroke-opacity=".18"/><ellipse cx="32" cy="52" rx="19" ry="4" fill="#000" opacity=".35"/><path d="M14 46 v5 a18 7 0 0 0 36 0 v-5 z" fill="#8a5a07"/><ellipse cx="32" cy="46" rx="18" ry="7" fill="url(#lgCoin)"/><ellipse cx="32" cy="46" rx="13.5" ry="4.8" fill="none" stroke="#b87b0a" stroke-width="1" opacity=".55"/><path d="M14 40 v5 a18 7 0 0 0 36 0 v-5 z" fill="#8a5a07"/><ellipse cx="32" cy="40" rx="18" ry="7" fill="url(#lgCoin)"/><ellipse cx="32" cy="40" rx="13.5" ry="4.8" fill="none" stroke="#b87b0a" stroke-width="1" opacity=".55"/><path d="M14 34 v5 a18 7 0 0 0 36 0 v-5 z" fill="#8a5a07"/><ellipse cx="32" cy="34" rx="18" ry="7" fill="url(#lgCoin)"/><ellipse cx="32" cy="34" rx="13.5" ry="4.8" fill="none" stroke="#b87b0a" stroke-width="1" opacity=".55"/><path d="M20 31 q4 -5 10 -5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".75"/></svg></div><span><?= e($appName) ?></span></div>
+    <div class="brand"><img class="brand-logo" src="assets/logo-login.png" alt="EL ZOCO"><span><?= e($appName) ?></span></div>
     <div class="row"><span class="user" id="who"></span><a class="out" href="#" onclick="logout();return false;">خروج</a></div>
   </div>
 </header>
@@ -30,7 +31,7 @@ $appName = cfg('app_name');
     <section class="card" id="info" style="margin-bottom:18px"></section>
     <nav class="tabs" id="tabs">
       <button data-tab="payslip" onclick="switchTab('payslip')">فیش حقوقی</button>
-      <button type="button" onclick="location.href='notifications.php'">تاریخچه اعلان‌ها</button>
+      <button data-tab="penalties" onclick="switchTab('penalties')">جریمه‌های من</button>
       <div class="dd" id="ddReq">
         <button type="button" class="dd-btn" data-tab="requests" aria-haspopup="true" aria-expanded="false" aria-controls="ddMenu" onclick="toggleReqMenu(event)">
           <span>درخواست‌های من</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
@@ -76,6 +77,11 @@ $appName = cfg('app_name');
     <div class="pane" id="pane-loan">
       <div class="pane-nav"><a class="back" href="#payslip">‹ بازگشت به فیش حقوقی</a><span class="crumb">درخواست‌های من ‹ <b>وام</b></span></div>
       <div id="loanBody"></div>
+    </div>
+
+    <div class="pane" id="pane-penalties">
+      <div class="pane-nav"><a class="back" href="#payslip">‹ بازگشت به فیش حقوقی</a><span class="crumb"><b>جریمه‌های من</b></span></div>
+      <div id="penBody"></div>
     </div>
 
     <div class="pane" id="pane-promotion">

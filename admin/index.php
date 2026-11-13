@@ -15,6 +15,7 @@ if (admin_session()) {
 <title>ورود مدیران | <?= e(cfg('app_name')) ?></title>
 <link rel="stylesheet" href="../assets/app.css">
 <link rel="stylesheet" href="../assets/login-admin.css?v=2">
+<link rel="stylesheet" href="../assets/brand-logo.css?v=1">
 <link rel="stylesheet" href="../assets/experience-ui.css?v=1">
 </head>
 <body class="lg">
@@ -24,20 +25,7 @@ if (admin_session()) {
 
 <main class="lg-card" id="card">
   <div class="lg-brand">
-    <div class="lg-coin" aria-hidden="true">
-      <svg viewBox="0 0 64 64">
-        <defs>
-          <linearGradient id="lgT" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d4e89"/><stop offset="1" stop-color="#0b2343"/></linearGradient>
-          <radialGradient id="lgC" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff4c7"/><stop offset=".45" stop-color="#ffd166"/><stop offset=".8" stop-color="#e8a317"/><stop offset="1" stop-color="#b87b0a"/></radialGradient>
-        </defs>
-        <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#lgT)"/>
-        <ellipse cx="32" cy="46" rx="19" ry="4" fill="#000" opacity=".35"/>
-        <path d="M14 46v5a18 7 0 0 0 36 0v-5z" fill="#8a5a07"/><ellipse cx="32" cy="46" rx="18" ry="7" fill="url(#lgC)"/>
-        <path d="M14 40v5a18 7 0 0 0 36 0v-5z" fill="#8a5a07"/><ellipse cx="32" cy="40" rx="18" ry="7" fill="url(#lgC)"/>
-        <path d="M14 34v5a18 7 0 0 0 36 0v-5z" fill="#8a5a07"/><ellipse cx="32" cy="34" rx="18" ry="7" fill="url(#lgC)"/>
-        <path d="M20 31q4-5 10-5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".75"/>
-      </svg>
-    </div>
+    <div class="lg-coin" aria-hidden="true"><img class="brand-logo" src="../assets/logo-login.png" alt="EL ZOCO"></div>
     <h1>پنل مدیریت</h1>
     <p>ورود ادمین و مدیران سامانه‌ی حقوق</p>
     <span class="lg-chip"><i></i>اتصال امن</span>

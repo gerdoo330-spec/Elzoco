@@ -460,3 +460,125 @@ function employee_profile_edit_history_list(int $employeeId): array
     unset($row);
     return $rows;
 }
+
+
+/**
+ * ایجاد پرونده‌ی کارمند از پنل موبایل با همان قرارداد کد پرسنلی اکسل:
+ * جزء N (تاریخ شروع به کار به شکل yymmdd) سپس جزء F (سه رقم، با صفرهای ابتدایی).
+ * این عملیات فقط پرونده‌ی فعال می‌سازد؛ سابقه‌ی کارمند غیرفعال بازنویسی یا حذف نمی‌شود.
+ */
+function employee_create_manual(array $in, string $actor): array
+{
+    $name = trim((string)($in['name'] ?? ''));
+    $national = digits((string)($in['national_code'] ?? ''));
+    $phone = phone_norm((string)($in['phone'] ?? ''));
+    $hireInput = trim(fa_digits_to_en((string)($in['hire_date'] ?? '')));
+    $suffix = digits((string)($in['personnel_suffix'] ?? ''));
+    $post = trim((string)($in['post'] ?? ''));
+    $sheba = strtoupper(preg_replace('/\\s+/', '', trim((string)($in['sheba'] ?? ''))) ?? '');
+    $salaryInput = trim((string)($in['salary'] ?? '0'));
+    $salaryDigits = digits($salaryInput);
+    $branch = trim((string)($in['branch'] ?? ''));
+    $section = trim((string)($in['section'] ?? ''));
+    $managerPc = digits((string)($in['manager_pc'] ?? ''));
+
+    if ($name === '') throw new RuntimeException('نام و نام خانوادگی الزامی است.');
+    if (strlen($national) !== 10) throw new RuntimeException('کد ملی باید دقیقاً ۱۰ رقم باشد.');
+    if ($phone !== '' && !in_array(strlen(digits($phone)), [10, 11], true)) {
+        throw new RuntimeException('شماره همراه باید ۱۰ یا ۱۱ رقم باشد.');
+    }
+    $hire = jalali_parse($hireInput);
+    if (!$hire || $hire[0] < 1400 || $hire[0] > 1499) {
+        throw new RuntimeException('تاریخ شروع همکاری را به شکل شمسی معتبر، مانند ۱۴۰۵/۰۷/۰۱ وارد کنید.');
+    }
+    if ($suffix === '' || strlen($suffix) > 3) {
+        throw new RuntimeException('جزء دوم کد پرسنلی (سلول F) باید حداکثر سه رقم باشد.');
+    }
+    $suffix = str_pad($suffix, 3, '0', STR_PAD_LEFT);
+    $startCode = sprintf('%02d%02d%02d', $hire[0] % 100, $hire[1], $hire[2]);
+    $personnelCode = $startCode . $suffix;
+    if ($salaryInput !== '' && $salaryDigits === '') {
+        throw new RuntimeException('حقوق پایه باید عددی و غیرمنفی باشد.');
+    }
+    $salary = (int)($salaryDigits === '' ? 0 : $salaryDigits);
+    if ($salary < 0 || strlen((string)$salary) > 15) {
+        throw new RuntimeException('مبلغ حقوق پایه معتبر نیست.');
+    }
+    if ($sheba !== '' && !preg_match('/^(IR)?\\d{24}$/', $sheba)) {
+        throw new RuntimeException('شماره شبا باید ۲۴ رقم یا IR به‌همراه ۲۴ رقم باشد.');
+    }
+
+    $nameKey = XlsxReader::norm($name);
+    $hireDate = jalali_str($hire);
+    $nationalOwner = $national !== ZERO_NATIONAL
+        ? one('SELECT id,name,personnel_code FROM employees WHERE national_code=? AND in_latest=1 AND inactive=0 ORDER BY id DESC LIMIT 1', [$national])
+        : null;
+    if ($nationalOwner) {
+        throw new RuntimeException('برای این کد ملی یک پرونده فعال وجود دارد؛ پرونده فعلی را ویرایش کنید.');
+    }
+
+    $codeOwners = all('SELECT id,name,national_code,inactive FROM employees WHERE personnel_code=? ORDER BY inactive ASC,id DESC', [$personnelCode]);
+    foreach ($codeOwners as $owner) {
+        $sameFormerIdentity = (string)$owner['national_code'] === $national
+            && XlsxReader::norm((string)$owner['name']) === $nameKey
+            && (int)$owner['inactive'] === 1;
+        if (!$sameFormerIdentity) {
+            throw new RuntimeException('کد پرسنلی N+F «' . $personnelCode . '» قبلاً به پرونده «' . $owner['name'] . '» تعلق دارد. سلول‌های N و F را بررسی کنید.');
+        }
+    }
+
+    $managerId = 0;
+    if ($managerPc !== '') {
+        $manager = one('SELECT id,personnel_code FROM employees WHERE personnel_code=? AND in_latest=1 AND inactive=0 ORDER BY id DESC LIMIT 1', [$managerPc]);
+        if (!$manager) throw new RuntimeException('مدیر مستقیم انتخاب‌شده در فهرست کارکنان فعال پیدا نشد.');
+        $managerId = (int)$manager['id'];
+    }
+
+    employee_profiles_ensure();
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $baseKey = 'PC:' . $personnelCode;
+        $key = $baseKey;
+        $keyOwner = one('SELECT id,name,national_code,inactive FROM employees WHERE emp_key=? LIMIT 1', [$key]);
+        if ($keyOwner) {
+            $sameFormerIdentity = (string)$keyOwner['national_code'] === $national
+                && XlsxReader::norm((string)$keyOwner['name']) === $nameKey
+                && (int)$keyOwner['inactive'] === 1;
+            if (!$sameFormerIdentity) {
+                throw new RuntimeException('کلید پرونده‌ی این کد پرسنلی قبلاً استفاده شده است؛ برای جلوگیری از ادغام اشتباه، پرونده ساخته نشد.');
+            }
+            $key = substr($baseKey . ':REHIRE:MANUAL:' . date('YmdHis'), 0, 120);
+        }
+
+        q('INSERT INTO employees
+            (emp_key,personnel_code,personnel_ok,national_code,name,name_key,phone,post,start_code,hire_date,
+             sheba,salary,color,inactive,in_latest,manager_pc,updated_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,\'\',0,1,\'\',NOW())',
+            [$key,$personnelCode,1,$national,$name,$nameKey,$phone,$post,$startCode,$hireDate,$sheba,$salary]);
+        $employeeId = (int)$pdo->lastInsertId();
+
+        // شعبه و سکشن به‌عنوان فیلدهای دستی پرونده ذخیره می‌شوند تا با ادغام‌های بعدی اکسل پاک نشوند.
+        employee_profile_save_manual($employeeId, [
+            'extra_branch' => $branch,
+            'extra_section' => $section,
+        ], [], $actor);
+
+        if ($managerId > 0) {
+            $assigned = manager_assign([$employeeId], $managerId);
+            if (empty($assigned['ok'])) {
+                throw new RuntimeException((string)($assigned['message'] ?? 'ثبت مدیر مستقیم انجام نشد.'));
+            }
+        }
+
+        $pdo->commit();
+        return [
+            'employee_id' => $employeeId,
+            'personnel_code' => $personnelCode,
+            'message' => 'پرونده کارمند با کد پرسنلی ' . $personnelCode . ' ثبت شد.',
+        ];
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}

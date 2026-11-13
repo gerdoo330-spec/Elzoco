@@ -161,165 +161,364 @@ class Gate extends StatefulWidget {
 }
 class _GateState extends State<Gate> {
   final LocalAuthentication auth = LocalAuthentication();
-  String? token, savedToken;
+  String? token, selectedKind, savedToken;
   Map<String,dynamic>? data, savedData;
-  bool busy = true, biometricReady = false, authenticating = false;
+  bool busy = true, authenticating = false;
+  String? error;
+
+  String get tokenKey => 'access_token_' + (selectedKind ?? 'employee');
+  String get biometricKey => 'biometric_enabled_' + (selectedKind ?? 'employee');
+
   @override void initState() { super.initState(); restore(); }
-  Future<void> validateAndEnter(String t) async {
-    final d = await MobileApi.call('me', token: t);
-    if (!mounted) return;
-    setState(() { token=t; data=d; savedToken=null; savedData=null; });
-  }
+
   Future<void> restore() async {
+    // Migrate an existing installation's single token without changing its account.
     try {
-      final t = await vault.read(key: 'access_token');
-      final enabled = await vault.read(key: 'biometric_enabled') == 'true';
-      if (t != null && t.isNotEmpty) {
-        final d = await MobileApi.call('me', token: t);
-        if (enabled) {
-          final supported = await auth.isDeviceSupported();
-          final can = await auth.canCheckBiometrics;
-          if (supported && can) {
-            savedToken = t; savedData = d; biometricReady = true;
-          } else {
-            await vault.write(key: 'biometric_enabled', value: 'false');
-            token = t; data = d;
-          }
-        } else { token=t; data=d; }
+      final legacy = await vault.read(key: 'access_token');
+      if (legacy != null && legacy.isNotEmpty) {
+        final d = await MobileApi.call('me', token: legacy);
+        final u = m(d['user']);
+        final kind = u['type'] == 'employee' ? 'employee' : 'manager';
+        await vault.write(key: 'access_token_' + kind, value: legacy);
+        final enabled = await vault.read(key: 'biometric_enabled') == 'true';
+        await vault.write(key: 'biometric_enabled_' + kind, value: enabled ? 'true' : 'false');
+        await vault.delete(key: 'access_token');
+        await vault.delete(key: 'biometric_enabled');
       }
     } catch (_) {
       await vault.delete(key: 'access_token');
       await vault.delete(key: 'biometric_enabled');
-      savedToken=null; savedData=null; biometricReady=false;
     }
-    if (mounted) setState(() => busy=false);
+    if (mounted) setState(() => busy = false);
   }
-  Future<void> biometricLogin() async {
-    final t=savedToken;
-    if (t==null || authenticating) return;
-    setState(() => authenticating=true);
+
+  Future<void> chooseRole(String kind) async {
+    if (busy) return;
+    setState(() { busy = true; selectedKind = kind; error = null; savedToken = null; savedData = null; });
     try {
-      final ok=await auth.authenticate(
-        localizedReason:'برای ورود امن به سامانه الزوکو هویت خود را تأیید کنید',
-        options:const AuthenticationOptions(biometricOnly:true,stickyAuth:true));
-      if (ok) await validateAndEnter(t);
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('احراز هویت انجام نشد: $e')));
-    } finally { if (mounted) setState(() => authenticating=false); }
+      final t = await vault.read(key: 'access_token_' + kind);
+      final enabled = await vault.read(key: 'biometric_enabled_' + kind) == 'true';
+      if (t != null && t.isNotEmpty) {
+        final d = await MobileApi.call('me', token: t);
+        final u = m(d['user']);
+        final correct = kind == 'employee' ? u['type'] == 'employee' : u['type'] == 'admin';
+        if (!correct) throw Exception('نوع حساب ذخیره‌شده با نقش انتخابی مطابقت ندارد.');
+        if (enabled && await auth.isDeviceSupported() && await auth.canCheckBiometrics) {
+          savedToken = t;
+          savedData = d;
+        } else {
+          await vault.write(key: 'biometric_enabled_' + kind, value: 'false');
+        }
+      }
+    } catch (_) {
+      await vault.delete(key: 'access_token_' + kind);
+      await vault.delete(key: 'biometric_enabled_' + kind);
+      savedToken = null;
+      savedData = null;
+    }
+    if (mounted) setState(() => busy = false);
   }
-  void logged(String t,Map<String,dynamic>d) => setState(() { token=t; data=d; savedToken=null; savedData=null; });
-  void logout() => setState(() { token=null; data=null; savedToken=null; savedData=null; biometricReady=false; });
+
+  Future<void> biometricLogin() async {
+    final t = savedToken;
+    if (t == null || authenticating) return;
+    setState(() => authenticating = true);
+    try {
+      final ok = await auth.authenticate(
+        localizedReason: 'برای ورود به پنل ' + (selectedKind == 'employee' ? 'کارمند' : 'مدیر') + ' هویت خود را تأیید کنید',
+        options: const AuthenticationOptions(biometricOnly: true, stickyAuth: true));
+      if (ok) {
+        final d = await MobileApi.call('me', token: t);
+        final u = m(d['user']);
+        final correct = selectedKind == 'employee' ? u['type'] == 'employee' : u['type'] == 'admin';
+        if (!correct) throw Exception('حساب کاربری با نقش انتخابی مطابقت ندارد.');
+        if (mounted) setState(() { token = t; data = d; savedToken = null; savedData = null; });
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('احراز هویت انجام نشد: ' + e.toString())));
+    } finally { if (mounted) setState(() => authenticating = false); }
+  }
+
+  void logged(String t, Map<String,dynamic> d) {
+    setState(() { token = t; data = d; savedToken = null; savedData = null; });
+  }
+
+  void logout() {
+    setState(() { token = null; data = null; selectedKind = null; savedToken = null; savedData = null; error = null; });
+  }
+
   @override Widget build(BuildContext c) {
-    if (busy) return const Scaffold(body:Center(child:CircularProgressIndicator()));
-    if (token!=null) return Shell(token:token!,initial:data!,onLogout:logout);
-    if (savedToken!=null && savedData!=null) return BiometricGate(
-      user:m(savedData!['user']), busy:authenticating, onAuthenticate:biometricLogin,
-      onUsePassword:() => setState(() { savedToken=null; savedData=null; biometricReady=false; }));
-    return Login(onLogin:logged);
+    if (busy) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (token != null) return Shell(token: token!, initial: data!, onLogout: logout);
+    if (selectedKind == null) return RoleSelection(onSelect: chooseRole);
+    if (savedToken != null && savedData != null) return BiometricGate(
+      user: m(savedData!['user']), busy: authenticating, onAuthenticate: biometricLogin,
+      onUsePassword: () => setState(() { savedToken = null; savedData = null; }));
+    return Login(kind: selectedKind!, onBack: () => setState(() { selectedKind = null; }),
+      onLogin: logged);
   }
 }
+
+class RoleSelection extends StatelessWidget {
+  final ValueChanged<String> onSelect;
+  const RoleSelection({super.key, required this.onSelect});
+
+  Widget roleCard(BuildContext context, String title, String subtitle, String kind, IconData icon, Color accent) {
+    return Material(
+      color: const Color(0xFF142238),
+      borderRadius: BorderRadius.circular(25),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(25),
+        onTap: () => onSelect(kind),
+        child: Container(
+          padding: const EdgeInsets.all(21),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(color: accent.withOpacity(.35)),
+            gradient: LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft,
+              colors: [accent.withOpacity(.15), const Color(0xFF142238), const Color(0xFF101B2D)])),
+          child: Row(children: [
+            Container(width: 58, height: 58, decoration: BoxDecoration(
+              color: accent.withOpacity(.16), borderRadius: BorderRadius.circular(19)),
+              child: Icon(icon, color: accent, size: 30)),
+            const SizedBox(width: 16),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(color: ink, fontSize: 17, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 5),
+              Text(subtitle, style: const TextStyle(color: muted, fontSize: 11)),
+            ])),
+            Icon(Icons.arrow_back_ios_new_rounded, color: accent, size: 17),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor: bg,
+    body: Stack(children: [
+      Positioned(top: -100, left: -100, child: Container(width: 290, height: 290,
+        decoration: BoxDecoration(shape: BoxShape.circle, color: blue.withOpacity(.08)))),
+      Positioned(bottom: -130, right: -100, child: Container(width: 320, height: 320,
+        decoration: BoxDecoration(shape: BoxShape.circle, color: gold.withOpacity(.07)))),
+      SafeArea(child: Center(child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 30, 24, 28),
+        child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 460),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Center(child: Container(width: 72, height: 72, decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(23),
+              gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                colors: [Color(0xFFFFB66D), Color(0xFFE87932)]),
+              boxShadow: [BoxShadow(color: gold.withOpacity(.20), blurRadius: 25, offset: const Offset(0, 9))]),
+              child: const Icon(Icons.restaurant_rounded, color: Colors.white, size: 36))),
+            const SizedBox(height: 19),
+            const Center(child: Text('ELZOCO', style: TextStyle(color: ink, fontSize: 25,
+              fontWeight: FontWeight.w900, letterSpacing: 3))),
+            const SizedBox(height: 6),
+            const Center(child: Text('سامانه یکپارچه منابع انسانی', style: TextStyle(color: muted, fontSize: 12))),
+            const SizedBox(height: 42),
+            const Text('به الزوکو خوش آمدید', textAlign: TextAlign.right,
+              style: TextStyle(color: ink, fontSize: 23, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 8),
+            const Text('برای ورود، نوع حساب کاربری خود را انتخاب کنید',
+              textAlign: TextAlign.right, style: TextStyle(color: muted, fontSize: 12)),
+            const SizedBox(height: 24),
+            roleCard(context, 'کارمند', 'مشاهده فیش حقوقی و خدمات پرسنلی', 'employee',
+              Icons.badge_rounded, const Color(0xFF64B5F6)),
+            const SizedBox(height: 14),
+            roleCard(context, 'مدیر و سرپرست', 'مدیریت کارکنان و امور سازمانی', 'manager',
+              Icons.admin_panel_settings_rounded, const Color(0xFFFFA45B)),
+            const SizedBox(height: 30),
+            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(Icons.fingerprint_rounded, color: gold, size: 19),
+              SizedBox(width: 7),
+              Text('پس از انتخاب نقش، ورود امن با اثر انگشت', style: TextStyle(color: muted, fontSize: 10)),
+            ]),
+            const SizedBox(height: 12),
+            const Center(child: Text('ELZOCO  •  HUMAN RESOURCE MANAGEMENT',
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 8, letterSpacing: 1.2))),
+          ]),
+        ),
+      ))),
+    ]),
+  );
+}
+
 class BiometricGate extends StatelessWidget {
   final Map<String,dynamic> user;
   final bool busy;
   final VoidCallback onAuthenticate, onUsePassword;
-  const BiometricGate({super.key,required this.user,required this.busy,required this.onAuthenticate,required this.onUsePassword});
-  @override Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient:LinearGradient(begin:Alignment.topCenter,end:Alignment.bottomCenter,
-          colors:[Color(0xFF111827),Color(0xFF1F2937),Color(0xFF111827)])),
-        child: SafeArea(child: Center(child: SingleChildScrollView(padding:const EdgeInsets.all(26),
-          child: ConstrainedBox(constraints:const BoxConstraints(maxWidth:430),child:Column(
-            crossAxisAlignment:CrossAxisAlignment.center,children:[
-              const SizedBox(height:24),
-              Container(width:76,height:76,decoration:BoxDecoration(
-                gradient:const LinearGradient(colors:[Color(0xFF60A5FA),Color(0xFF2563EB)]),
-                borderRadius:BorderRadius.circular(24),boxShadow:[BoxShadow(color:blue.withOpacity(.24),blurRadius:28,offset:const Offset(0,10))]),
-                child:const Icon(Icons.restaurant_menu_rounded,color:Colors.white,size:39)),
-              const SizedBox(height:18),
-              const Text('ELZOCO HRM',style:TextStyle(color:ink,fontSize:19,fontWeight:FontWeight.w900,letterSpacing:2)),
-              const SizedBox(height:8),
-              const Text('ورود امن به حساب کاربری',style:TextStyle(color:muted,fontSize:13,fontWeight:FontWeight.w600)),
-              const SizedBox(height:35),
-              Container(width:214,height:214,decoration:BoxDecoration(shape:BoxShape.circle,
-                border:Border.all(color:blue.withOpacity(.25),width:1.5),
-                boxShadow:[BoxShadow(color:blue.withOpacity(.08),blurRadius:35,spreadRadius:10)]),
-                child:Center(child:Container(width:166,height:166,decoration:BoxDecoration(shape:BoxShape.circle,
-                  color:surface,border:Border.all(color:gold.withOpacity(.32),width:1.2)),
-                  child:Icon(Icons.fingerprint_rounded,size:104,color:blue)))),
-              const SizedBox(height:27),
-              Text((user['name']??'کاربر الزوکو').toString(),style:const TextStyle(color:ink,fontSize:19,fontWeight:FontWeight.w900)),
-              const SizedBox(height:6),
-              Text(roleText(user['role']??(user['type']=='employee'?'employee':'manager')),
-                style:const TextStyle(color:muted,fontSize:12)),
-              const SizedBox(height:12),
-              Container(padding:const EdgeInsets.symmetric(horizontal:13,vertical:8),
-                decoration:BoxDecoration(color:gold.withOpacity(.12),borderRadius:BorderRadius.circular(30),border:Border.all(color:gold.withOpacity(.28))),
-                child:const Row(mainAxisSize:MainAxisSize.min,children:[Icon(Icons.verified_user_outlined,color:mint,size:16),SizedBox(width:7),
-                  Text('حساب شما روی این دستگاه امن است',style:TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w700))])),
-              const SizedBox(height:30),
-              SizedBox(width:double.infinity,height:55,child:FilledButton.icon(
-                onPressed:busy?null:onAuthenticate,
-                icon:busy?const SizedBox(width:19,height:19,child:CircularProgressIndicator(strokeWidth:2,color:Colors.white)):const Icon(Icons.fingerprint_rounded,size:23),
-                label:Text(busy?'در حال بررسی هویت...':'ورود با اثر انگشت',style:const TextStyle(fontSize:14,fontWeight:FontWeight.w900)))),
-              const SizedBox(height:13),
-              TextButton.icon(onPressed:busy?null:onUsePassword,icon:const Icon(Icons.password_rounded),
-                label:const Text('استفاده از روش ورود دیگر')),
-              const SizedBox(height:24),
-              const Text('تأیید هویت توسط سیستم‌عامل دستگاه انجام می‌شود.',textAlign:TextAlign.center,
-                style:TextStyle(color:muted,fontSize:10,height:1.6))
-            ])))))));
+  const BiometricGate({super.key, required this.user, required this.busy,
+    required this.onAuthenticate, required this.onUsePassword});
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor: bg,
+    body: SafeArea(child: Center(child: SingleChildScrollView(
+      padding: const EdgeInsets.all(25),
+      child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 430),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          Align(alignment: Alignment.centerRight, child: TextButton.icon(
+            onPressed: onUsePassword, icon: const Icon(Icons.arrow_forward_rounded),
+            label: const Text('بازگشت به ورود با رمز'))),
+          const SizedBox(height: 18),
+          Container(width: 70, height: 70, decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            gradient: const LinearGradient(colors: [Color(0xFFFFB66D), Color(0xFFE87932)])),
+            child: const Icon(Icons.restaurant_rounded, color: Colors.white, size: 35)),
+          const SizedBox(height: 17),
+          const Text('ELZOCO', style: TextStyle(color: ink, fontSize: 21, fontWeight: FontWeight.w900, letterSpacing: 2)),
+          const SizedBox(height: 8),
+          Text((user['name'] ?? 'کاربر الزوکو').toString(),
+            style: const TextStyle(color: ink, fontSize: 18, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 5),
+          Text(roleText(user['role'] ?? (user['type'] == 'employee' ? 'employee' : 'manager')),
+            style: const TextStyle(color: muted, fontSize: 12)),
+          const SizedBox(height: 34),
+          Container(width: 190, height: 190, decoration: BoxDecoration(shape: BoxShape.circle,
+            border: Border.all(color: gold.withOpacity(.35), width: 1.5),
+            boxShadow: [BoxShadow(color: gold.withOpacity(.08), blurRadius: 38, spreadRadius: 8)]),
+            child: Center(child: Container(width: 148, height: 148,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: surface,
+                border: Border.all(color: line)),
+              child: const Icon(Icons.fingerprint_rounded, size: 92, color: gold)))),
+          const SizedBox(height: 28),
+          const Text('تأیید هویت برای ورود', style: TextStyle(color: ink, fontSize: 18, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 8),
+          const Text('با اثر انگشت یا روش زیستی ثبت‌شده در دستگاه وارد پنل انتخاب‌شده شوید.',
+            textAlign: TextAlign.center, style: TextStyle(color: muted, fontSize: 11, height: 1.8)),
+          const SizedBox(height: 25),
+          SizedBox(width: double.infinity, height: 54, child: FilledButton.icon(
+            onPressed: busy ? null : onAuthenticate,
+            icon: busy ? const SizedBox(width: 18, height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Icon(Icons.fingerprint_rounded, size: 23),
+            label: Text(busy ? 'در حال بررسی هویت...' : 'ورود با اثر انگشت',
+              style: const TextStyle(fontWeight: FontWeight.w900)))),
+          const SizedBox(height: 12),
+          TextButton(onPressed: onUsePassword, child: const Text('استفاده از نام کاربری و رمز عبور')),
+        ]),
+      ),
+    ))),
+  );
+}
+
+class Login extends StatefulWidget {
+  final String kind;
+  final void Function(String, Map<String,dynamic>) onLogin;
+  final VoidCallback onBack;
+  const Login({super.key, required this.kind, required this.onLogin, required this.onBack});
+  @override State<Login> createState() => _LoginState();
+}
+class _LoginState extends State<Login> {
+  bool busy = false, hide = true;
+  String? error;
+  final national = TextEditingController(), pc = TextEditingController(),
+    phone = TextEditingController(), username = TextEditingController(), password = TextEditingController();
+  final LocalAuthentication auth = LocalAuthentication();
+  bool get employee => widget.kind == 'employee';
+  @override void dispose() { national.dispose(); pc.dispose(); phone.dispose(); username.dispose(); password.dispose(); super.dispose(); }
+
+  Future<void> submit() async {
+    setState(() { busy = true; error = null; });
+    try {
+      final body = employee
+        ? {'user_type':'employee','national':national.text.trim(),'personnel':pc.text.trim(),'phone':phone.text.trim()}
+        : {'user_type':'admin','username':username.text.trim(),'password':password.text};
+      final r = await MobileApi.call('login', method:'POST', body:body);
+      final t = r['token'].toString();
+      await vault.write(key:'access_token_' + widget.kind, value:t);
+      final d = await MobileApi.call('me', token:t);
+      var enable = false;
+      try {
+        if (await auth.isDeviceSupported() && await auth.canCheckBiometrics) {
+          enable = await showDialog<bool>(context:context, builder:(ctx) => AlertDialog(
+            title: const Text('فعال‌سازی ورود با اثر انگشت'),
+            content: const Text('برای دفعات بعد، پس از انتخاب همین نقش، با اثر انگشت وارد شوید؟'),
+            actions: [
+              TextButton(onPressed:() => Navigator.pop(ctx,false), child: const Text('فعلاً نه')),
+              FilledButton(onPressed:() => Navigator.pop(ctx,true), child: const Text('فعال‌سازی')),
+            ])) ?? false;
+          if (enable) enable = await auth.authenticate(
+            localizedReason:'برای فعال‌سازی ورود زیستی، هویت خود را تأیید کنید',
+            options: const AuthenticationOptions(biometricOnly:true, stickyAuth:true));
+        }
+      } catch (_) { enable = false; }
+      await vault.write(key:'biometric_enabled_' + widget.kind, value:enable ? 'true' : 'false');
+      if (mounted) widget.onLogin(t,d);
+    } catch (e) {
+      if (mounted) setState(() => error = e.toString());
+    } finally { if (mounted) setState(() => busy = false); }
   }
+
+  Widget field(String label, TextEditingController controller, {TextInputType? type, bool secret = false}) =>
+    TextField(controller:controller,
+      textDirection:(type != null || secret || !employee) ? TextDirection.ltr : TextDirection.rtl,
+      textAlign:(type != null || secret || !employee) ? TextAlign.left : TextAlign.right,
+      keyboardType:type, obscureText:secret && hide,
+      decoration:InputDecoration(
+        labelText:label, prefixIcon:Icon(secret ? Icons.lock_outline_rounded : Icons.person_outline_rounded),
+        suffixIcon:secret ? IconButton(onPressed:() => setState(() => hide = !hide),
+          icon:Icon(hide ? Icons.visibility_rounded : Icons.visibility_off_rounded)) : null));
+
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor:bg,
+    appBar:AppBar(backgroundColor:bg, leading:IconButton(onPressed:widget.onBack,
+      icon:const Icon(Icons.arrow_forward_rounded, color:ink)), title:Text(employee ? 'ورود کارمند' : 'ورود مدیر',
+      style:const TextStyle(color:ink, fontSize:16, fontWeight:FontWeight.w900))),
+    body:SafeArea(child:Center(child:SingleChildScrollView(
+      padding:const EdgeInsets.fromLTRB(23,18,23,28),
+      child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:440),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.stretch, children:[
+          Center(child:Container(width:62,height:62,decoration:BoxDecoration(
+            color:gold.withOpacity(.14),borderRadius:BorderRadius.circular(20)),
+            child:Icon(employee ? Icons.badge_rounded : Icons.admin_panel_settings_rounded,color:gold,size:31))),
+          const SizedBox(height:18),
+          Text(employee ? 'ورود به پنل کارمند' : 'ورود به پنل مدیریت',
+            textAlign:TextAlign.center,style:const TextStyle(color:ink,fontSize:21,fontWeight:FontWeight.w900)),
+          const SizedBox(height:7),
+          Text(employee ? 'اطلاعات حساب پرسنلی خود را وارد کنید' : 'با حساب مدیریتی سازمان وارد شوید',
+            textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:11)),
+          const SizedBox(height:28),
+          Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(
+            color:surface,borderRadius:BorderRadius.circular(23),border:Border.all(color:line)),
+            child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+              if(employee)...[
+                field('کد ملی',national,type:TextInputType.number),
+                const SizedBox(height:13),
+                field('کد پرسنلی کامل',pc,type:TextInputType.number),
+                const SizedBox(height:13),
+                field('شماره تلفن همراه',phone,type:TextInputType.phone),
+              ] else ...[
+                field('نام کاربری',username),
+                const SizedBox(height:13),
+                field('گذرواژه',password,secret:true),
+              ],
+              if(error != null) ...[
+                const SizedBox(height:13),
+                Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(
+                  color:red.withOpacity(.10),borderRadius:BorderRadius.circular(12)),
+                  child:Text(error!,style:const TextStyle(color:red,fontSize:11))),
+              ],
+              const SizedBox(height:20),
+              SizedBox(height:53,child:FilledButton(
+                onPressed:busy ? null : submit,
+                child:busy ? const SizedBox(width:20,height:20,
+                  child:CircularProgressIndicator(strokeWidth:2,color:Colors.white))
+                  : const Text('ادامه و فعال‌سازی ورود امن',style:TextStyle(fontWeight:FontWeight.w900)))),
+            ]),
+          ),
+          const SizedBox(height:22),
+          const Row(mainAxisAlignment:MainAxisAlignment.center,children:[
+            Icon(Icons.verified_user_outlined,color:mint,size:16),
+            SizedBox(width:7),
+            Text('اطلاعات ورود به‌صورت امن در دستگاه نگهداری می‌شود',
+              style:TextStyle(color:muted,fontSize:9)),
+          ]),
+        ]),
+      ),
+    ))),
+  );
 }
-class Login extends StatefulWidget{final void Function(String,Map<String,dynamic>) onLogin;final Future<void> Function()? onBiometric;const Login({super.key,required this.onLogin,this.onBiometric});@override State<Login> createState()=>_LoginState();}
-class _LoginState extends State<Login>{
- String kind='employee';bool busy=false,hide=true;String? error;
- final national=TextEditingController(),pc=TextEditingController(),phone=TextEditingController(),username=TextEditingController(),password=TextEditingController();
- final LocalAuthentication auth=LocalAuthentication();
- @override void dispose(){national.dispose();pc.dispose();phone.dispose();username.dispose();password.dispose();super.dispose();}
- Future<void> submit()async{setState((){busy=true;error=null;});try{
-  final b=kind=='employee'?{'user_type':'employee','national':national.text.trim(),'personnel':pc.text.trim(),'phone':phone.text.trim()}:{'user_type':'admin','username':username.text.trim(),'password':password.text};
-  final r=await MobileApi.call('login',method:'POST',body:b);final t=r['token'].toString();await vault.write(key:'access_token',value:t);final d=await MobileApi.call('me',token:t);
-  if(mounted){var enable=false;try{if(await auth.isDeviceSupported()&&await auth.canCheckBiometrics){
-   enable=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(title:const Text('ورود با اثر انگشت'),content:const Text('مایل هستید از این پس برای ورود سریع و امن از اثر انگشت یا روش زیستی گوشی استفاده کنید؟'),actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('فعلاً نه')),FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('فعال‌سازی'))]))??false;
-   if(enable)enable=await auth.authenticate(localizedReason:'برای فعال‌سازی ورود زیستی، هویت خود را تأیید کنید',options:const AuthenticationOptions(biometricOnly:true,stickyAuth:true));
-  }}catch(_){enable=false;}await vault.write(key:'biometric_enabled',value:enable?'true':'false');widget.onLogin(t,d);}
- }catch(e){if(mounted)setState(()=>error=e.toString());}finally{if(mounted)setState(()=>busy=false);}}
- Widget _label(String value)=>Padding(padding:const EdgeInsets.only(bottom:7),child:Align(alignment:Alignment.centerRight,child:Text(value,style:const TextStyle(color:navy,fontSize:11,fontWeight:FontWeight.w800))));
- Widget _modeTile(String label,bool selected,VoidCallback onTap,IconData icon)=>Expanded(child:Material(color:selected?navy:Colors.transparent,borderRadius:BorderRadius.circular(11),child:InkWell(onTap:onTap,borderRadius:BorderRadius.circular(11),child:AnimatedContainer(duration:const Duration(milliseconds:180),height:45,alignment:Alignment.center,padding:const EdgeInsets.symmetric(horizontal:8),decoration:BoxDecoration(borderRadius:BorderRadius.circular(11),boxShadow:selected?[BoxShadow(color:navy.withOpacity(.13),blurRadius:10,offset:const Offset(0,4))]:[]),child:Row(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(icon,size:17,color:selected?Colors.white:muted),const SizedBox(width:7),Flexible(child:Text(label,maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(color:selected?Colors.white:muted,fontSize:11,fontWeight:FontWeight.w800)))])))));
- Widget field(String label,TextEditingController c,{bool secret=false,TextInputType? type})=>TextField(controller:c,textDirection:(type!=null||secret||kind=='admin')?TextDirection.ltr:TextDirection.rtl,textAlign:(type!=null||secret||kind=='admin')?TextAlign.left:TextAlign.right,keyboardType:type,obscureText:secret&&hide,decoration:InputDecoration(labelText:label,prefixIcon:Icon(secret?Icons.lock_outline:Icons.person_outline),suffixIcon:secret?IconButton(onPressed:()=>setState(()=>hide=!hide),icon:Icon(hide?Icons.visibility:Icons.visibility_off)):null));
- @override Widget build(BuildContext c)=>Scaffold(
- backgroundColor:Theme.of(c).scaffoldBackgroundColor,
- body:Stack(children:[
-  Positioned(top:-90,left:-80,child:Container(width:260,height:260,decoration:BoxDecoration(shape:BoxShape.circle,color:blue.withOpacity(.12)))),
-  Positioned(bottom:-120,right:-100,child:Container(width:300,height:300,decoration:BoxDecoration(shape:BoxShape.circle,color:cyan.withOpacity(.10)))),
-  SafeArea(child:Center(child:SingleChildScrollView(padding:const EdgeInsets.fromLTRB(22,20,22,28),child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:460),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-   Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[
-    Container(padding:const EdgeInsets.symmetric(horizontal:11,vertical:8),decoration:BoxDecoration(color:mint.withOpacity(.09),borderRadius:BorderRadius.circular(30)),child:const Row(children:[Icon(Icons.shield_rounded,color:mint,size:15),SizedBox(width:6),Text('ورود امن سازمانی',style:TextStyle(color:navy,fontSize:10,fontWeight:FontWeight.w800))])),
-    const Text('سامانه منابع انسانی',style:TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700))
-   ]),
-   const SizedBox(height:22),
-   Container(padding:const EdgeInsets.all(23),decoration:BoxDecoration(gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF1E3A8A),Color(0xFF111827),Color(0xFF172554)]),borderRadius:BorderRadius.circular(28),boxShadow:[BoxShadow(color:navy.withOpacity(.20),blurRadius:28,offset:const Offset(0,13))]),child:Stack(children:[
-    Positioned(left:-20,top:-25,child:Container(width:135,height:135,decoration:BoxDecoration(shape:BoxShape.circle,border:Border.all(color:Colors.white.withOpacity(.07),width:20)))),
-    Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-     Row(children:[Container(width:52,height:52,decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF93C5FD),Color(0xFF3B82F6)]),borderRadius:BorderRadius.circular(17),boxShadow:[BoxShadow(color:Colors.black.withOpacity(.2),blurRadius:12,offset:const Offset(0,6))]),child:const Icon(Icons.restaurant_rounded,color:Colors.white,size:28)),const SizedBox(width:12),const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('ELZOCO',style:TextStyle(color:Colors.white,fontSize:22,fontWeight:FontWeight.w900,letterSpacing:2)),Text('PEOPLE  •  PAYROLL  •  OPERATIONS',style:TextStyle(color:Color(0xFFB9C8DA),fontSize:8,fontWeight:FontWeight.w800,letterSpacing:1))])]),
-     const SizedBox(height:25),const Text('مدیریت هوشمند\nسرمایه انسانی',style:TextStyle(color:Colors.white,fontSize:25,height:1.4,fontWeight:FontWeight.w900)),const SizedBox(height:7),const Text('دسترسی یکپارچه و امن به خدمات سازمانی الزوکو',style:TextStyle(color:Color(0xFFC2D0E1),fontSize:11))
-    ])
-   ])),
-   const SizedBox(height:18),
-   Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(26),border:Border.all(color:const Color(0xFFE5EAF0)),boxShadow:[BoxShadow(color:navy.withOpacity(.055),blurRadius:23,offset:const Offset(0,8))]),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-    const Text('خوش آمدید',style:TextStyle(color:navy,fontSize:20,fontWeight:FontWeight.w900)),const SizedBox(height:4),const Text('نوع حساب خود را برای ورود انتخاب کنید',style:TextStyle(color:muted,fontSize:11)),const SizedBox(height:17),
-    Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFF1F4F8),borderRadius:BorderRadius.circular(14)),child:Row(children:[_modeTile('کارمند',kind=='employee',()=>setState(()=>kind='employee'),Icons.badge_outlined),_modeTile('مدیر و سرپرست',kind=='admin',()=>setState(()=>kind='admin'),Icons.manage_accounts_outlined)])),
-    const SizedBox(height:18),
-    if(kind=='employee')...[_label('کد ملی'),field('کد ملی',national,type:TextInputType.number),const SizedBox(height:12),_label('کد پرسنلی'),field('کد پرسنلی کامل',pc,type:TextInputType.number),const SizedBox(height:12),_label('شماره تلفن همراه'),field('شماره موبایل',phone,type:TextInputType.phone)]else...[_label('نام کاربری'),field('نام کاربری',username),const SizedBox(height:12),_label('گذرواژه'),field('رمز عبور',password,secret:true)],
-    if(error!=null)Container(margin:const EdgeInsets.only(top:12),padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:red.withOpacity(.08),borderRadius:BorderRadius.circular(12)),child:Row(children:[const Icon(Icons.error_outline,color:red,size:18),const SizedBox(width:8),Expanded(child:Text(error!,style:const TextStyle(color:red,fontSize:11)))])),
-    const SizedBox(height:18),SizedBox(height:54,child:FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:navy,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(15))),child:busy?const SizedBox(width:21,height:21,child:CircularProgressIndicator(color:Colors.white,strokeWidth:2)):const Row(mainAxisAlignment:MainAxisAlignment.center,children:[Text('ورود به حساب کاربری',style:TextStyle(fontWeight:FontWeight.w900,fontSize:13)),SizedBox(width:8),Icon(Icons.arrow_back_rounded,size:18)]))),
-    if(widget.onBiometric!=null)...[const SizedBox(height:13),InkWell(onTap:busy?null:widget.onBiometric,borderRadius:BorderRadius.circular(17),child:Container(padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:const Color(0xFFF7F9FC),borderRadius:BorderRadius.circular(17),border:Border.all(color:const Color(0xFFDCE5EF))),child:Row(children:[Container(width:42,height:42,decoration:BoxDecoration(color:navy,borderRadius:BorderRadius.circular(13)),child:const Icon(Icons.fingerprint_rounded,color:Colors.white,size:23)),const SizedBox(width:12),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('ورود سریع با اثر انگشت',style:TextStyle(color:navy,fontWeight:FontWeight.w900,fontSize:12)),SizedBox(height:4),Text('تأیید هویت امن با حسگر دستگاه',style:TextStyle(color:muted,fontSize:10))])),const Icon(Icons.chevron_left_rounded,color:muted)])))]
-   ])),
-   const SizedBox(height:18),const Row(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(Icons.verified_user_outlined,color:mint,size:15),SizedBox(width:6),Text('حفاظت از اطلاعات و حریم خصوصی کارکنان',style:TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w600))]),const SizedBox(height:8),const Text('ELZOCO  •  HUMAN RESOURCE MANAGEMENT',textAlign:TextAlign.center,style:TextStyle(color:Color(0xFF9AA6B5),fontSize:8,fontWeight:FontWeight.w800,letterSpacing:1))
-  ])))))
- ]));
-}
+
 class Entry{final String id,label,group;final IconData icon;const Entry(this.id,this.label,this.icon,{this.group='اصلی'});}
 const adminEntries=[Entry('dashboard','داشبورد',Icons.grid_view_rounded),Entry('upload','بارگذاری اکسل ماهانه',Icons.upload_file_rounded),Entry('employees','کارمندان',Icons.groups_2_rounded),Entry('advances','مساعده و وام',Icons.account_balance_wallet_rounded,group:'personnel'),Entry('leaves','مرخصی‌ها',Icons.event_available_rounded,group:'personnel'),Entry('promotions','ارتقای شغلی',Icons.trending_up_rounded,group:'personnel'),Entry('admins','مدیران',Icons.admin_panel_settings_rounded,group:'system'),Entry('settings','تنظیمات',Icons.tune_rounded,group:'system'),Entry('appearance','ظاهر برنامه',Icons.palette_rounded,group:'system'),Entry('notifications','اعلان‌ها',Icons.notifications_active_rounded)];
 const employeeEntries=[Entry('dashboard','خانه',Icons.home_rounded),Entry('requests','درخواست‌های من',Icons.assignment_rounded),Entry('slips','فیش حقوقی',Icons.receipt_long_rounded),Entry('appearance','ظاهر برنامه',Icons.palette_rounded),Entry('notifications','اعلان‌ها',Icons.notifications_active_rounded)];
@@ -334,7 +533,7 @@ Future<void> loadAdmins()async{try{admins=l((await api('admin_list'))['admins'])
 Future<void> loadSettings()async{try{settings=await api('admin_settings_get');}catch(e){toast(e.toString(),true);}if(mounted)setState((){});}
 Future<void> loadAlerts()async{try{final r=await api(employee?'notif_poll':'manager_notif_poll');alerts=l(r['items']);final ids=alerts.map((e)=>m(e)['id']).where((e)=>e!=null).toList();if(ids.isNotEmpty)await api(employee?'notif_ack':'manager_notif_ack',method:'POST',body:{'ids':ids});}catch(e){toast(e.toString(),true);}if(mounted)setState((){});}
 void toast(String s,[bool bad=false]){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s),backgroundColor:bad?red:navy,behavior:SnackBarBehavior.floating));}
-Future<void> logout()async{await PushService.unregister(apiBase:apiBase,accessToken:widget.token);try{await api('logout',method:'POST');}catch(_){}await vault.deleteAll();widget.onLogout();}
+Future<void> logout()async{await PushService.unregister(apiBase:apiBase,accessToken:widget.token);widget.onLogout();}
 @override Widget build(BuildContext c){String title='داشبورد';for(final e in menu){if(e.id==page)title=e.label;}return Scaffold(drawer:DrawerMenu(user:user,role:role,menu:menu,current:page,onSelect:go,onLogout:logout),appBar:AppBar(title:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,style:const TextStyle(fontSize:16,fontWeight:FontWeight.w900,color:ink)),Text(user['name']?.toString()??'همکار الزوکو',style:const TextStyle(fontSize:10,color:muted))]),actions:[IconButton(onPressed:refresh,icon:const Icon(Icons.refresh_rounded)),const SizedBox(width:6)]),body:SafeArea(top:false,child:loading?const Center(child:CircularProgressIndicator()):AnimatedSwitcher(duration:const Duration(milliseconds:300),transitionBuilder:(child,a)=>FadeTransition(opacity:a,child:SlideTransition(position:Tween(begin:const Offset(0,.025),end:Offset.zero).animate(a),child:child)),child:KeyedSubtree(key:ValueKey(page),child:body()))),bottomNavigationBar:SafeArea(top:false,child:Padding(padding:const EdgeInsets.fromLTRB(10,3,10,7),child:ClipRRect(borderRadius:BorderRadius.circular(22),child:NavigationBar(
  selectedIndex:(employee?['dashboard','requests','slips','notifications']:['dashboard','employees','leaves','notifications']).indexOf(page).clamp(0,3).toInt(),
  backgroundColor:surface,elevation:0,indicatorColor:gold.withOpacity(.18),labelBehavior:NavigationDestinationLabelBehavior.alwaysShow,

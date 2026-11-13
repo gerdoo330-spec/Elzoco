@@ -41,6 +41,7 @@ jobs:
           cp ../../src/payroll.php ../../dist/elzoco-fcm-backend/src/payroll.php
           cp ../../src/notify.php ../../dist/elzoco-fcm-backend/src/notify.php
           cp ../../src/push.php ../../dist/elzoco-fcm-backend/src/push.php
+          cp ../../src/employee_profile.php ../../dist/elzoco-fcm-backend/src/employee_profile.php
           cp ../../db/migrations/2026-11-09-mobile-push-tokens.sql ../../dist/elzoco-fcm-backend/db/migrations/
           cp ../../mobile/FCM-SETUP-FA.md ../../dist/elzoco-fcm-backend/راهنمای-نصب.md
           cd ../../dist

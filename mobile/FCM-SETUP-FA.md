@@ -8,6 +8,7 @@
 - `api/announcements.php` → `public_html/payroll/api/announcements.php`
 - `src/bootstrap.php` → `public_html/payroll/src/bootstrap.php`
 - `src/payroll.php` → `public_html/payroll/src/payroll.php` (اصلاح دریافت و محاسبه مبلغ نهایی فیش حقوقی)
+- `src/employee_profile.php` → `public_html/payroll/src/employee_profile.php` (ثبت کارمند جدید با قاعده کد پرسنلی N+F و حفظ شعبه/سکشن)
 - `src/notify.php` → `public_html/payroll/src/notify.php`
 - `src/push.php` → `public_html/payroll/src/push.php`
 
@@ -15,11 +16,12 @@
 
 ## دیتابیس هاست موجود
 
-در phpMyAdmin دیتابیس مربوط به هاست آزمایشی را انتخاب و فقط یک‌بار فایل زیر را اجرا کنید:
+در phpMyAdmin دیتابیس مربوط به هاست آزمایشی را انتخاب و هر دو فایل زیر را به ترتیب اجرا کنید (هر کدام فقط یک‌بار):
 
-`db/migrations/2026-11-09-mobile-push-tokens.sql`
+1. `db/migrations/2026-11-06-mobile-tokens.sql` برای جدول نشست امن Bearer با نام `mobile_tokens`.
+2. `db/migrations/2026-11-09-mobile-push-tokens.sql` برای جدول توکن دستگاه با نام `mobile_push_tokens`.
 
-این migration فقط جدول توکن دستگاه را ایجاد می‌کند. جدول نشست موبایل `mobile_tokens` باید طبق نصب قبلی موجود باشد. اگر وجود ندارد، ابتدا migration قبلی `db/migrations/2026-11-06-mobile-tokens.sql` را بررسی و در صورت نیاز اجرا کنید.
+هر دو دستور `CREATE TABLE IF NOT EXISTS` هستند؛ اگر جدول از قبل وجود داشته باشد، دوباره ساخته نمی‌شود. این مرحله برای فعال شدن ورود موبایل و اعلان فوری روی هاست آزمایشی لازم است.
 
 ## تنظیم امن Firebase در هاست
 

@@ -82,6 +82,7 @@ try{
   switch($action){
    case 'manager_employees':
     // The scope is calculated on the server; a client cannot request employees outside it.
+    employee_profiles_ensure();
     $scope=admin_employee_scope_ids($a);
     $search=trim((string)($in['q']??$_GET['q']??''));
     $where=['in_latest=1'];

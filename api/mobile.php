@@ -96,7 +96,11 @@ try{
      $like='%'.$search.'%';
      array_push($params,$like,$like,$like);
     }
-    $rows=all('SELECT id,name,personnel_code,post,inactive FROM employees WHERE '.implode(' AND ',$where).' ORDER BY name LIMIT 1000',$params);
+    $rows=all("SELECT e.id,e.name,e.personnel_code,e.post,e.inactive,
+      CASE WHEN ep.extra_json IS NOT NULL AND JSON_VALID(ep.extra_json)
+        THEN COALESCE(JSON_UNQUOTE(JSON_EXTRACT(ep.extra_json,'$.section')),'') ELSE '' END AS section
+      FROM employees e LEFT JOIN employee_profiles ep ON ep.employee_id=e.id
+      WHERE ".implode(' AND ',array_map(static fn($w)=>str_replace(['in_latest','id','name','personnel_code','post','inactive'],['e.in_latest','e.id','e.name','e.personnel_code','e.post','e.inactive'],$w),$where))." ORDER BY e.name LIMIT 1000",$params);
     json_out(['ok'=>true,'employees'=>$rows,'total'=>count($rows)]);
    case 'manager_employee_dossier': {
     $employeeId=(int)($in['employee_id']??0);

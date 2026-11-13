@@ -266,6 +266,9 @@ function compute_slip(array $base, ?array $work): array
     $v['M14'] = $w['insurance'] ?? 0.0;
     $v['M15'] = 0.0;
     $v['M16'] = ($w['penalty'] ?? 0.0) + ($w['absence'] ?? 0.0);
+    // جزئیات مستقل برای نمایش موبایل؛ فرمول و جمع کسورات شیت اصلی بدون تغییر می‌ماند.
+    $v['penalty'] = (float)($w['penalty'] ?? 0.0);
+    $v['absence'] = (float)($w['absence'] ?? 0.0);
     $v['M19'] = $v['M10'] + $v['M11'] + $v['M13'] + $v['M14'] + $v['M15'] + $v['M16'];
     $v['E20'] = $v['G19'] - $v['M19'];
     $v['days'] = $days;
@@ -1124,6 +1127,13 @@ function payslip_for(int $employeeId, int $periodId): ?array
         'values'   => $data['values'],
         'pay'      => array_map(fn($l, $c) => ['label' => $l, 'code' => $c, 'amount' => (float)$data['values'][$c]], array_values(SLIP_PAY), array_keys(SLIP_PAY)),
         'ded'      => array_map(fn($l, $c) => ['label' => $l, 'code' => $c, 'amount' => (float)$data['values'][$c]], array_values(SLIP_DED), array_keys(SLIP_DED)),
+        // فیش‌های قدیمی فقط M16 ترکیبی دارند؛ فیش‌های جدید جریمه و کسرکار را جداگانه نمایش می‌دهند.
+        'ded_details' => array_key_exists('penalty', $data['values']) && array_key_exists('absence', $data['values'])
+            ? array_merge(
+                array_map(fn($l, $c) => ['label' => $l, 'code' => $c, 'amount' => (float)$data['values'][$c]], array_values(array_filter(SLIP_DED, static fn($c) => $c !== 'M16')), array_keys(array_filter(SLIP_DED, static fn($c) => $c !== 'M16'))),
+                [['label' => 'جریمه', 'code' => 'penalty', 'amount' => (float)$data['values']['penalty']], ['label' => 'کسر کار', 'code' => 'absence', 'amount' => (float)$data['values']['absence']]]
+            )
+            : array_map(fn($l, $c) => ['label' => $l, 'code' => $c, 'amount' => (float)$data['values'][$c]], array_values(SLIP_DED), array_keys(SLIP_DED)),
         'totals'   => ['pay' => (float)$data['values']['G19'], 'ded' => (float)$data['values']['M19'],
             'net' => (float)$data['values']['E20']],
     ];

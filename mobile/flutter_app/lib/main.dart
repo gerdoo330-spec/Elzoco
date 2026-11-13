@@ -84,7 +84,8 @@ class AppAppearance extends ChangeNotifier {
     if (!palettes.containsKey(palette)) palette = 'midnight';
     await vault.write(key: 'ui_palette', value: palette);
     await vault.write(key: 'ui_midnight_migrated', value: 'true');
-    mode = (await vault.read(key: 'ui_theme_mode')) == 'light' ? ThemeMode.light : ThemeMode.dark;
+    mode = ThemeMode.dark;
+    await vault.write(key: 'ui_theme_mode', value: 'dark');
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: mode == ThemeMode.dark ? Brightness.light : Brightness.dark,
@@ -100,13 +101,15 @@ class AppAppearance extends ChangeNotifier {
     notifyListeners();
   }
   Future<void> setMode(ThemeMode value) async {
-    mode = value;
-    await vault.write(key: 'ui_theme_mode', value: value == ThemeMode.light ? 'light' : 'dark');
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    // نسخه موبایل فعلاً از یک پوسته‌ی یکپارچه‌ی تیره استفاده می‌کند تا کنتراست
+    // تمام صفحه‌های بومی و اجزای سفارشی یکسان و قابل پیش‌بینی بماند.
+    mode = ThemeMode.dark;
+    await vault.write(key: 'ui_theme_mode', value: 'dark');
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: value == ThemeMode.dark ? Brightness.light : Brightness.dark,
-      systemNavigationBarColor: value == ThemeMode.dark ? bg : const Color(0xFFF3F4F6),
-      systemNavigationBarIconBrightness: value == ThemeMode.dark ? Brightness.light : Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: bg,
+      systemNavigationBarIconBrightness: Brightness.light,
     ));
     notifyListeners();
   }
@@ -519,36 +522,30 @@ Widget adminsPage()=>ListView(padding:const EdgeInsets.all(15),children:[
 Future<void> editAdmin([Map<String,dynamic>? a])async{final un=TextEditingController(text:a?['username']?.toString()??''),name=TextEditingController(text:a?['name']?.toString()??''),pass=TextEditingController(),pc=TextEditingController(text:a?['personnel_code']?.toString()??'');String r=a?['role']?.toString()??'manager';final ok=await showModalBottomSheet<bool>(context:context,isScrollControlled:true,builder:(c)=>StatefulBuilder(builder:(c,set)=>Padding(padding:EdgeInsets.fromLTRB(18,18,18,MediaQuery.of(c).viewInsets.bottom+20),child:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[Text(a==null?'ایجاد حساب مدیریتی':'ویرایش حساب',style:const TextStyle(fontSize:17,fontWeight:FontWeight.w900)),const SizedBox(height:12),TextField(controller:un,textDirection:TextDirection.ltr,textAlign:TextAlign.left,decoration:const InputDecoration(labelText:'نام کاربری')),const SizedBox(height:9),TextField(controller:name,decoration:const InputDecoration(labelText:'نام نمایشی')),const SizedBox(height:9),DropdownButtonFormField<String>(value:r,decoration:const InputDecoration(labelText:'نقش'),items:const [DropdownMenuItem(value:'manager',child:Text('مدیر / سرپرست')),DropdownMenuItem(value:'senior',child:Text('مدیر ارشد')),DropdownMenuItem(value:'admin',child:Text('ادمین'))],onChanged:(v)=>set(()=>r=v??r)),const SizedBox(height:9),TextField(controller:pc,textDirection:TextDirection.ltr,textAlign:TextAlign.left,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'کد پرسنلی مرتبط')),const SizedBox(height:9),TextField(controller:pass,textDirection:TextDirection.ltr,textAlign:TextAlign.left,obscureText:true,decoration:InputDecoration(labelText:a==null?'رمز عبور (حداقل ۸ کاراکتر)':'رمز جدید (اختیاری)')),const SizedBox(height:15),SizedBox(width:double.infinity,child:FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('ذخیره حساب')))])))));if(ok==true){try{final x=await api('admin_save',method:'POST',body:{'id':a?['id']??0,'username':un.text,'name':name.text,'role':r,'personnel':pc.text,'password':pass.text});toast(x['message']??'ذخیره شد.');await loadAdmins();}catch(e){toast(e.toString(),true);}}un.dispose();name.dispose();pass.dispose();pc.dispose();}
 Future<void> toggleAdmin(Map<String,dynamic> a)async{try{final x=await api('admin_toggle',method:'POST',body:{'id':a['id']});toast(x['message']??'وضعیت تغییر کرد.');await loadAdmins();}catch(e){toast(e.toString(),true);}}
 Widget appearanceSettings() => Container(
-  margin:const EdgeInsets.only(bottom:16),padding:const EdgeInsets.all(15),
-  decoration:BoxDecoration(color:surface,borderRadius:BorderRadius.circular(18),border:Border.all(color:line)),
+  margin:const EdgeInsets.only(bottom:16),padding:const EdgeInsets.all(17),
+  decoration:BoxDecoration(
+    gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,
+      colors:[Color(0xFF172B4D),Color(0xFF101B2D),Color(0xFF0B1220)]),
+    borderRadius:BorderRadius.circular(20),border:Border.all(color:blue.withOpacity(.35))),
   child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-    const Text('شخصی‌سازی ظاهر برنامه',style:TextStyle(color:ink,fontSize:13,fontWeight:FontWeight.w900)),
-    const SizedBox(height:5),
-    const Text('پوسته آبی نیمه‌شب و حالت روشن یا تیره فقط روی همین دستگاه ذخیره می‌شود.',style:TextStyle(color:muted,fontSize:10)),
-    const SizedBox(height:13),
-    Wrap(spacing:9,runSpacing:9,children:[
-      for(final entry in AppAppearance.palettes.entries)
-        InkWell(onTap:()=>appearance.setPalette(entry.key),borderRadius:BorderRadius.circular(12),
-          child:Container(padding:const EdgeInsets.symmetric(horizontal:11,vertical:9),
-            decoration:BoxDecoration(borderRadius:BorderRadius.circular(12),
-              border:Border.all(color:appearance.palette==entry.key?entry.value:line,width:appearance.palette==entry.key?2:1),
-              color:entry.value.withOpacity(.10)),
-            child:Row(mainAxisSize:MainAxisSize.min,children:[
-              Container(width:13,height:13,decoration:BoxDecoration(color:entry.value,shape:BoxShape.circle)),
-              const SizedBox(width:7),
-              Text({'midnight':'آبی نیمه‌شب','copper':'مسی','green':'سبز','silver':'نقره‌ای'}[entry.key]!,
-                style:const TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w800)),
-              if(appearance.palette==entry.key) ...[const SizedBox(width:5),Icon(Icons.check_circle,color:entry.value,size:14)]
-            ]))),
+    Row(children:[Icon3D(Icons.palette_rounded,color:gold,size:42),const SizedBox(width:12),
+      const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Text('پوسته آبی نیمه‌شب',style:TextStyle(color:ink,fontSize:14,fontWeight:FontWeight.w900)),
+        SizedBox(height:4),Text('سرمه‌ای عمیق · آبی سازمانی · نارنجی برای تأکید و وضعیت فعال',
+          style:TextStyle(color:muted,fontSize:10,height:1.5))
+      ]))
     ]),
-    const SizedBox(height:13),
+    const SizedBox(height:15),
     Row(children:[
-      const Expanded(child:Text('حالت نمایش',style:TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w800))),
-      SegmentedButton<ThemeMode>(segments:const [
-        ButtonSegment(value:ThemeMode.dark,label:Text('تیره'),icon:Icon(Icons.dark_mode_outlined)),
-        ButtonSegment(value:ThemeMode.light,label:Text('روشن'),icon:Icon(Icons.light_mode_outlined)),
-      ],selected:{appearance.mode},onSelectionChanged:(v)=>appearance.setMode(v.first))
-    ])
+      for(final color in [navy,surface,blue,gold]) ...[
+        Container(width:34,height:28,margin:const EdgeInsets.only(left:8),
+          decoration:BoxDecoration(color:color,borderRadius:BorderRadius.circular(8),
+            border:Border.all(color:Colors.white.withOpacity(.18))))
+      ]
+    ]),
+    const SizedBox(height:12),
+    const Text('حالت تیره یکپارچه برای خوانایی ثابت در تمام صفحه‌ها فعال است.',
+      style:TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w700))
   ]));
 Widget appearancePage()=>ListView(padding:const EdgeInsets.all(15),children:[section('ظاهر برنامه','انتخاب پوسته و حالت نمایش برای این دستگاه'),appearanceSettings()]);
 Widget settingsPage(){final w=m(settings['windows']),rules=m(settings['rules']);return ListView(padding:const EdgeInsets.all(15),children:[section('تنظیمات سامانه','کنترل زمان‌بندی و سیاست‌های منابع انسانی'),appearanceSettings(),setting('مشاهده فیش حقوقی',windowText(w['payslip']),Icons.receipt_long,()=>windowEdit('payslip',w['payslip'])),setting('ثبت درخواست مساعده',windowText(w['advance']),Icons.payments,()=>windowEdit('advance',w['advance'])),setting('ثبت درخواست وام',windowText(w['loan']),Icons.account_balance_wallet,()=>windowEdit('loan',w['loan'])),note('قوانین مالی','سابقه مساعده: '+(rules['adv_wait_months']??'—').toString()+' ماه · سقف: '+(rules['adv_ratio_pct']??'—').toString()+'٪\\nسابقه وام: '+(rules['loan_wait_months']??'—').toString()+' ماه · سقف: '+(rules['loan_ratio_pct']??'—').toString()+'٪',Icons.rule_folder_outlined),setting('حساب‌های مدیران','مدیریت نقش و دسترسی مدیران',Icons.admin_panel_settings,()=>goDirect('admins'))]);}

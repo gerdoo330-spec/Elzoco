@@ -31,6 +31,7 @@ jobs:
           php -l ../../src/bootstrap.php
           php -l ../../src/notify.php
           php -l ../../src/push.php
+          php -l ../../src/employee_profile.php
       - name: Package PHP backend update
         run: |
           mkdir -p ../../dist/elzoco-fcm-backend/api ../../dist/elzoco-fcm-backend/src ../../dist/elzoco-fcm-backend/db/migrations

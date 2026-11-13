@@ -16,6 +16,11 @@ on:
       - 'db/migrations/**'
       - '.github/workflows/flutter-android.yml'
   workflow_dispatch:
+
+concurrency:
+  group: flutter-android-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest

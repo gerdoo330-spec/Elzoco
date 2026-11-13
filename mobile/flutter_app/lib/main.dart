@@ -51,7 +51,14 @@ class MobileApi{
  static Uri url(String a)=>Uri.parse(root+'/api/mobile.php?action='+a);
  static Future<Map<String,dynamic>> call(String a,{String method='GET',String? token,Map<String,dynamic>? body})async{
   final h={'Accept':'application/json','Content-Type':'application/json',if(token!=null)'Authorization':'Bearer '+token};
-  final r=method=='GET'?await http.get(url(a),headers:h):await http.post(url(a),headers:h,body:jsonEncode({...?body,'action':a}));
+  final Future<http.Response> request = method=='GET'
+    ? http.get(url(a),headers:h)
+    : http.post(url(a),headers:h,body:jsonEncode({...?body,'action':a}));
+  // Do not leave the login screen waiting forever when the host/API is unreachable.
+  final r = await request.timeout(
+    const Duration(seconds:25),
+    onTimeout: () => throw Exception('پاسخی از سرور دریافت نشد. اتصال اینترنت و نشانی سامانه را بررسی کنید و دوباره تلاش کنید.'),
+  );
   final d=jsonDecode(utf8.decode(r.bodyBytes));if(d is! Map<String,dynamic>)throw Exception('پاسخ سرور معتبر نیست.');
   if(r.statusCode==401||d['logout']==true)throw Exception('نشست شما منقضی شده است؛ دوباره وارد شوید.');
   if(r.statusCode<200||r.statusCode>=300||d['ok']==false)throw Exception(d['message']??'عملیات انجام نشد.');
@@ -501,8 +508,7 @@ class _LoginState extends State<Login> {
               const SizedBox(height:20),
               SizedBox(height:53,child:FilledButton(
                 onPressed:busy ? null : submit,
-                child:busy ? const SizedBox(width:20,height:20,
-                  child:CircularProgressIndicator(strokeWidth:2,color:Colors.white))
+                child:busy ? const Row(mainAxisAlignment:MainAxisAlignment.center,mainAxisSize:MainAxisSize.min,children:[SizedBox(width:18,height:18,child:CircularProgressIndicator(strokeWidth:2,color:Colors.white)),SizedBox(width:10),Text('در حال اتصال و بررسی اطلاعات...')])
                   : const Text('ادامه و فعال‌سازی ورود امن',style:TextStyle(fontWeight:FontWeight.w900)))),
             ]),
           ),

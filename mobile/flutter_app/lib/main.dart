@@ -683,14 +683,24 @@ class DrawerMenu extends StatelessWidget {
     const SizedBox(height:20),Text(user['name']?.toString()??'کاربر',style:const TextStyle(color:Colors.white,fontWeight:FontWeight.w900)),Text(roleText(role),style:const TextStyle(color:Colors.white70,fontSize:10))
    ])),
    Expanded(child:ListView(padding:const EdgeInsets.all(12),children:[
-    for(final g in groups.entries) Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-     Padding(padding:const EdgeInsets.fromLTRB(12,13,12,7),child:Text(g.key=='personnel'?'امور پرسنلی':g.key=='system'?'مدیریت سامانه':'منوی اصلی',style:const TextStyle(color:Color(0xFF91A8CA),fontSize:10,fontWeight:FontWeight.w800))),
-     for(final e in g.value) Padding(padding:const EdgeInsets.only(bottom:4),child:Material(color:e.id==current?gold.withOpacity(.14):Colors.transparent,borderRadius:BorderRadius.circular(13),child:InkWell(onTap:()=>onSelect(e.id),borderRadius:BorderRadius.circular(13),child:Padding(padding:const EdgeInsets.symmetric(horizontal:12,vertical:10),child:Row(children:[
-      Icon3D(e.icon,color:e.id==current?gold:cyan,size:38,compact:true),
-      const SizedBox(width:12),Expanded(child:Text(e.label,style:TextStyle(color:e.id==current?gold:const Color(0xFFD0D9E6),fontWeight:e.id==current?FontWeight.w900:FontWeight.w600,fontSize:12))),
-      if(e.id==current)Container(width:5,height:26,decoration:BoxDecoration(color:gold,borderRadius:BorderRadius.circular(8)))
-     ])))))
-    ])
+    for(final g in groups.entries) Theme(
+     data:Theme.of(c).copyWith(dividerColor:Colors.transparent),
+     child:ExpansionTile(
+      key:PageStorageKey<String>('drawer_group_${g.key}'),
+      initiallyExpanded:true,
+      tilePadding:const EdgeInsets.symmetric(horizontal:12),
+      childrenPadding:const EdgeInsets.only(bottom:7),
+      iconColor:gold,collapsedIconColor:muted,
+      title:Text(g.key=='personnel'?'امور پرسنلی':g.key=='system'?'مدیریت سامانه':'منوی اصلی',style:const TextStyle(color:Color(0xFF91A8CA),fontSize:10,fontWeight:FontWeight.w900)),
+      children:[
+       for(final e in g.value) Padding(padding:const EdgeInsets.only(bottom:4),child:Material(color:e.id==current?gold.withOpacity(.14):Colors.transparent,borderRadius:BorderRadius.circular(13),child:InkWell(onTap:()=>onSelect(e.id),borderRadius:BorderRadius.circular(13),child:Padding(padding:const EdgeInsets.symmetric(horizontal:12,vertical:10),child:Row(children:[
+        Icon3D(e.icon,color:e.id==current?gold:cyan,size:38,compact:true),
+        const SizedBox(width:12),Expanded(child:Text(e.label,style:TextStyle(color:e.id==current?gold:const Color(0xFFD0D9E6),fontWeight:e.id==current?FontWeight.w900:FontWeight.w600,fontSize:12))),
+        if(e.id==current)Container(width:5,height:26,decoration:BoxDecoration(color:gold,borderRadius:BorderRadius.circular(8)))
+       ])))))
+      ],
+     ),
+    )
    ])),
    const Divider(color:Colors.white12),
    ListTile(onTap:()=>onLogout(),leading:const Icon(Icons.logout,color:Color(0xFFFFA0A0)),title:const Text('خروج از حساب',style:TextStyle(color:Color(0xFFFFB3B3),fontSize:12,fontWeight:FontWeight.w800)))

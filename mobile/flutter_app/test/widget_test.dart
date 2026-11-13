@@ -10,8 +10,8 @@ void main() {
         child: Login(onLogin: (_, __) {}),
       ),
     ));
-    expect(find.text('ELZOCO HRM'), findsOneWidget);
-    expect(find.text('سامانه یکپارچه منابع انسانی'), findsOneWidget);
-    expect(find.text('ورود به سامانه'), findsOneWidget);
+    expect(find.text('ELZOCO'), findsOneWidget);
+    expect(find.text('سامانه منابع انسانی'), findsOneWidget);
+    expect(find.text('ورود به حساب کاربری'), findsOneWidget);
   });
 }

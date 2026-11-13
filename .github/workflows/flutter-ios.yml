@@ -1,0 +1,59 @@
+name: Flutter iOS build
+
+on:
+  push:
+    branches:
+      - sync/production-host-2026-11-13
+    paths:
+      - 'mobile/flutter_app/**'
+      - '.github/workflows/flutter-ios.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: flutter-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: mobile/flutter_app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.38.9
+          channel: stable
+          cache: true
+
+      - name: Generate iOS project files
+        run: flutter create --platforms=ios --project-name elzoco_hrm .
+
+      - name: Configure Face ID permission
+        run: |
+          /usr/libexec/PlistBuddy -c "Set :NSFaceIDUsageDescription برای ورود امن به سامانه از تشخیص چهره استفاده می‌شود." ios/Runner/Info.plist || \
+            /usr/libexec/PlistBuddy -c "Add :NSFaceIDUsageDescription string برای ورود امن به سامانه از تشخیص چهره استفاده می‌شود." ios/Runner/Info.plist
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Analyze Dart code
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run Flutter widget tests
+        run: flutter test
+
+      - name: Build unsigned iOS app
+        run: flutter build ios --release --no-codesign --dart-define=API_BASE_URL=https://hrsarv.ir/payroll
+
+      - name: Package unsigned iOS app
+        run: ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app ../../dist/elzoco-hrm-ios-unsigned.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: elzoco-hrm-ios-unsigned
+          path: mobile/dist/elzoco-hrm-ios-unsigned.zip
+          if-no-files-found: error
+          retention-days: 90

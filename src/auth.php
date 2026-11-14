@@ -89,36 +89,20 @@ function is_full_access(string $role): bool
 }
 
 /**
- * شناسه‌ی تمام کارکنان زیرمجموعه‌ی یک مدیر (مستقیم و غیرمستقیم).
+ * فقط شناسه‌ی کارکنانی که مدیر مستقیمشان همین حساب است.
  * خروجی null برای دسترسی کامل و آرایه برای نقش مدیر مستقیم است.
- * ارتباط سلسله‌مراتب فقط از ستون manager_pc و کد پرسنلی کامل استفاده می‌کند.
+ * دسترسی به کارکنانِ زیرمجموعه‌ی مدیران دیگر به‌صورت بازگشتی مجاز نیست.
  */
 function employee_scope_collect_ids(string $rootPc, array $rows): array
 {
     $rootPc = trim($rootPc);
     if ($rootPc === '') return [];
-    $childrenByManager = [];
-    foreach ($rows as $row) {
-        $managerPc = trim((string)($row['manager_pc'] ?? ''));
-        if ($managerPc !== '') $childrenByManager[$managerPc][] = $row;
-    }
 
     $ids = [];
-    $queue = [$rootPc];
-    $visitedManagers = [$rootPc => true];
-    $cursor = 0;
-    while ($cursor < count($queue) && $cursor < 10000) {
-        $managerPc = $queue[$cursor++];
-        foreach ($childrenByManager[$managerPc] ?? [] as $child) {
-            $employeeId = (int)($child['id'] ?? 0);
-            if ($employeeId > 0) $ids[$employeeId] = true;
-
-            $childPc = trim((string)($child['personnel_code'] ?? ''));
-            if ($childPc !== '' && !isset($visitedManagers[$childPc])) {
-                $visitedManagers[$childPc] = true;
-                $queue[] = $childPc;
-            }
-        }
+    foreach ($rows as $row) {
+        if (trim((string)($row['manager_pc'] ?? '')) !== $rootPc) continue;
+        $employeeId = (int)($row['id'] ?? 0);
+        if ($employeeId > 0) $ids[$employeeId] = true;
     }
     return array_map('intval', array_keys($ids));
 }
@@ -133,7 +117,7 @@ function admin_employee_scope_ids(array $admin): ?array
     if ($rootPc === '') return [];
     if (array_key_exists($rootPc, $cache)) return $cache[$rootPc];
 
-    // یک بار خواندن ساختار کارکنان و پیمایش درخت در PHP؛ بدون وابستگی به CTE در MySQL 5.7.
+    // فقط کدهای مدیر مستقیم خوانده می‌شوند؛ زیرمجموعه‌های غیرمستقیم مجاز نیستند.
     $rows = all("SELECT id, personnel_code, manager_pc FROM employees
                  WHERE manager_pc <> '' OR personnel_code <> ''");
     $cache[$rootPc] = employee_scope_collect_ids($rootPc, $rows);

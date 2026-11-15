@@ -26,6 +26,7 @@ Widget valueText(dynamic value,{TextStyle? style}){final v=(value==null||value.t
 
 String stage(dynamic x)=>({'direct':'در انتظار سرپرست','general':'در انتظار مدیر','admin':'در انتظار منابع انسانی','evaluated':'در انتظار تصمیم مدیر','final':'تأیید نهایی','rejected':'رد شده'}[x?.toString()]??x?.toString()??'در حال بررسی');
 String roleText(dynamic x)=>({'admin':'مدیر سامانه','senior':'مدیر ارشد','manager':'مدیر / سرپرست','supervisor':'سرپرست','supervisor_manager':'سوپروایزر'}[x?.toString()]??'مدیر');
+bool hasFullSystemAccessRole(String role)=>role=='admin'||role=='senior';
 const months=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
 
 
@@ -529,7 +530,7 @@ class Entry{final String id,label,group;final IconData icon;const Entry(this.id,
 const adminEntries=[Entry('dashboard','داشبورد',Icons.grid_view_rounded),Entry('upload','بارگذاری اکسل ماهانه',Icons.upload_file_rounded),Entry('employees','کارمندان',Icons.groups_2_rounded),Entry('advances','مساعده و وام',Icons.account_balance_wallet_rounded,group:'personnel'),Entry('leaves','مرخصی‌ها',Icons.event_available_rounded,group:'personnel'),Entry('promotions','ارتقای شغلی',Icons.trending_up_rounded,group:'personnel'),Entry('admins','مدیران',Icons.admin_panel_settings_rounded,group:'system'),Entry('settings','تنظیمات',Icons.tune_rounded,group:'system'),Entry('appearance','ظاهر برنامه',Icons.palette_rounded,group:'system'),Entry('notifications','اعلان‌ها',Icons.notifications_active_rounded)];
 const employeeEntries=[Entry('dashboard','خانه',Icons.home_rounded),Entry('requests','درخواست‌های من',Icons.assignment_rounded),Entry('slips','فیش حقوقی',Icons.receipt_long_rounded),Entry('appearance','ظاهر برنامه',Icons.palette_rounded),Entry('notifications','اعلان‌ها',Icons.notifications_active_rounded)];
 class Shell extends StatefulWidget{final String token;final Map<String,dynamic> initial;final VoidCallback onLogout;const Shell({super.key,required this.token,required this.initial,required this.onLogout});@override State<Shell> createState()=>_ShellState();}
-class _ShellState extends State<Shell>{late Map<String,dynamic> data,user;String page='dashboard',search='',sectionFilter='همه';bool loading=false,uploading=false;List<dynamic> employees=[],leaves=[],finance=[],promos=[],admins=[],alerts=[];Map<String,dynamic> settings={};PlatformFile? file;int year=1405,month=7;bool get employee=>user['type']=='employee';String get role=>(user['role']??'').toString();bool get full=>role=='admin'||role=='senior';List<Entry> get menu=>employee?employeeEntries:adminEntries.where((e)=>!['upload','admins','settings'].contains(e.id)||full).toList();
+class _ShellState extends State<Shell>{late Map<String,dynamic> data,user;String page='dashboard',search='',sectionFilter='همه';bool loading=false,uploading=false;List<dynamic> employees=[],leaves=[],finance=[],promos=[],admins=[],alerts=[];Map<String,dynamic> settings={};PlatformFile? file;int year=1405,month=7;bool get employee=>user['type']=='employee';String get role=>(user['role']??'').toString();bool get full=>hasFullSystemAccessRole(role);List<Entry> get menu=>employee?employeeEntries:adminEntries.where((e)=>!['upload','admins','settings'].contains(e.id)||full).toList();
 @override void initState(){super.initState();data=Map.from(widget.initial);user=m(data['user']);PushService.configure(apiBase:apiBase,accessToken:widget.token,onMessage:(message){final title=message.notification?.title??'اعلان جدید دریافت شد';toast(title);if(page=='notifications')loadAlerts();},onOpened:(message){if(mounted){setState(()=>page='notifications');loadAlerts();}});if(!employee)loadAll();}
 Future<Map<String,dynamic>> api(String a,{String method='GET',Map<String,dynamic>? body})=>MobileApi.call(a,method:method,token:widget.token,body:body);
 Future<void> loadAll()async{setState(()=>loading=true);try{final x=await Future.wait([api('manager_employees'),api('manager_leaves'),api('manager_advances'),api('manager_promotions')]);employees=l(x[0]['employees']);leaves=l(x[1]['requests']);finance=l(x[2]['requests']);promos=l(x[3]['requests']);}catch(e){toast(e.toString(),true);}if(mounted)setState(()=>loading=false);}
@@ -556,7 +557,7 @@ Future<void> logout()async{await PushService.unregister(apiBase:apiBase,accessTo
   NavigationDestination(icon:Icon(Icons.notifications_none),selectedIcon:Icon(Icons.notifications_active),label:'اعلان‌ها'),
  ])))),
  floatingActionButton:page=='employees'&&full?FloatingActionButton.extended(onPressed:employeeCreate,backgroundColor:blue,icon:const Icon(Icons.person_add,color:Colors.white),label:const Text('افزودن کارمند',style:TextStyle(color:Colors.white))):null);}
-Widget body(){switch(page){case 'dashboard':return employee?employeeDashboard():dashboard();case 'employees':return employeesPage();case 'upload':return uploadPage();case 'advances':return requestsPage('finance');case 'leaves':return requestsPage('leave');case 'promotions':return requestsPage('promotion');case 'admins':return adminsPage();case 'settings':return settingsPage();case 'appearance':return appearancePage();case 'notifications':return notificationsPage();case 'requests':return employeeRequests();case 'slips':return slipsPage();default:return dashboard();}}
+Widget body(){switch(page){case 'dashboard':return employee?employeeDashboard():dashboard();case 'employees':return employeesPage();case 'upload':return full?uploadPage():Center(child:Text('دسترسی کافی ندارید.',style:TextStyle(color:ink)));case 'advances':return requestsPage('finance');case 'leaves':return requestsPage('leave');case 'promotions':return requestsPage('promotion');case 'admins':return adminsPage();case 'settings':return settingsPage();case 'appearance':return appearancePage();case 'notifications':return notificationsPage();case 'requests':return employeeRequests();case 'slips':return slipsPage();default:return dashboard();}}
 Widget welcome(){
  return Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(
   gradient:const LinearGradient(begin:Alignment.topRight,end:Alignment.bottomLeft,colors:[Color(0xFF172B4D),Color(0xFF101B2D),Color(0xFF0B1220)]),
@@ -585,7 +586,7 @@ Widget dashboard(){
  final n=p.values.fold<int>(0,(s,v)=>s+(int.tryParse(v.toString())??0));
  final shortcuts=<Widget>[
   quick('مدیریت کارکنان','فهرست و پرونده پرسنلی',Icons.groups_2_rounded,blue,()=>goDirect('employees')),
-  quick('بارگذاری اکسل','ثبت دوره حقوقی جدید',Icons.table_view_rounded,mint,()=>goDirect('upload')),
+  if(full)quick('بارگذاری اکسل','ثبت دوره حقوقی جدید',Icons.table_view_rounded,mint,()=>goDirect('upload')),
   quick('مرخصی‌ها','بررسی و تصمیم‌گیری',Icons.calendar_month_rounded,gold,()=>goDirect('leaves')),
   quick('مساعده و وام','درخواست‌های مالی',Icons.account_balance_wallet_rounded,cyan,()=>goDirect('advances')),
   quick('ارتقای شغلی','سوابق و درخواست‌ها',Icons.trending_up_rounded,blue,()=>goDirect('promotions')),

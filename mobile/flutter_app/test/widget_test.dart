@@ -3,6 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:elzoco_hrm/main.dart';
 
 void main() {
+  test('only admin and senior roles have full system access', () {
+    expect(hasFullSystemAccessRole('admin'), isTrue);
+    expect(hasFullSystemAccessRole('senior'), isTrue);
+    expect(hasFullSystemAccessRole('manager'), isFalse);
+    expect(hasFullSystemAccessRole('supervisor'), isFalse);
+    expect(hasFullSystemAccessRole('supervisor_manager'), isFalse);
+  });
+
   testWidgets('role selection screen renders employee and manager choices', (tester) async {
     await tester.pumpWidget(MaterialApp(
       home: Directionality(

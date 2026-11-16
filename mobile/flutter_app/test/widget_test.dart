@@ -11,6 +11,39 @@ void main() {
     expect(hasFullSystemAccessRole('supervisor_manager'), isFalse);
   });
 
+  testWidgets('employee dossier uses midnight surfaces and readable headings', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: buildTheme(Brightness.dark),
+      home: EmployeeDossierScreen(
+        dossier: {
+          'employee': {'name': 'کارمند نمونه', 'personnel_code': '140507001', 'post': 'آشپز'},
+          'bank': <String, dynamic>{},
+          'payroll': <String, dynamic>{},
+          'leave_balance': <String, dynamic>{},
+          'payslips': <dynamic>[],
+          'profile_fields': <dynamic>[],
+          'advances': <dynamic>[],
+          'leaves': <dynamic>[],
+        },
+        onSlip: (_) async {},
+      ),
+    ));
+
+    final headingFinder = find.text('اطلاعات هویتی');
+    final heading = tester.widget<Text>(headingFinder);
+    expect(heading.style?.color, ink);
+    final ancestors = tester.widgetList<Container>(
+      find.ancestor(of: headingFinder, matching: find.byType(Container)),
+    );
+    expect(
+      ancestors.any((container) {
+        final decoration = container.decoration;
+        return decoration is BoxDecoration && decoration.color == surface;
+      }),
+      isTrue,
+    );
+  });
+
   testWidgets('role selection screen renders employee and manager choices', (tester) async {
     await tester.pumpWidget(MaterialApp(
       home: Directionality(

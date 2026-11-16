@@ -29,6 +29,15 @@ jobs:
         working-directory: mobile/flutter_app
     steps:
       - uses: actions/checkout@v4
+      - name: Pin Android Gradle runtime to Java 17
+        run: |
+          if [ -z "${JAVA_HOME_17_X64:-}" ] || [ ! -x "$JAVA_HOME_17_X64/bin/java" ]; then
+            echo "Java 17 is not available on this runner." >&2
+            exit 1
+          fi
+          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME_17_X64/bin" >> "$GITHUB_PATH"
+          "$JAVA_HOME_17_X64/bin/java" -version
       - name: Check PHP syntax
         run: |
           php -l ../../api/mobile.php

@@ -805,13 +805,13 @@ void request(String k)=>Navigator.push(context,MaterialPageRoute(builder:(_)=>Re
 Future<void> employeeCreate()async{
  final fields=<String,TextEditingController>{
   'name':TextEditingController(),'national_code':TextEditingController(),'phone':TextEditingController(),
-  'hire_date':TextEditingController(),'personnel_suffix':TextEditingController(),'post':TextEditingController(),
+  'hire_date':TextEditingController(),'personnel_prefix':TextEditingController(),'personnel_suffix':TextEditingController(),'post':TextEditingController(),
   'branch':TextEditingController(),'section':TextEditingController(),'sheba':TextEditingController(),
   'salary':TextEditingController(),'manager_pc':TextEditingController()
  };
  final labels=<String,String>{
   'name':'نام و نام خانوادگی','national_code':'کد ملی ۱۰ رقمی','phone':'شماره موبایل',
-  'hire_date':'تاریخ شروع همکاری شمسی (۱۴۰۵/۰۵/۲۷)','personnel_suffix':'سه رقم انتهایی کد پرسنلی',
+  'hire_date':'تاریخ شروع همکاری شمسی (۱۴۰۵/۰۵/۲۷)','personnel_prefix':'جزء اول کد پرسنلی (N، اختیاری: ۶ یا ۸ رقم)','personnel_suffix':'جزء دوم کد پرسنلی (F، حداکثر ۳ رقم)',
   'post':'عنوان شغلی','branch':'شعبه','section':'سکشن / واحد کاری','sheba':'شماره شبا (اختیاری)',
   'salary':'حقوق پایه (ریال)','manager_pc':'کد پرسنلی مدیر مستقیم (اختیاری)'
  };
@@ -819,9 +819,9 @@ Future<void> employeeCreate()async{
   padding:EdgeInsets.fromLTRB(18,18,18,MediaQuery.of(c).viewInsets.bottom+20),
   child:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.stretch,children:[
    const Text('افزودن کارمند',style:TextStyle(fontSize:18,fontWeight:FontWeight.w900,color:ink)),
-   const SizedBox(height:5),const Text('کد پرسنلی دقیقاً با قاعده اکسل ساخته می‌شود: جزء N (تاریخ شروع) سپس جزء F (سه رقم انتهایی).',style:TextStyle(color:muted,fontSize:10)),
+   const SizedBox(height:5),const Text('کد پرسنلی = N سپس F. اگر N را وارد نکنید، از تاریخ شروع ساخته می‌شود؛ برای N هشت‌رقمی، مقدار دقیق سلول N را وارد کنید.',style:TextStyle(color:muted,fontSize:10)),
    const SizedBox(height:14),
-   for(final entry in fields.entries) Padding(padding:const EdgeInsets.only(bottom:9),child:entry.key=='manager_pc'?DropdownButtonFormField<String>(value:entry.value.text,decoration:InputDecoration(labelText:labels[entry.key]),items:[const DropdownMenuItem(value:'',child:Text('بدون مدیر مستقیم')),...employees.where((x){final e=m(x);return (e['inactive']==0||e['inactive']==false)&&(e['personnel_code']??'').toString().isNotEmpty;}).map((x){final e=m(x);final pc=e['personnel_code'].toString();return DropdownMenuItem(value:pc,child:Text((e['name']??'کارمند').toString()+' · '+pc,overflow:TextOverflow.ellipsis));})],onChanged:(v)=>entry.value.text=v??'' ):TextField(controller:entry.value,textDirection:['national_code','phone','personnel_suffix','salary'].contains(entry.key)?TextDirection.ltr:TextDirection.rtl,textAlign:['national_code','phone','personnel_suffix','salary'].contains(entry.key)?TextAlign.left:TextAlign.right,keyboardType:['national_code','phone','personnel_suffix','salary'].contains(entry.key)?TextInputType.number:TextInputType.text,decoration:InputDecoration(labelText:labels[entry.key]))),
+   for(final entry in fields.entries) Padding(padding:const EdgeInsets.only(bottom:9),child:entry.key=='manager_pc'?DropdownButtonFormField<String>(value:entry.value.text,decoration:InputDecoration(labelText:labels[entry.key]),items:[const DropdownMenuItem(value:'',child:Text('بدون مدیر مستقیم')),...employees.where((x){final e=m(x);return (e['inactive']==0||e['inactive']==false)&&(e['personnel_code']??'').toString().isNotEmpty;}).map((x){final e=m(x);final pc=e['personnel_code'].toString();return DropdownMenuItem(value:pc,child:Text((e['name']??'کارمند').toString()+' · '+pc,overflow:TextOverflow.ellipsis));})],onChanged:(v)=>entry.value.text=v??'' ):TextField(controller:entry.value,textDirection:['national_code','phone','personnel_prefix','personnel_suffix','salary'].contains(entry.key)?TextDirection.ltr:TextDirection.rtl,textAlign:['national_code','phone','personnel_prefix','personnel_suffix','salary'].contains(entry.key)?TextAlign.left:TextAlign.right,keyboardType:['national_code','phone','personnel_prefix','personnel_suffix','salary'].contains(entry.key)?TextInputType.number:TextInputType.text,decoration:InputDecoration(labelText:labels[entry.key]))),
    const SizedBox(height:8),SizedBox(height:48,child:FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('ثبت پرونده کارمند')))
   ])))
  );

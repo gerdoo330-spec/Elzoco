@@ -88,9 +88,15 @@ function is_full_access(string $role): bool
     return in_array($role, ['admin', 'senior'], true);
 }
 
+/** نقش‌های محدود با دسترسی فقط به کارکنان منتسب‌شده به کد مدیر مستقیم. */
+function admin_role_has_direct_scope(string $role): bool
+{
+    return in_array($role, ['manager', 'supervisor', 'supervisor_manager'], true);
+}
+
 /**
  * فقط شناسه‌ی کارکنانی که مدیر مستقیمشان همین حساب است.
- * خروجی null برای دسترسی کامل و آرایه برای نقش مدیر مستقیم است.
+ * خروجی null برای دسترسی کامل و آرایه برای مدیر مستقیم و نقش‌های سرپرستی است.
  * دسترسی به کارکنانِ زیرمجموعه‌ی مدیران دیگر به‌صورت بازگشتی مجاز نیست.
  */
 function employee_scope_collect_ids(string $rootPc, array $rows): array
@@ -111,7 +117,7 @@ function admin_employee_scope_ids(array $admin): ?array
 {
     static $cache = [];
     if (is_full_access((string)($admin['role'] ?? ''))) return null;
-    if (($admin['role'] ?? '') !== 'manager') return [];
+    if (!admin_role_has_direct_scope((string)($admin['role'] ?? ''))) return [];
 
     $rootPc = trim((string)($admin['pc'] ?? ''));
     if ($rootPc === '') return [];
@@ -145,7 +151,7 @@ function approval_can_see(array $sess, string $stage, string $directPc): bool
     if (is_full_access((string)$sess['role'])) {
         return true;
     }
-    return $sess['role'] === 'manager' && $stage === 'direct' && $sess['pc'] !== '' && $sess['pc'] === $directPc;
+    return admin_role_has_direct_scope((string)$sess['role']) && $stage === 'direct' && $sess['pc'] !== '' && $sess['pc'] === $directPc;
 }
 
 /** آیا این کاربر می‌تواند در این مرحله تصمیم بگیرد؟ */
@@ -159,7 +165,7 @@ function approval_can_decide(array $sess, string $stage, string $directPc): bool
         return $sess['role'] === 'admin';
     }
     if ($stage === 'direct') {
-        return in_array($sess['role'], ['manager', 'senior'], true) && $sess['pc'] !== '' && $sess['pc'] === $directPc;
+        return (admin_role_has_direct_scope((string)$sess['role']) || $sess['role'] === 'senior') && $sess['pc'] !== '' && $sess['pc'] === $directPc;
     }
     if ($stage === 'general') {
         return $sess['role'] === 'senior';

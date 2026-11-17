@@ -467,13 +467,45 @@ function employee_profile_edit_history_list(int $employeeId): array
  * جزء N (تاریخ شروع به کار به شکل yymmdd) سپس جزء F (سه رقم، با صفرهای ابتدایی).
  * این عملیات فقط پرونده‌ی فعال می‌سازد؛ سابقه‌ی کارمند غیرفعال بازنویسی یا حذف نمی‌شود.
  */
+/** ساخت کد دستی دقیقاً با ترتیب N سپس F؛ جزء N می‌تواند ۶ یا ۸ رقمی باشد. */
+function employee_manual_personnel_code(array $hire, string $startCodeInput, string $suffixInput): array
+{
+    $normalize = static function (string $value): string {
+        return preg_replace('/[^0-9]/', '', fa_digits_to_en(trim($value))) ?? '';
+    };
+
+    $startCode = $normalize($startCodeInput);
+    if ($startCode === '') {
+        $startCode = sprintf('%02d%02d%02d', $hire[0] % 100, $hire[1], $hire[2]);
+    }
+    if (!in_array(strlen($startCode), [6, 8], true)) {
+        throw new RuntimeException('جزء اول کد پرسنلی (سلول N) باید ۶ یا ۸ رقم باشد.');
+    }
+    $startDate = jalali_from_start_code($startCode);
+    if (!$startDate || !jalali_parse(jalali_str($startDate)) || $startDate !== $hire) {
+        throw new RuntimeException('جزء N کد پرسنلی باید دقیقاً با تاریخ شروع همکاری مطابقت داشته باشد.');
+    }
+
+    $suffix = $normalize($suffixInput);
+    if ($suffix === '' || strlen($suffix) > 3) {
+        throw new RuntimeException('جزء دوم کد پرسنلی (سلول F) باید حداکثر سه رقم باشد.');
+    }
+    $suffix = str_pad($suffix, 3, '0', STR_PAD_LEFT);
+
+    return [
+        'start_code' => $startCode,
+        'personnel_code' => $startCode . $suffix,
+    ];
+}
+
 function employee_create_manual(array $in, string $actor): array
 {
     $name = trim((string)($in['name'] ?? ''));
     $national = digits((string)($in['national_code'] ?? ''));
     $phone = phone_norm((string)($in['phone'] ?? ''));
     $hireInput = trim(fa_digits_to_en((string)($in['hire_date'] ?? '')));
-    $suffix = digits((string)($in['personnel_suffix'] ?? ''));
+    $suffixInput = (string)($in['personnel_suffix'] ?? '');
+    $startCodeInput = (string)($in['personnel_prefix'] ?? '');
     $post = trim((string)($in['post'] ?? ''));
     $sheba = strtoupper(preg_replace('/\\s+/', '', trim((string)($in['sheba'] ?? ''))) ?? '');
     $salaryInput = trim((string)($in['salary'] ?? '0'));
@@ -491,12 +523,9 @@ function employee_create_manual(array $in, string $actor): array
     if (!$hire || $hire[0] < 1400 || $hire[0] > 1499) {
         throw new RuntimeException('تاریخ شروع همکاری را به شکل شمسی معتبر، مانند ۱۴۰۵/۰۷/۰۱ وارد کنید.');
     }
-    if ($suffix === '' || strlen($suffix) > 3) {
-        throw new RuntimeException('جزء دوم کد پرسنلی (سلول F) باید حداکثر سه رقم باشد.');
-    }
-    $suffix = str_pad($suffix, 3, '0', STR_PAD_LEFT);
-    $startCode = sprintf('%02d%02d%02d', $hire[0] % 100, $hire[1], $hire[2]);
-    $personnelCode = $startCode . $suffix;
+    $codeParts = employee_manual_personnel_code($hire, $startCodeInput, $suffixInput);
+    $startCode = $codeParts['start_code'];
+    $personnelCode = $codeParts['personnel_code'];
     if ($salaryInput !== '' && $salaryDigits === '') {
         throw new RuntimeException('حقوق پایه باید عددی و غیرمنفی باشد.');
     }

@@ -73,4 +73,10 @@ if (!$mismatchRejected) {
     exit(1);
 }
 
+$extendedSuffix = employee_manual_personnel_code($hire, '050701', '1234');
+if ($extendedSuffix['personnel_code'] !== '0507011234') {
+    fwrite(STDERR, 'F components longer than three digits must be preserved like the Excel importer.' . PHP_EOL);
+    exit(1);
+}
+
 echo "Supervisor scope and manual N+F personnel-code tests passed." . PHP_EOL;

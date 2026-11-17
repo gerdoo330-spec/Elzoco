@@ -811,7 +811,7 @@ Future<void> employeeCreate()async{
  };
  final labels=<String,String>{
   'name':'نام و نام خانوادگی','national_code':'کد ملی ۱۰ رقمی','phone':'شماره موبایل',
-  'hire_date':'تاریخ شروع همکاری شمسی (۱۴۰۵/۰۵/۲۷)','personnel_prefix':'جزء اول کد پرسنلی (N، اختیاری: ۶ یا ۸ رقم)','personnel_suffix':'جزء دوم کد پرسنلی (F، حداکثر ۳ رقم)',
+  'hire_date':'تاریخ شروع همکاری شمسی (۱۴۰۵/۰۵/۲۷)','personnel_prefix':'جزء اول کد پرسنلی (N، اختیاری: ۶ یا ۸ رقم)','personnel_suffix':'جزء دوم کد پرسنلی (F، حداقل ۳ رقم)',
   'post':'عنوان شغلی','branch':'شعبه','section':'سکشن / واحد کاری','sheba':'شماره شبا (اختیاری)',
   'salary':'حقوق پایه (ریال)','manager_pc':'کد پرسنلی مدیر مستقیم (اختیاری)'
  };

@@ -487,10 +487,15 @@ function employee_manual_personnel_code(array $hire, string $startCodeInput, str
     }
 
     $suffix = $normalize($suffixInput);
-    if ($suffix === '' || strlen($suffix) > 3) {
-        throw new RuntimeException('جزء دوم کد پرسنلی (سلول F) باید حداکثر سه رقم باشد.');
+    if ($suffix === '') {
+        throw new RuntimeException('جزء دوم کد پرسنلی (سلول F) الزامی است.');
     }
-    $suffix = str_pad($suffix, 3, '0', STR_PAD_LEFT);
+    if (strlen($suffix) < 3) {
+        $suffix = str_pad($suffix, 3, '0', STR_PAD_LEFT);
+    }
+    if (strlen($startCode) + strlen($suffix) > 30) {
+        throw new RuntimeException('طول کد پرسنلی N+F نباید از ۳۰ رقم بیشتر شود.');
+    }
 
     return [
         'start_code' => $startCode,

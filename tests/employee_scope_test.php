@@ -29,6 +29,18 @@ if (employee_scope_collect_ids('', $rows) !== []) {
 
 echo "Direct-report scope tests passed (2 assertions)." . PHP_EOL;
 
+$validAdminRoles = ['admin', 'senior', 'manager', 'supervisor', 'supervisor_manager'];
+foreach ($validAdminRoles as $role) {
+    if (!admin_role_is_valid($role)) {
+        fwrite(STDERR, 'Expected ' . $role . ' to be an assignable management role.' . PHP_EOL);
+        exit(1);
+    }
+}
+if (admin_role_is_valid('unknown')) {
+    fwrite(STDERR, 'Unknown management roles must be rejected.' . PHP_EOL);
+    exit(1);
+}
+
 $directRoles = ['manager', 'supervisor', 'supervisor_manager'];
 foreach ($directRoles as $role) {
     if (!admin_role_has_direct_scope($role)) {

@@ -88,6 +88,12 @@ function is_full_access(string $role): bool
     return in_array($role, ['admin', 'senior'], true);
 }
 
+/** نقش‌های مجاز برای حساب‌های مدیریتی؛ فقط admin و senior دسترسی کامل دارند. */
+function admin_role_is_valid(string $role): bool
+{
+    return in_array($role, ['admin', 'senior', 'manager', 'supervisor', 'supervisor_manager'], true);
+}
+
 /** نقش‌های محدود با دسترسی فقط به کارکنان منتسب‌شده به کد مدیر مستقیم. */
 function admin_role_has_direct_scope(string $role): bool
 {

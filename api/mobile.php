@@ -180,7 +180,7 @@ try{
 
   if($action==='mobile_employee_create'){ $created=employee_create_manual($in,(string)$a['name']); json_out(['ok'=>true]+$created); }
   if($action==='admin_save'){
-   $id=(int)($in['id']??0);$username=trim((string)($in['username']??''));$name=trim((string)($in['name']??''));$role=in_array($in['role']??'', ['admin','senior'],true)?$in['role']:'manager';$pc=digits((string)($in['personnel']??''));$pass=(string)($in['password']??'');
+   $id=(int)($in['id']??0);$username=trim((string)($in['username']??''));$name=trim((string)($in['name']??''));$role=(string)($in['role']??'manager');if(!admin_role_is_valid($role))json_out(['ok'=>false,'message'=>'نقش مدیریتی معتبر نیست.'],422);$pc=digits((string)($in['personnel']??''));$pass=(string)($in['password']??'');
    if($pc!==''&&!one('SELECT id FROM employees WHERE personnel_code=? LIMIT 1',[$pc]))json_out(['ok'=>false,'message'=>'کد پرسنلی در فهرست کارکنان پیدا نشد.'],422);
    if($username===''||$name==='')json_out(['ok'=>false,'message'=>'نام کاربری و نام نمایشی الزامی است.'],422);
    if($id){q('UPDATE admins SET username=?,name=?,role=?,personnel_code=? WHERE id=?',[$username,$name,$role,$pc,$id]);if($pass!==''){if(strlen($pass)<8)json_out(['ok'=>false,'message'=>'رمز عبور باید حداقل ۸ کاراکتر باشد.'],422);q('UPDATE admins SET password_hash=? WHERE id=?',[password_hash($pass,PASSWORD_DEFAULT),$id]);}}
